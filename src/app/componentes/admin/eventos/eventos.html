@@ -52,17 +52,13 @@
     <span class="input-group-text bg-white border-end-0">
       <i class="bi bi-search text-muted" style="font-size:12px"></i>
     </span>
-    <input type="text" class="form-control border-start-0"
-           placeholder="Buscar por evento o tipo"
-           [(ngModel)]="searchText">
+    <input type="text" class="form-control border-start-0" placeholder="Buscar por evento o tipo"
+      [(ngModel)]="searchText">
   </div>
   <div class="btn-group">
-    <button class="btn btn-sm"
-      [class.btn-dark]="activeTab==='eventos'"
-      [class.btn-outline-secondary]="activeTab!=='eventos'"
-      (click)="activeTab='eventos'">Eventos</button>
-    <button class="btn btn-sm"
-      [class.btn-dark]="activeTab==='estadisticas'"
+    <button class="btn btn-sm" [class.btn-dark]="activeTab==='eventos'"
+      [class.btn-outline-secondary]="activeTab!=='eventos'" (click)="activeTab='eventos'">Eventos</button>
+    <button class="btn btn-sm" [class.btn-dark]="activeTab==='estadisticas'"
       [class.btn-outline-secondary]="activeTab!=='estadisticas'"
       (click)="activeTab='estadisticas'">Estadísticas</button>
   </div>
@@ -70,248 +66,233 @@
 
 <!-- ═══ TAB: EVENTOS ═══ -->
 @if (activeTab === 'eventos') {
-  <div class="card border-0 shadow-sm rounded-3">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0" style="font-size:13px">
-        <thead class="table-light">
-          <tr>
-            <th>Evento</th>
-            <th>Fecha</th>
-            <th>Tipo</th>
-            <th>Inscritos</th>
-            <th>Estado</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (ev of filtered(); track ev.id) {
-            <tr>
-              <td class="fw-medium">{{ ev.title }}</td>
-              <td class="text-muted">{{ ev.date | date:'dd MMM, yyyy' }}</td>
-              <td>
-                <span class="gu-badge" [class]="badgeClass(ev.type)">{{ ev.type }}</span>
-              </td>
-              <td>
-                <span class="fw-medium">{{ ev.enrolledCount }} / {{ ev.maxVolunteers }}</span>
-                <div class="progress mt-1" style="height:3px;width:56px">
-                  <div class="progress-bar bg-success"
-                       [style.width]="(ev.enrolledCount/ev.maxVolunteers*100)+'%'"></div>
-                </div>
-              </td>
-              <td>
-                <span class="badge bg-primary-subtle text-primary">{{ ev.status }}</span>
-              </td>
-              <td>
-                <button class="btn btn-sm btn-outline-warning me-1"
-                        (click)="openEdit(ev)" title="Editar">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn btn-sm btn-outline-danger"
-                        (click)="askDelete(ev.id)" title="Eliminar">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-          }
-          @empty {
-            <tr>
-              <td colspan="6" class="text-center text-muted py-4">Sin eventos.</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+<div class="card border-0 shadow-sm rounded-3">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0" style="font-size:13px">
+      <thead class="table-light">
+        <tr>
+          <th>Evento</th>
+          <th>Fecha</th>
+          <th>Tipo</th>
+          <th>Inscritos</th>
+          <th>Estado</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (ev of filtered(); track ev.id) {
+        <tr>
+          <td class="fw-medium">{{ ev.title }}</td>
+          <td class="text-muted">{{ ev.date | date:'dd MMM, yyyy' }}</td>
+          <td>
+            <span class="gu-badge" [class]="badgeClass(ev.type)">{{ ev.type }}</span>
+          </td>
+          <td>
+            <span class="fw-medium">{{ ev.enrolledCount }} / {{ ev.maxVolunteers }}</span>
+            <div class="progress mt-1" style="height:3px;width:56px">
+              <div class="progress-bar bg-success" [style.width]="(ev.enrolledCount/ev.maxVolunteers*100)+'%'"></div>
+            </div>
+          </td>
+          <td>
+            <span class="badge bg-primary-subtle text-primary">{{ ev.status }}</span>
+          </td>
+          <td>
+            <button class="btn btn-sm btn-outline-warning me-1" (click)="openEdit(ev)" title="Editar">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" (click)="askDelete(ev.id)" title="Eliminar">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+        }
+        @empty {
+        <tr>
+          <td colspan="6" class="text-center text-muted py-4">Sin eventos.</td>
+        </tr>
+        }
+      </tbody>
+    </table>
   </div>
+</div>
 }
 
 <!-- ═══ TAB: ESTADÍSTICAS ═══ -->
 @if (activeTab === 'estadisticas') {
-  <div class="row g-3">
+<div class="row g-3">
 
-    <!-- Panel 1: Voluntarios por tipo -->
-    <div class="col-md-6">
-      <div class="card border-0 shadow-sm rounded-3 p-4 h-100">
-        <h6 class="fw-bold mb-3">Voluntarios por tipo</h6>
-        <div class="d-flex flex-column gap-3">
-          @for (t of statTypes; track t) {
-            <div>
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="small text-muted fw-medium">{{ t }}</span>
-                <span class="small fw-semibold text-dark">{{ voluntariosPorTipo(t) }}</span>
-              </div>
-              <div class="progress" style="height:6px;border-radius:99px">
-                <div class="progress-bar bg-success" style="border-radius:99px"
-                     [style.width]="(voluntariosPorTipo(t) / maxVoluntariosStat() * 100) + '%'">
-                </div>
-              </div>
+  <!-- Panel 1: Voluntarios por tipo -->
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm rounded-3 p-4 h-100">
+      <h6 class="fw-bold mb-3">Voluntarios por tipo</h6>
+      <div class="d-flex flex-column gap-3">
+        @for (t of statTypes; track t) {
+        <div>
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small text-muted fw-medium">{{ t }}</span>
+            <span class="small fw-semibold text-dark">{{ voluntariosPorTipo(t) }}</span>
+          </div>
+          <div class="progress" style="height:6px;border-radius:99px">
+            <div class="progress-bar bg-success" style="border-radius:99px"
+              [style.width]="(voluntariosPorTipo(t) / maxVoluntariosStat() * 100) + '%'">
             </div>
-          }
+          </div>
         </div>
+        }
       </div>
     </div>
-
-    <!-- Panel 2: Eventos por tipo -->
-    <div class="col-md-6">
-      <div class="card border-0 shadow-sm rounded-3 p-4 h-100">
-        <h6 class="fw-bold mb-3">Evento por tipo</h6>
-        <div class="d-flex flex-column gap-3">
-          @for (t of statTypes; track t) {
-            <div>
-              <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="small text-muted fw-medium">{{ t }}</span>
-                <span class="small fw-semibold text-dark">{{ eventosPorTipo(t) }}</span>
-              </div>
-              <div class="progress" style="height:6px;border-radius:99px">
-                <div class="progress-bar bg-primary" style="border-radius:99px"
-                     [style.width]="(eventosPorTipo(t) / maxEventosStat() * 100) + '%'">
-                </div>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-    </div>
-
   </div>
+
+  <!-- Panel 2: Eventos por tipo -->
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm rounded-3 p-4 h-100">
+      <h6 class="fw-bold mb-3">Evento por tipo</h6>
+      <div class="d-flex flex-column gap-3">
+        @for (t of statTypes; track t) {
+        <div>
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small text-muted fw-medium">{{ t }}</span>
+            <span class="small fw-semibold text-dark">{{ eventosPorTipo(t) }}</span>
+          </div>
+          <div class="progress" style="height:6px;border-radius:99px">
+            <div class="progress-bar bg-primary" style="border-radius:99px"
+              [style.width]="(eventosPorTipo(t) / maxEventosStat() * 100) + '%'">
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+
+</div>
 }
 
 <!-- ═══ MODAL: Crear / Editar evento ═══ -->
 @if (showModal()) {
-  <div class="gu-modal-backdrop" (click)="showModal.set(false)"></div>
-  <div class="gu-modal-panel">
-    <div class="d-flex justify-content-between align-items-start mb-3">
-      <div>
-        <p class="text-muted small mb-0">
-          Completa el formulario para publicar el evento{{ isEditing() ? ' editado' : '' }}
-        </p>
-        <h5 class="fw-bold mb-0">
-          {{ isEditing() ? 'Editar evento' : 'Crear nuevo evento' }}
-        </h5>
-      </div>
-      <button class="btn-close" (click)="showModal.set(false)"></button>
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label small fw-medium">Título del evento</label>
-      <input type="text" class="form-control" [(ngModel)]="form.title"
-             placeholder="Ej: Limpieza de Playa — Costa Verde">
-    </div>
-    <div class="mb-3">
-      <label class="form-label small fw-medium">Descripción</label>
-      <textarea class="form-control" rows="3" style="resize:none"
-                [(ngModel)]="form.description"></textarea>
-    </div>
-    <div class="row g-3 mb-3">
-      <div class="col">
-        <label class="form-label small fw-medium">Tipo de actividad</label>
-        <select class="form-select" [(ngModel)]="form.type">
-          @for (t of EVENT_TYPES; track t) {
-            <option [value]="t">{{ t }}</option>
-          }
-        </select>
-      </div>
-      <div class="col">
-        <label class="form-label small fw-medium">Máx. voluntarios</label>
-        <input type="number" class="form-control" [(ngModel)]="form.maxVolunteers" min="1">
-      </div>
-    </div>
-    <div class="row g-3 mb-3">
-      <div class="col">
-        <label class="form-label small fw-medium">Fecha</label>
-        <input type="date" class="form-control" [(ngModel)]="form.date">
-      </div>
-      <div class="col">
-        <label class="form-label small fw-medium">Hora</label>
-        <input type="time" class="form-control" [(ngModel)]="form.time">
-      </div>
-    </div>
-    <div class="mb-3">
-      <label class="form-label small fw-medium">Ubicación (Texto)</label>
-      <input type="text" class="form-control" [(ngModel)]="form.location"
-             placeholder="Ej: Costa Verde, Miraflores, Lima">
-    </div>
-    <div class="row g-3 mb-1">
-      <div class="col">
-        <label class="form-label small fw-medium">Latitud</label>
-        <input type="number" class="form-control" [(ngModel)]="form.latitude"
-               step="0.0001" placeholder="-12.046">
-      </div>
-      <div class="col">
-        <label class="form-label small fw-medium">Longitud</label>
-        <input type="number" class="form-control" [(ngModel)]="form.longitude"
-               step="0.0001" placeholder="-77.042">
-      </div>
-    </div>
-    <p class="text-muted small mb-3">
-      <i class="bi bi-info-circle me-1"></i>
-      Busca el lugar en Google Maps, haz clic derecho y copia las coordenadas.
-    </p>
-    <div class="row g-3 mb-3">
-      <div class="col">
-        <label class="form-label small fw-medium">Organizador / ONG</label>
-        <input type="text" class="form-control" [(ngModel)]="form.organizerName">
-      </div>
-      <div class="col">
-        <label class="form-label small fw-medium">URL de imagen</label>
-        <input type="text" class="form-control" [(ngModel)]="form.imageUrl"
-               placeholder="https://...">
-      </div>
-    </div>
-
-    @if (form.imageUrl) {
-      <img [src]="form.imageUrl" alt="preview"
-           class="w-100 rounded-3 mb-3"
-           style="height:110px;object-fit:cover"
-           (error)="form.imageUrl=''">
-    }
-
-    <!-- Requisitos (uno por línea) -->
-    <div class="mb-3">
-      <label class="form-label small fw-medium">
-        Requisitos (uno por línea)
-      </label>
-      <textarea class="form-control" rows="4" style="resize:vertical"
-                [(ngModel)]="form.requirementsText"
-                placeholder="Ropa cómoda&#10;Mayores de 16 años&#10;Llevar agua"></textarea>
-      <p class="text-muted" style="font-size:11px;margin-top:4px">
-        <i class="bi bi-info-circle me-1"></i>Escribe un requisito por línea
+<div class="gu-modal-backdrop" (click)="showModal.set(false)"></div>
+<div class="gu-modal-panel">
+  <div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+      <p class="text-muted small mb-0">
+        Completa el formulario para publicar el evento{{ isEditing() ? ' editado' : '' }}
       </p>
+      <h5 class="fw-bold mb-0">
+        {{ isEditing() ? 'Editar evento' : 'Crear nuevo evento' }}
+      </h5>
     </div>
+    <button class="btn-close" (click)="showModal.set(false)"></button>
+  </div>
 
-    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-      <button class="btn btn-outline-secondary px-4"
-              (click)="showModal.set(false)">Cancelar</button>
-      <button class="btn btn-success px-4" (click)="save()">
-        {{ isEditing() ? 'Guardar cambios' : 'Crear evento' }}
-      </button>
+  <div class="mb-3">
+    <label class="form-label small fw-medium">Título del evento</label>
+    <input type="text" class="form-control" [(ngModel)]="form.title" placeholder="Ej: Limpieza de Playa — Costa Verde">
+  </div>
+  <div class="mb-3">
+    <label class="form-label small fw-medium">Descripción</label>
+    <textarea class="form-control" rows="3" style="resize:none" [(ngModel)]="form.description"></textarea>
+  </div>
+  <div class="row g-3 mb-3">
+    <div class="col">
+      <label class="form-label small fw-medium">Tipo de actividad</label>
+      <select class="form-select" [(ngModel)]="form.type">
+        @for (t of EVENT_TYPES; track t) {
+        <option [value]="t">{{ t }}</option>
+        }
+      </select>
+    </div>
+    <div class="col">
+      <label class="form-label small fw-medium">Máx. voluntarios</label>
+      <input type="number" class="form-control" [(ngModel)]="form.maxVolunteers" min="1">
     </div>
   </div>
+  <div class="row g-3 mb-3">
+    <div class="col">
+      <label class="form-label small fw-medium">Fecha</label>
+      <input type="date" class="form-control" [(ngModel)]="form.date">
+    </div>
+    <div class="col">
+      <label class="form-label small fw-medium">Hora</label>
+      <input type="time" class="form-control" [(ngModel)]="form.time">
+    </div>
+  </div>
+  <div class="mb-3">
+    <label class="form-label small fw-medium">Ubicación (Texto)</label>
+    <input type="text" class="form-control" [(ngModel)]="form.location" placeholder="Ej: Costa Verde, Miraflores, Lima">
+  </div>
+  <div class="row g-3 mb-1">
+    <div class="col">
+      <label class="form-label small fw-medium">Latitud</label>
+      <input type="number" class="form-control" [(ngModel)]="form.latitude" step="0.0001" placeholder="-12.046">
+    </div>
+    <div class="col">
+      <label class="form-label small fw-medium">Longitud</label>
+      <input type="number" class="form-control" [(ngModel)]="form.longitude" step="0.0001" placeholder="-77.042">
+    </div>
+  </div>
+  <p class="text-muted small mb-3">
+    <i class="bi bi-info-circle me-1"></i>
+    Busca el lugar en Google Maps, haz clic derecho y copia las coordenadas.
+  </p>
+  <div class="row g-3 mb-3">
+    <div class="col">
+      <label class="form-label small fw-medium">Organizador / ONG</label>
+      <input type="text" class="form-control" [(ngModel)]="form.organizerName">
+    </div>
+    <div class="col">
+      <label class="form-label small fw-medium">URL de imagen</label>
+      <input type="text" class="form-control" [(ngModel)]="form.imageUrl" placeholder="https://...">
+    </div>
+  </div>
+
+  @if (form.imageUrl) {
+  <img [src]="form.imageUrl" alt="preview" class="w-100 rounded-3 mb-3" style="height:110px;object-fit:cover"
+    (error)="form.imageUrl=''">
+  }
+
+  <!-- Requisitos (uno por línea) -->
+  <div class="mb-3">
+    <label class="form-label small fw-medium">
+      Requisitos (uno por línea)
+    </label>
+    <textarea class="form-control" rows="4" style="resize:vertical" [(ngModel)]="form.requirementsText"
+      placeholder="Ropa cómoda&#10;Mayores de 16 años&#10;Llevar agua"></textarea>
+    <p class="text-muted" style="font-size:11px;margin-top:4px">
+      <i class="bi bi-info-circle me-1"></i>Escribe un requisito por línea
+    </p>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+    <button class="btn btn-outline-secondary px-4" (click)="showModal.set(false)">Cancelar</button>
+    <button class="btn btn-success px-4" (click)="save()">
+      {{ isEditing() ? 'Guardar cambios' : 'Crear evento' }}
+    </button>
+  </div>
+</div>
 }
 
 <!-- ═══ MODAL: Confirmar eliminación ═══ -->
 @if (showDelete()) {
-  <div class="gu-modal-backdrop" (click)="showDelete.set(false)"></div>
-  <div class="gu-modal-panel" style="max-width:360px;text-align:center">
-    <div class="d-flex justify-content-center mb-3">
-      <div class="rounded-circle bg-danger-subtle d-flex align-items-center justify-content-center"
-           style="width:56px;height:56px">
-        <i class="bi bi-trash-fill text-danger fs-3"></i>
-      </div>
-    </div>
-    <h5 class="fw-bold mb-1">¿Eliminar este evento?</h5>
-    <p class="text-muted small mb-4">
-      Esta acción no se puede deshacer.<br>
-      El evento y todos sus inscritos serán removidos.
-    </p>
-    <div class="d-flex gap-3">
-      <button class="btn btn-outline-secondary flex-fill"
-              (click)="showDelete.set(false)">
-        Cancelar
-      </button>
-      <button class="btn btn-danger flex-fill fw-semibold"
-              (click)="confirmDelete()">
-        Sí, eliminar
-      </button>
+<div class="gu-modal-backdrop" (click)="showDelete.set(false)"></div>
+<div class="gu-modal-panel" style="max-width:360px;text-align:center">
+  <div class="d-flex justify-content-center mb-3">
+    <div class="rounded-circle bg-danger-subtle d-flex align-items-center justify-content-center"
+      style="width:56px;height:56px">
+      <i class="bi bi-trash-fill text-danger fs-3"></i>
     </div>
   </div>
+  <h5 class="fw-bold mb-1">¿Eliminar este evento?</h5>
+  <p class="text-muted small mb-4">
+    Esta acción no se puede deshacer.<br>
+    El evento y todos sus inscritos serán removidos.
+  </p>
+  <div class="d-flex gap-3">
+    <button class="btn btn-outline-secondary flex-fill" (click)="showDelete.set(false)">
+      Cancelar
+    </button>
+    <button class="btn btn-danger flex-fill fw-semibold" (click)="confirmDelete()">
+      Sí, eliminar
+    </button>
+  </div>
+</div>
 }

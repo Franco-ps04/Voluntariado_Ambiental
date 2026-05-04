@@ -4,17 +4,17 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { Inscripcion } from '../../../models/inscripciones';
-import { MOCK_INSCRIPCIONES} from '../../../mocks/mock_inscripciones';
+import { MOCK_INSCRIPCIONES } from '../../../mocks/mock_inscripciones';
 import { Certificado } from '../../../models/certificado';
 import { MOCK_CERTIFICADO } from '../../../mocks/mock_certificado';
 
 @Component({
   selector: 'app-dashboard-voluntario',
-  imports: [CommonModule,DatePipe,RouterLink,FormsModule],
+  imports: [CommonModule, DatePipe, RouterLink, FormsModule],
   templateUrl: './dashboard-voluntario.html',
   styleUrl: './dashboard-voluntario.css',
 })
-export class DashboardVoluntario implements OnInit{
+export class DashboardVoluntario implements OnInit {
   inscriptions = signal<Inscripcion[]>([]);
   searchText = '';
   cancelTarget: Inscripcion | null = null;

@@ -9,7 +9,13 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './contacto.css',
 })
 export class Contacto {
-  form = { name: '', phone: '', email: '', subject: '', message: '' };
+  form = {
+    name: '',
+    phone: '',
+    email: '',
+    subject: '',
+    message: ''
+  };
   subjects = ['Consulta general', 'Registro de organización', 'Reporte de problema', 'Sugerencia', 'Otro'];
   success = false;
 

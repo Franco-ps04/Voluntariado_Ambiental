@@ -13,7 +13,7 @@ export class AuthService {
     this.getUserFromStorage()
   );
 
-  // Observable para el menu (proj1 style)
+  // Observable para el menu
   user$ = this.userSubject.asObservable();
 
   get currentUser(): AuthUser | null {
@@ -34,7 +34,7 @@ export class AuthService {
     return true;
   }
 
-  /** Acceso rápido por rol — para botones de presentación */
+  /** Acceso rápido por rol (quitar luego de presentación de fronted, solo es un vista de como funciona)*/
   loginByRole(role: UserRole): void {
     const user = MOCK_USERS.find(u => u.rol === role) ?? MOCK_USERS[0];
     this.saveUser(user);

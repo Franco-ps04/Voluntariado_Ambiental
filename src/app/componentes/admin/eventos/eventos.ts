@@ -11,19 +11,19 @@ import { MOCK_VOLUNTARIOS_EVENTO } from '../../../mocks/mock_eventos';
   styleUrl: './eventos.css',
 })
 export class AdminEventos implements OnInit {
-  events       = signal<VolunteerEvent[]>([]);
-  searchText   = '';
+  events = signal<VolunteerEvent[]>([]);
+  searchText = '';
   activeTab: 'eventos' | 'estadisticas' = 'eventos';
-  showModal    = signal(false);
-  isEditing    = signal(false);
-  editingId:   number | null = null;
+  showModal = signal(false);
+  isEditing = signal(false);
+  editingId: number | null = null;
 
   // Modal confirmación eliminar
-  deleteId:    number | null = null;
-  showDelete   = signal(false);
+  deleteId: number | null = null;
+  showDelete = signal(false);
 
-  totalEvents   = computed(() => this.events().length);
-  upcoming      = computed(() => this.events().filter(e => e.status === 'Próximo').length);
+  totalEvents = computed(() => this.events().length);
+  upcoming = computed(() => this.events().filter(e => e.status === 'Próximo').length);
   totalEnrolled = computed(() => this.events().reduce((s, e) => s + e.enrolledCount, 0));
 
   readonly EVENT_TYPES: EventType[] = [
@@ -92,21 +92,21 @@ export class AdminEventos implements OnInit {
 
     if (!this.isEditing()) {
       const newEv: VolunteerEvent = {
-        id:            Date.now(),
-        title:         this.form.title ?? '',
-        description:   this.form.description ?? '',
-        type:          (this.form.type as EventType) ?? 'Limpieza',
-        date:          this.form.date ?? '',
-        time:          this.form.time ?? '',
-        location:      this.form.location ?? '',
-        latitude:      this.form.latitude ?? 0,
-        longitude:     this.form.longitude ?? 0,
+        id: Date.now(),
+        title: this.form.title ?? '',
+        description: this.form.description ?? '',
+        type: (this.form.type as EventType) ?? 'Limpieza',
+        date: this.form.date ?? '',
+        time: this.form.time ?? '',
+        location: this.form.location ?? '',
+        latitude: this.form.latitude ?? 0,
+        longitude: this.form.longitude ?? 0,
         maxVolunteers: this.form.maxVolunteers ?? 30,
         enrolledCount: 0,
         organizerName: this.form.organizerName ?? '',
-        imageUrl:      this.form.imageUrl ?? '',
-        requirements:  reqs,
-        status:        'Próximo'
+        imageUrl: this.form.imageUrl ?? '',
+        requirements: reqs,
+        status: 'Próximo'
       };
       this.events.update(list => [newEv, ...list]);
     } else {

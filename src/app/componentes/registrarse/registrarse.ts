@@ -12,7 +12,7 @@ function passwordMatchValidator(g: AbstractControl): ValidationErrors | null {
 
 @Component({
   selector: 'app-registrarse',
-  imports: [ReactiveFormsModule,RouterLink,CommonModule],
+  imports: [ReactiveFormsModule, RouterLink, CommonModule],
   templateUrl: './registrarse.html',
   styleUrl: './registrarse.css',
 })

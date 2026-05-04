@@ -8,11 +8,11 @@ import { CardStats } from '../card-stats/card-stats';
 
 @Component({
   selector: 'app-inicio',
-  imports: [CommonModule,RouterLink, EventoCard, CardStats],
+  imports: [CommonModule, RouterLink, EventoCard, CardStats],
   templateUrl: './inicio.html',
   styleUrl: './inicio.css',
 })
-export class Inicio implements OnInit{
+export class Inicio implements OnInit {
   events: VolunteerEvent[] = [];
 
   stats = [

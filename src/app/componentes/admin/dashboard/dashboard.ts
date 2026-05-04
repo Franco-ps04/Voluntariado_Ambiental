@@ -12,7 +12,7 @@ import { EventoCard } from "../../evento-card/evento-card";
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
-export class Dashboard implements OnInit{
+export class Dashboard implements OnInit {
   stats!: ReturnType<AdminService['getStats']>;
   events: AdminEvento[] = [];
 

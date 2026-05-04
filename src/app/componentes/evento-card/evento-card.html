@@ -1,23 +1,17 @@
 <div class="card h-100 shadow-sm border-0 rounded-4 gu-event-card overflow-hidden"
-     [style.outline]="selected ? '2px solid #2d9e5f' : 'none'">
+  [style.outline]="selected ? '2px solid #2d9e5f' : 'none'">
 
   <!-- Imagen clickeable → abre modal info -->
-  <div style="position:relative;cursor:pointer;overflow:hidden"
-       (click)="verInfo.emit(event)">
+  <div style="position:relative;cursor:pointer;overflow:hidden" (click)="verInfo.emit(event)">
     <img [src]="event.imageUrl || 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=80'"
-         [alt]="event.title"
-         class="card-img-top"
-         style="height:170px;object-fit:cover;transition:transform .2s"
-         onmouseover="this.style.transform='scale(1.03)'"
-         onmouseout="this.style.transform='scale(1)'"
-         (error)="event.imageUrl='https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=80'">
+      [alt]="event.title" class="card-img-top" style="height:170px;object-fit:cover;transition:transform .2s"
+      onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'"
+      (error)="event.imageUrl='https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=80'">
 
     <!-- Overlay hover -->
     <div style="position:absolute;inset:0;background:rgba(0,0,0,.25);
                 opacity:0;transition:opacity .2s;display:flex;align-items:center;
-                justify-content:center"
-         onmouseover="this.style.opacity='1'"
-         onmouseout="this.style.opacity='0'">
+                justify-content:center" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">
       <span style="background:rgba(255,255,255,.9);color:#111;border-radius:20px;
                    padding:4px 14px;font-size:12px;font-weight:600">
         <i class="bi bi-info-circle me-1"></i>Ver información
@@ -51,19 +45,16 @@
 
     <!-- Botones: Ver mapa | Información | Inscribirse -->
     <div class="d-flex gap-1 mt-auto">
-      <button class="btn btn-outline-secondary btn-sm flex-fill"
-              style="font-size:11px"
-              (click)="verMapa.emit(event); $event.stopPropagation()">
+      <button class="btn btn-outline-secondary btn-sm flex-fill" style="font-size:11px"
+        (click)="verMapa.emit(event); $event.stopPropagation()">
         <i class="bi bi-map me-1"></i>Ver mapa
       </button>
-      <button class="btn btn-outline-success btn-sm flex-fill"
-              style="font-size:11px"
-              (click)="verInfo.emit(event); $event.stopPropagation()">
+      <button class="btn btn-outline-success btn-sm flex-fill" style="font-size:11px"
+        (click)="verInfo.emit(event); $event.stopPropagation()">
         <i class="bi bi-info-circle me-1"></i>Información
       </button>
-      <button class="btn btn-success btn-sm flex-fill"
-              style="font-size:11px"
-              (click)="inscribirse.emit(event); $event.stopPropagation()">
+      <button class="btn btn-success btn-sm flex-fill" style="font-size:11px"
+        (click)="inscribirse.emit(event); $event.stopPropagation()">
         <i class="bi bi-person-plus me-1"></i>Inscribirse
       </button>
     </div>

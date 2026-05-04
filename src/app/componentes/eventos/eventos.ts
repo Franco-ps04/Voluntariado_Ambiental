@@ -10,11 +10,11 @@ import { MapaVista } from '../mapa-vista/mapa-vista';
 
 @Component({
   selector: 'app-eventos',
-  imports: [CommonModule,FormsModule,EventoCard, MapaVista],
+  imports: [CommonModule, FormsModule, EventoCard, MapaVista],
   templateUrl: './eventos.html',
   styleUrl: './eventos.css',
 })
-export class Eventos implements OnInit, OnDestroy{
+export class Eventos implements OnInit, OnDestroy {
   @ViewChild(MapaVista) mapView?: MapaVista;
 
   events: VolunteerEvent[] = [];
