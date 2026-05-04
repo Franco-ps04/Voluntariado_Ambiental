@@ -1,0 +1,56 @@
+<!-- Admin layout: sidebar oscuro + contenido principal -->
+<aside class="admin-sidebar">
+
+  <!-- Logo -->
+  <div class="d-flex align-items-center gap-2 px-2 mb-4 mt-1">
+    <div style="width:30px;height:30px;background:#2d9e5f;border-radius:8px;
+                display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <i class="bi bi-leaf-fill text-white" style="font-size:13px"></i>
+    </div>
+    <span class="fw-bold" style="font-size:15px">
+      <span class="text-white">Green</span><span class="text-success">Unity</span>
+    </span>
+  </div>
+
+  <!-- Label -->
+  <p class="text-white-50 px-2 mb-2"
+     style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:600">
+    Administración
+  </p>
+
+  <!-- Links -->
+  <a routerLink="/admin/eventos"       routerLinkActive="active" class="sidebar-link">
+    <i class="bi bi-calendar-event-fill"></i> Eventos
+  </a>
+  <a routerLink="/admin/inscripciones" routerLinkActive="active" class="sidebar-link">
+    <i class="bi bi-people-fill"></i> Inscripción
+  </a>
+
+  <!-- Usuario al fondo -->
+  <div class="admin-user-section">
+    <div class="d-flex align-items-center gap-2 mb-2 px-1">
+      <div class="rounded-circle bg-success d-flex align-items-center justify-content-center
+                  text-white fw-bold shrink-0"
+           style="width:32px;height:32px;font-size:12px">AD</div>
+      <div style="min-width:0">
+        <p class="text-white mb-0 small fw-medium text-truncate">Administrador</p>
+        <p class="text-white-50 mb-0 text-truncate" style="font-size:11px">{{ getEmail() }}</p>
+      </div>
+    </div>
+    <button class="btn-salir" (click)="logout()">
+      <i class="bi bi-box-arrow-right"></i> Salir
+    </button>
+  </div>
+</aside>
+
+<!-- Contenido principal -->
+<div class="admin-main">
+  <div class="top-bar">
+    <a routerLink="/" target="_blank" class="btn btn-sm btn-outline-success">
+      <i class="bi bi-globe me-1"></i>Ver sitio web
+    </a>
+  </div>
+  <div class="grow p-4">
+    <router-outlet />
+  </div>
+</div>

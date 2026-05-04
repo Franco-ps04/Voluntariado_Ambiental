@@ -1,0 +1,73 @@
+<div class="min-vh-100 d-flex align-items-center justify-content-center">
+  <div class="card admin-card border-0 rounded-4 p-4 p-md-5" style="width:100%;max-width:420px">
+
+    <!-- Logo -->
+    <div class="text-center mb-4">
+      <div style="width:52px;height:52px;background:#2d9e5f;border-radius:12px;
+                  display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px">
+        <i class="bi bi-leaf-fill text-white fs-4"></i>
+      </div>
+      <p class="text-success fw-semibold text-uppercase small mb-1"
+         style="letter-spacing:.08em">Panel de Administración</p>
+      <h5 class="text-white fw-bold mb-0">
+        <span class="text-success">Green</span>Unity Admin
+      </h5>
+    </div>
+
+    @if (error) {
+      <div class="alert alert-danger small py-2 mb-3">{{ error }}</div>
+    }
+
+    <div class="mb-3">
+      <label class="form-label small fw-medium" style="color:#8899aa">Correo electrónico</label>
+      <div class="input-group">
+        <span class="input-group-text admin-prefix border-0">
+          <i class="bi bi-envelope" style="color:#667;font-size:13px"></i>
+        </span>
+        <input type="email" class="form-control admin-input border-0"
+               placeholder="admingreen@gmail.com"
+               [(ngModel)]="email"
+               (keyup.enter)="submit()">
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label small fw-medium" style="color:#8899aa">Contraseña</label>
+      <div class="input-group">
+        <span class="input-group-text admin-prefix border-0">
+          <i class="bi bi-lock" style="color:#667;font-size:13px"></i>
+        </span>
+        <input [type]="showPass() ? 'text' : 'password'"
+               class="form-control admin-input border-0 border-end-0"
+               [(ngModel)]="password"
+               (keyup.enter)="submit()">
+        <span class="input-group-text admin-prefix border-0"
+              style="cursor:pointer" (click)="showPass.set(!showPass())">
+          <i class="bi" style="color:#667;font-size:13px"
+             [class.bi-eye]="!showPass()" [class.bi-eye-slash]="showPass()"></i>
+        </span>
+      </div>
+    </div>
+
+    <button class="btn btn-success w-100 py-2 fw-semibold mb-3"
+            (click)="submit()" [disabled]="loading">
+      @if (loading) {
+        <span class="spinner-border spinner-border-sm me-2"></span>
+      }
+      Ingresar al panel
+    </button>
+
+    <!-- Acceso rápido presentación -->
+    <button class="btn btn-sm w-100 mb-3 d-flex align-items-center justify-content-center gap-2"
+            style="background:rgba(45,158,95,.15);color:#4ade80;border:1px solid rgba(45,158,95,.3);border-radius:8px"
+            (click)="quickAccess()">
+      <i class="bi bi-lightning-charge-fill text-warning"></i>
+      Acceso rápido (presentación)
+    </button>
+
+    <p class="text-center mb-0" style="color:#6b7a8d;font-size:13px">
+      ¿No eres admin?
+      <a routerLink="/" class="text-success text-decoration-none">Volver al sitio</a>
+    </p>
+  </div>
+</div>

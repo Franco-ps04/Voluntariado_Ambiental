@@ -1,0 +1,21 @@
+:host {
+    display: block;
+    min-height: 100vh;
+    background: #0d1b2a;
+}
+
+.admin-card {
+    background: #1a2a3a;
+    border: 0.5px solid rgba(255, 255, 255, .08);
+}
+
+.admin-input,
+.admin-prefix {
+    background: #243447 !important;
+    color: #ccc !important;
+    border-color: rgba(255, 255, 255, .1) !important;
+}
+
+.admin-input::placeholder {
+    color: #555;
+}

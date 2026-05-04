@@ -1,0 +1,86 @@
+<div class="container py-4" style="max-width: 980px;">
+    <div class="mb-4">
+        <h2 class="fw-bold mb-0">Crear nuevo evento</h2>
+        <p class="text-muted mb-0">Completa el formulario para publicar el evento</p>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Título del evento</label>
+                    <input class="form-control" [(ngModel)]="title">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Tipo de actividad</label>
+                    <select class="form-select" [(ngModel)]="type">
+                        <option>Limpieza</option>
+                        <option>Reforestación</option>
+                        <option>Reciclaje</option>
+                        <option>Taller</option>
+                        <option>Educación</option>
+                        <option>Conservación</option>
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Descripción</label>
+                    <textarea class="form-control" rows="4" [(ngModel)]="description"></textarea>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Fecha</label>
+                    <input class="form-control" [(ngModel)]="date" placeholder="25/04/2026">
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Hora</label>
+                    <input class="form-control" [(ngModel)]="time" placeholder="08:00">
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Máx. voluntarios</label>
+                    <input type="number" class="form-control" [(ngModel)]="maxVolunteers">
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Ubicación (Texto)</label>
+                    <input class="form-control" [(ngModel)]="location">
+                    <small class="text-muted">Tip: busca el lugar en Google Maps, haz clic derecho y copia las
+                        coordenadas.</small>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Latitud</label>
+                    <input class="form-control" [(ngModel)]="latitude">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Longitud</label>
+                    <input class="form-control" [(ngModel)]="longitude">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Organizador / ONG</label>
+                    <input class="form-control" [(ngModel)]="organizer">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">URL de imagen</label>
+                    <input class="form-control" [(ngModel)]="image">
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Requisitos (uno por línea)</label>
+                    <textarea class="form-control" rows="4" [(ngModel)]="requirementsText"></textarea>
+                </div>
+
+                <div class="col-12 d-flex justify-content-end gap-2">
+                    <button class="btn btn-outline-secondary" routerLink="/admin/events">Cancelar</button>
+                    <button class="btn btn-success" (click)="submit()">Crear evento</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

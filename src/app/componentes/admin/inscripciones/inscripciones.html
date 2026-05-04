@@ -1,0 +1,67 @@
+<h4 class="fw-bold mb-1">Inscripciones por evento</h4>
+<p class="text-muted small mb-4">Visualiza los voluntarios inscritos en cada evento</p>
+
+<div class="d-flex flex-column gap-3">
+    @for (ev of events(); track ev.id) {
+    <div class="card border-0 shadow-sm rounded-3 p-3">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+                <h6 class="fw-bold mb-1">{{ ev.title }}</h6>
+                <p class="text-muted small mb-0">{{ ev.date }} — {{ ev.time }}</p>
+                <p class="text-muted small mb-0">
+                    Inscripciones registradas: <strong>{{ ev.enrolledCount }}</strong>
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success-subtle text-success px-3 py-2">
+                    {{ ev.enrolledCount }} inscritos
+                </span>
+                <button class="btn btn-sm btn-outline-primary" (click)="openNotif(ev.id)">
+                    <i class="bi bi-megaphone me-1"></i>Enviar notificación
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+    @empty {
+    <p class="text-muted text-center">No hay eventos registrados.</p>
+    }
+</div>
+
+<!-- Modal notificación -->
+@if (showNotifModal()) {
+<div class="gu-modal-backdrop" (click)="showNotifModal.set(false)"></div>
+<div class="gu-modal-panel">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <p class="text-muted small mb-0">Completa el formulario para publicar el mensaje</p>
+            <h5 class="fw-bold mb-0">Crear notificación</h5>
+        </div>
+        <button class="btn-close" (click)="showNotifModal.set(false)"></button>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label small fw-medium">Título del mensaje</label>
+        <input type="text" class="form-control" [(ngModel)]="notifTitle" placeholder="Ej: Recordatorio del evento">
+    </div>
+    <div class="mb-4">
+        <label class="form-label small fw-medium">Mensaje</label>
+        <textarea class="form-control" rows="6" [(ngModel)]="notifMessage"
+            placeholder="Escribe el mensaje para los voluntarios..."></textarea>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+        <button class="btn btn-outline-secondary px-4" (click)="showNotifModal.set(false)">
+            Cancelar
+        </button>
+        <button class="btn px-4 fw-semibold" [class.btn-success]="!sent()" [class.btn-light]="sent()"
+            (click)="sendNotif()" [disabled]="sent()">
+            @if (sent()) {
+            <i class="bi bi-check-circle-fill text-success me-1"></i>¡Enviado!
+            } @else {
+            <i class="bi bi-send me-1"></i>Enviar
+            }
+        </button>
+    </div>
+</div>
+}
