@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -6,17 +5,17 @@ import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-ingresar',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink],
   templateUrl: './ingresar.html',
   styleUrl: './ingresar.css',
 })
 export class Ingresar {
-email    = '';
+  email = '';
   password = '';
   showPass = false;
-  error    = '';
+  error = '';
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router) { }
 
   submit(): void {
     this.error = '';

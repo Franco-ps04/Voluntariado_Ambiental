@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../services/admin.service';
@@ -6,7 +5,7 @@ import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-crear-notificacion',
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './crear-notificacion.html',
   styleUrl: './crear-notificacion.css',
 })

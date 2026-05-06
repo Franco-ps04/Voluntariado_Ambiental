@@ -239,9 +239,44 @@
       <label class="form-label small fw-medium">Organizador / ONG</label>
       <input type="text" class="form-control" [(ngModel)]="form.organizerName">
     </div>
-    <div class="col">
-      <label class="form-label small fw-medium">URL de imagen</label>
-      <input type="text" class="form-control" [(ngModel)]="form.imageUrl" placeholder="https://...">
+    <!-- ── Imagen: drag & drop + seleccionar archivo ── -->
+    <div class="mb-3">
+      <label class="form-label small fw-medium">Imagen del evento</label>
+
+      <!-- Zona de arrastre -->
+      <div class="upload-zone rounded-3 text-center p-4" [class.dragging]="isDragging" (click)="fileInput.click()"
+        (drop)="onDrop($event)" (dragover)="onDragOver($event)" (dragleave)="onDragLeave()"
+        style="cursor:pointer;border:2px dashed #2d9e5f;background:#f8fffe;transition:background .15s">
+
+        @if (previewUrl) {
+        <!-- Preview de imagen seleccionada -->
+        <div style="position:relative;display:inline-block">
+          <img [src]="previewUrl" alt="preview" class="rounded-3"
+            style="max-height:130px;max-width:100%;object-fit:cover">
+          <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle"
+            style="width:22px;height:22px;padding:0;font-size:11px;margin:-8px -8px 0 0"
+            (click)="removeImage(); $event.stopPropagation()">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+        <p class="small text-muted mb-0 mt-2">Haz clic o arrastra para cambiar</p>
+        } @else {
+        <i class="bi bi-cloud-upload text-success fs-1 d-block mb-2"></i>
+        <p class="fw-medium mb-1" style="font-size:14px">Arrastra una imagen aquí</p>
+        <p class="small text-muted mb-1">o haz clic para seleccionar desde tu computadora</p>
+        <p class="text-muted" style="font-size:11px">JPG, PNG, WEBP · Máx. 5 MB</p>
+        }
+      </div>
+
+      <!-- Input oculto -->
+      <input #fileInput type="file" accept="image/jpeg,image/png,image/webp" class="d-none"
+        (change)="onFileSelected($event)">
+
+      <!-- Fallback: URL manual -->
+      <div class="mt-2">
+        <input type="text" class="form-control form-control-sm" [(ngModel)]="form.imageUrl"
+          placeholder="O pega una URL de imagen: https://..." (input)="previewUrl = form.imageUrl ?? null">
+      </div>
     </div>
   </div>
 

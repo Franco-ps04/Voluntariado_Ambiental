@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-contacto',
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './contacto.html',
   styleUrl: './contacto.css',
 })

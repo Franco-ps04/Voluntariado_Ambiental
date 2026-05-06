@@ -1,10 +1,9 @@
-import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { VolunteerEvent } from '../../models/event';
 
 @Component({
   selector: 'app-evento-card',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './evento-card.html',
   styleUrl: './evento-card.css',
 })

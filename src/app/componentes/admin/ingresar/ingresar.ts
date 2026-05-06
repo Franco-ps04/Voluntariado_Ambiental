@@ -1,12 +1,11 @@
 import { Component, signal } from '@angular/core';
 import { AuthService } from '../../../services/auth.service';
 import { Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-ingresar',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink],
   templateUrl: './ingresar.html',
   styleUrl: './ingresar.css',
 })

@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EventType, VolunteerEvent } from '../../../models/event';
@@ -6,7 +6,7 @@ import { MOCK_VOLUNTARIOS_EVENTO } from '../../../mocks/mock_eventos';
 
 @Component({
   selector: 'app-eventos',
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [DatePipe, FormsModule],
   templateUrl: './eventos.html',
   styleUrl: './eventos.css',
 })
@@ -17,10 +17,13 @@ export class AdminEventos implements OnInit {
   showModal = signal(false);
   isEditing = signal(false);
   editingId: number | null = null;
-
   // Modal confirmación eliminar
   deleteId: number | null = null;
   showDelete = signal(false);
+  // Subida de imagen
+  selectedFile: File | null = null;
+  previewUrl: string | null = null;
+  isDragging = false;
 
   totalEvents = computed(() => this.events().length);
   upcoming = computed(() => this.events().filter(e => e.status === 'Próximo').length);
@@ -47,7 +50,7 @@ export class AdminEventos implements OnInit {
     );
   }
 
-  // ── Estadísticas ────────────────────────────
+  // Estadísticas
   voluntariosPorTipo(type: string): number {
     return this.events()
       .filter(e => e.type === type)
@@ -66,10 +69,12 @@ export class AdminEventos implements OnInit {
     return Math.max(...this.statTypes.map(t => this.eventosPorTipo(t)), 1);
   }
 
-  // ── Formulario ──────────────────────────────
+  // Formulario
   openCreate(): void {
     this.isEditing.set(false);
     this.form = this.emptyForm();
+    this.selectedFile = null;
+    this.previewUrl = null;
     this.showModal.set(true);
   }
 
@@ -80,9 +85,55 @@ export class AdminEventos implements OnInit {
       ...ev,
       requirementsText: (ev.requirements ?? []).join('\n')
     };
+    this.selectedFile = null;
+    this.previewUrl = ev.imageUrl ?? null;
     this.showModal.set(true);
   }
 
+  // ── Subida de imagen ────────────────────────
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    this.processFile(input.files[0]);
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragging = false;
+    const file = event.dataTransfer?.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    this.processFile(file);
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragging = true;
+  }
+
+  onDragLeave(): void { this.isDragging = false; }
+
+  private processFile(file: File): void {
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen no debe superar los 5MB.');
+      return;
+    }
+    this.selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.previewUrl = reader.result as string;
+      // Para mock: usamos base64 como imageUrl
+      // En producción: el backend devolverá la URL real tras subir con Multer
+      this.form.imageUrl = this.previewUrl;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeImage(): void {
+    this.selectedFile = null;
+    this.previewUrl = null;
+    this.form.imageUrl = '';
+  }
+  //Guardar
   save(): void {
     // Convertir requisitos de texto a array
     const reqs = (this.form.requirementsText ?? '')

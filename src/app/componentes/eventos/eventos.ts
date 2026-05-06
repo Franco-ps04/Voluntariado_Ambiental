@@ -3,14 +3,13 @@ import { VolunteerEvent } from '../../models/event';
 import { EventoService } from '../../services/evento-service';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EventoCard } from '../evento-card/evento-card';
 import { MapaVista } from '../mapa-vista/mapa-vista';
 
 @Component({
   selector: 'app-eventos',
-  imports: [CommonModule, FormsModule, EventoCard, MapaVista],
+  imports: [FormsModule, EventoCard, MapaVista],
   templateUrl: './eventos.html',
   styleUrl: './eventos.css',
 })

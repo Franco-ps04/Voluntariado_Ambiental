@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { EventoService } from '../../services/evento-service';
@@ -8,7 +7,7 @@ import { CardStats } from '../card-stats/card-stats';
 
 @Component({
   selector: 'app-inicio',
-  imports: [CommonModule, RouterLink, EventoCard, CardStats],
+  imports: [RouterLink, EventoCard, CardStats],
   templateUrl: './inicio.html',
   styleUrl: './inicio.css',
 })

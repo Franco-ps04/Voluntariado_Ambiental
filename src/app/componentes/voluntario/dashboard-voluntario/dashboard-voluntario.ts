@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -10,7 +10,7 @@ import { MOCK_CERTIFICADO } from '../../../mocks/mock_certificado';
 
 @Component({
   selector: 'app-dashboard-voluntario',
-  imports: [CommonModule, DatePipe, RouterLink, FormsModule],
+  imports: [DatePipe, RouterLink, FormsModule],
   templateUrl: './dashboard-voluntario.html',
   styleUrl: './dashboard-voluntario.css',
 })
