@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -9,13 +9,29 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './ingresar.html',
   styleUrl: './ingresar.css',
 })
-export class Ingresar {
+export class Ingresar implements OnInit {
   email = '';
   password = '';
   showPass = false;
   error = '';
 
-  constructor(private auth: AuthService, private router: Router) { }
+  constructor(private auth: AuthService, private router: Router) {}
+
+  ngOnInit(): void {
+    // Si ya está autenticado, redirigir según su rol
+    this.redirectIfLoggedIn();
+  }
+
+  private redirectIfLoggedIn(): void {
+    const user = this.auth.currentUser;
+    if (!user) return;
+    const rol = user.rol;
+    if (rol === 'admin' || rol === 'organizador') {
+      this.router.navigate(['/admin/eventos']);
+    } else if (rol === 'voluntario') {
+      this.router.navigate(['/voluntario/dashboard']);
+    }
+  }
 
   submit(): void {
     this.error = '';
@@ -25,19 +41,24 @@ export class Ingresar {
     }
     const ok = this.auth.login(this.email, this.password);
     if (ok) {
-      this.router.navigate([
-        this.auth.isAdmin() ? '/admin/eventos' : '/voluntario/dashboard'
-      ]);
+      const rol = this.auth.currentUser?.rol;
+      if (rol === 'admin' || rol === 'organizador') {
+        this.router.navigate(['/admin/eventos']);
+      } else {
+        this.router.navigate(['/voluntario/dashboard']);
+      }
       return;
     }
     this.error = 'Correo no encontrado. Usa el acceso rápido para presentar.';
   }
 
-  // ← Nombre exacto que usa login.html
   loginMock(role: 'voluntario' | 'admin'): void {
     this.auth.loginByRole(role);
-    this.router.navigate([
-      role === 'admin' ? '/admin/eventos' : '/voluntario/dashboard'
-    ]);
+    const rol = this.auth.currentUser?.rol;
+    if (rol === 'admin' || rol === 'organizador') {
+      this.router.navigate(['/admin/eventos']);
+    } else {
+      this.router.navigate(['/voluntario/dashboard']);
+    }
   }
 }

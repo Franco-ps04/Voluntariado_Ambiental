@@ -18,17 +18,40 @@ export class DashboardVoluntario implements OnInit {
   inscriptions = signal<Inscripcion[]>([]);
   searchText = '';
   cancelTarget: Inscripcion | null = null;
-
   badges = signal<Certificado[]>(MOCK_CERTIFICADO);
 
-  enrolledCount = computed(() => this.inscriptions().length);
-  participatedCount = computed(() => this.inscriptions().filter(i => i.status === 'Finalizado').length);
+  // ── Métricas principales ───────────────────────────────────
+  enrolledCount   = computed(() => this.inscriptions().length);
+  participatedCount = computed(() =>
+    this.inscriptions().filter(i => i.status === 'Finalizado').length
+  );
   badgeCount = computed(() => this.badges().length);
 
-  constructor(public auth: AuthService) { }
+  // ── Métricas de asistencia ─────────────────────────────────
+  asistenciasConfirmadas = computed(() =>
+    this.inscriptions().filter(i => i.asistio === true).length
+  );
+  noAsistencias = computed(() =>
+    this.inscriptions().filter(i => i.status === 'Finalizado' && i.asistio === false).length
+  );
+  sinRegistrar = computed(() =>
+    this.inscriptions().filter(i => i.status === 'Finalizado' && i.asistio == null).length
+  );
+  tasaAsistencia = computed((): number => {
+    const finalizados = this.inscriptions().filter(i => i.status === 'Finalizado');
+    if (finalizados.length === 0) return 0;
+    const asistidas = finalizados.filter(i => i.asistio === true).length;
+    return Math.round(asistidas / finalizados.length * 100);
+  });
+
+  /** Solo los eventos finalizados (para la tarjeta de asistencias) */
+  inscriptionsFinalizadas = computed(() =>
+    this.inscriptions().filter(i => i.status === 'Finalizado')
+  );
+
+  constructor(public auth: AuthService) {}
 
   ngOnInit(): void {
-    // Mock — reemplazar con inscriptionService.getMyInscriptions()
     this.inscriptions.set(MOCK_INSCRIPCIONES);
   }
 
@@ -41,21 +64,22 @@ export class DashboardVoluntario implements OnInit {
     );
   }
 
-  cancel(ins: Inscripcion): void {
-    if (!confirm('¿Deseas anular tu inscripción?')) return;
-    this.inscriptions.update(list => list.filter(i => i.id !== ins.id));
-  }
-
   statusClass(status: string): string {
     return status === 'Finalizado'
       ? 'bg-secondary-subtle text-secondary'
+      : status === 'Cancelado'
+      ? 'bg-danger-subtle text-danger'
       : 'bg-primary-subtle text-primary';
   }
 
   badgeClass(type: string = ''): string {
     const m: Record<string, string> = {
-      'Limpieza': 'badge-limpieza', 'Reforestación': 'badge-reforestacion',
-      'Taller': 'badge-taller', 'Reciclaje': 'badge-reciclaje'
+      'Limpieza':      'badge-limpieza',
+      'Reforestación': 'badge-reforestacion',
+      'Taller':        'badge-taller',
+      'Reciclaje':     'badge-reciclaje',
+      'Educación':     'badge-educacion',
+      'Conservación':  'badge-conservacion',
     };
     return m[type] ?? 'bg-secondary-subtle text-secondary';
   }
@@ -74,5 +98,18 @@ export class DashboardVoluntario implements OnInit {
       list.filter(i => i.id !== this.cancelTarget!.id)
     );
     this.cancelTarget = null;
+  }
+
+  asistenciaLabel(ins: Inscripcion): { texto: string; clase: string; icono: string } {
+    if (ins.status === 'Próximo') {
+      return { texto: '—', clase: 'text-muted', icono: '' };
+    }
+    if (ins.asistio === true) {
+      return { texto: 'Asistió', clase: 'text-success fw-medium', icono: 'bi-check-circle-fill' };
+    }
+    if (ins.asistio === false) {
+      return { texto: 'No asistió', clase: 'text-danger fw-medium', icono: 'bi-x-circle-fill' };
+    }
+    return { texto: 'Sin registrar', clase: 'text-muted fst-italic', icono: 'bi-dash-circle' };
   }
 }

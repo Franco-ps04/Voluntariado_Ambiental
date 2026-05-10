@@ -32,6 +32,13 @@
         class="px-3 py-2 rounded-3 text-decoration-none fw-medium text-dark">Mis eventos</a>
       <a routerLink="/voluntario/anuncios" routerLinkActive="active-link"
         class="px-3 py-2 rounded-3 text-decoration-none fw-medium text-dark">Anuncios</a>
+      <a routerLink="/voluntario/mensajes" routerLinkActive="active-link"
+        class="px-3 py-2 rounded-3 text-decoration-none fw-medium text-dark d-flex align-items-center gap-1">
+        Mensajes
+        @if (mensajesNoLeidos() > 0) {
+        <span class="badge bg-success rounded-pill" style="font-size:10px">{{ mensajesNoLeidos() }}</span>
+        }
+      </a>
       }
 
       <a routerLink="/contacto" routerLinkActive="active-link"
@@ -91,6 +98,13 @@
         eventos</a>
       <a routerLink="/voluntario/anuncios" (click)="closeMenu()"
         class="px-3 py-2 rounded-3 text-dark fw-medium">Anuncios</a>
+      <a routerLink="/voluntario/mensajes" (click)="closeMenu()"
+        class="px-3 py-2 rounded-3 text-dark fw-medium d-flex align-items-center gap-2">
+        Mensajes
+        @if (mensajesNoLeidos() > 0) {
+        <span class="badge bg-success rounded-pill" style="font-size:10px">{{ mensajesNoLeidos() }}</span>
+        }
+      </a>
       }
 
       <a routerLink="/contacto" (click)="closeMenu()" class="px-3 py-2 rounded-3 text-dark fw-medium">Contacto</a>

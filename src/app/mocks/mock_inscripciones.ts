@@ -1,5 +1,5 @@
 import { Inscripcion } from '../models/inscripciones';
-import { MOCK_VOLUNTARIOS_EVENTO} from './mock_eventos';
+import { MOCK_VOLUNTARIOS_EVENTO } from './mock_eventos';
 
 export const MOCK_INSCRIPCIONES: Inscripcion[] = [
   {
@@ -8,7 +8,8 @@ export const MOCK_INSCRIPCIONES: Inscripcion[] = [
     eventId: 1,
     enrolledAt: '2026-04-01',
     status: 'Finalizado',
-    event: MOCK_VOLUNTARIOS_EVENTO[0]
+    event: MOCK_VOLUNTARIOS_EVENTO[0],
+    asistio: true // ← evento pasado: ya tiene asistencia registrada
   },
   {
     id: 2,
@@ -16,7 +17,8 @@ export const MOCK_INSCRIPCIONES: Inscripcion[] = [
     eventId: 2,
     enrolledAt: '2026-04-12',
     status: 'Próximo',
-    event: MOCK_VOLUNTARIOS_EVENTO[1]
+    event: MOCK_VOLUNTARIOS_EVENTO[1],
+    asistio: false //evento futuro: sin registrar
   },
   {
     id: 3,
@@ -24,6 +26,7 @@ export const MOCK_INSCRIPCIONES: Inscripcion[] = [
     eventId: 3,
     enrolledAt: '2026-04-28',
     status: 'Próximo',
-    event: MOCK_VOLUNTARIOS_EVENTO[2]
+    event: MOCK_VOLUNTARIOS_EVENTO[2],
+    asistio: null
   }
 ];

@@ -13,7 +13,7 @@ export const MOCK_USERS: AuthUser[] = [
     id: 2,
     nombre:     'Administrador',
     email:    'admingreen@gmail.com',
-    telefono:    '',
+    telefono:    '231321456',
     rol:     'admin',
     token:    'mock-admin-token'
   },
@@ -21,7 +21,7 @@ export const MOCK_USERS: AuthUser[] = [
     id: 3,
     nombre:     'Diego Ramírez',
     email:    'organizador@gmail.com',
-    telefono:    '',
+    telefono:    '987150521',
     rol:     'organizador',
     token:    'mock-organizer-token'
   }

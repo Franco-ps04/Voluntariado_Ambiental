@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { CardStats } from '../../card-stats/card-stats';
 import { AdminService } from '../../../services/admin.service';
 import { AdminEvento } from '../../../models/admin_evento';
-import { EventoCard } from "../../evento-card/evento-card";
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -16,7 +16,9 @@ export class Dashboard implements OnInit {
   stats!: ReturnType<AdminService['getStats']>;
   events: AdminEvento[] = [];
 
-  constructor(private adminService: AdminService) { }
+  constructor(private adminService: AdminService, public auth: AuthService) {}
+
+  isAdmin(): boolean { return this.auth.currentUser?.rol === 'admin'; }
 
   ngOnInit(): void {
     this.stats = this.adminService.getStats();

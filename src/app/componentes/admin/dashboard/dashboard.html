@@ -1,7 +1,7 @@
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-0">Panel de administración</h2>
+            <h2 class="fw-bold mb-0">{{ isAdmin() ? 'Panel de administración' : 'Panel de organización' }}</h2>
             <p class="text-muted mb-0">{{ stats.totalEvents }} eventos registrados</p>
         </div>
         <a routerLink="/admin/create-event" class="btn btn-success">

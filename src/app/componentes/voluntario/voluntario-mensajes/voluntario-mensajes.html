@@ -1,0 +1,263 @@
+<div class="d-flex" style="height:calc(100vh - 64px);overflow:hidden">
+
+  <!-- ══ Panel izquierdo: lista de mensajes ══ -->
+  <div class="border-end bg-white d-flex flex-column"
+       style="width:320px;min-width:280px;overflow:hidden">
+
+    <!-- Cabecera -->
+    <div class="p-3 border-bottom flex-shrink-0">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Mis mensajes</h5>
+        @if (respuestasNoLeidas() > 0) {
+        <span class="badge bg-success rounded-pill">{{ respuestasNoLeidas() }} nuevas</span>
+        }
+      </div>
+      <!-- Filtros -->
+      <div class="d-flex gap-1 flex-wrap">
+        @for (f of [
+          {v:'todos',       l:'Todos'},
+          {v:'sin-leer',    l:'Sin leer'},
+          {v:'respondidos', l:'Respondidos'}
+        ]; track f.v) {
+        <button class="btn btn-sm rounded-pill"
+                [class.btn-success]="filtro === f.v"
+                [class.btn-outline-secondary]="filtro !== f.v"
+                (click)="filtro = $any(f.v)">{{ f.l }}</button>
+        }
+      </div>
+    </div>
+
+    <!-- Botón nuevo mensaje -->
+    <div class="px-3 py-2 border-bottom flex-shrink-0">
+      <button class="btn btn-success w-100 fw-medium" (click)="abrirModal()">
+        <i class="bi bi-pencil-square me-2"></i>Nueva consulta
+      </button>
+    </div>
+
+    <!-- Lista scrollable -->
+    <div class="overflow-y-auto flex-grow-1">
+      @for (m of misMensajes(); track m.id) {
+      <div class="p-3 border-bottom cursor-pointer"
+           [style.background]="selected()?.id === m.id ? '#f0fdf4'
+                              : tieneRespuestasNoLeidas(m) ? '#fafafa' : 'white'"
+           (click)="seleccionar(m)">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+          <span class="fw-semibold small text-truncate grow">{{ m.asunto }}</span>
+          @if (tieneRespuestasNoLeidas(m)) {
+          <span class="rounded-circle bg-success d-block flex-shrink-0"
+                style="width:8px;height:8px;margin-top:4px"></span>
+          }
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="badge rounded-pill" style="font-size:10px"
+                [class]="estadoLabel(m).clase">{{ estadoLabel(m).texto }}</span>
+          <span class="text-muted" style="font-size:10px">
+            {{ m.fecha | date:'dd MMM' }}
+          </span>
+        </div>
+        @if (m.eventoRelacionado) {
+        <p class="text-muted mb-0 mt-1 text-truncate" style="font-size:11px">
+          <i class="bi bi-calendar-event me-1 text-success"></i>{{ m.eventoRelacionado }}
+        </p>
+        }
+      </div>
+      }
+      @empty {
+      <div class="text-center text-muted py-5">
+        <i class="bi bi-envelope-open fs-1 d-block mb-2 opacity-50"></i>
+        <p class="small">No has enviado ningún mensaje.</p>
+        <button class="btn btn-sm btn-outline-success" (click)="abrirModal()">
+          Enviar primera consulta
+        </button>
+      </div>
+      }
+    </div>
+  </div>
+
+  <!-- ══ Panel derecho: conversación ══ -->
+  <div class="flex-grow-1 overflow-y-auto p-4 bg-light">
+    @if (selected(); as m) {
+
+    <!-- Mensaje original enviado por el voluntario -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+      <div class="d-flex align-items-start justify-content-between mb-3">
+        <div>
+          <h5 class="fw-bold mb-1">{{ m.asunto }}</h5>
+          <div class="d-flex gap-2 align-items-center flex-wrap">
+            <span class="badge rounded-pill" [class]="estadoLabel(m).clase"
+                  style="font-size:11px">{{ estadoLabel(m).texto }}</span>
+            @if (m.eventoRelacionado) {
+            <span class="badge bg-success-subtle text-success rounded-pill" style="font-size:11px">
+              <i class="bi bi-calendar-event me-1"></i>{{ m.eventoRelacionado }}
+            </span>
+            }
+          </div>
+        </div>
+        <span class="text-muted small flex-shrink-0">
+          {{ m.fecha | date:'dd MMM yyyy, h:mm a' }}
+        </span>
+      </div>
+
+      <!-- Tu mensaje original -->
+      <div class="rounded-3 p-3 mb-0" style="background:#f0fdf4;border-left:3px solid #2d9e5f">
+        <p class="small fw-semibold text-success mb-2">
+          <i class="bi bi-person-fill me-1"></i>Tu mensaje
+        </p>
+        <p class="text-dark mb-0" style="line-height:1.8;white-space:pre-wrap">{{ m.mensaje }}</p>
+      </div>
+    </div>
+
+    <!-- Historial de respuestas del admin/organizador -->
+    @if ((m.historial ?? []).length > 0) {
+    <div class="mb-3">
+      <p class="small fw-semibold text-muted mb-3 px-1">
+        <i class="bi bi-chat-dots-fill text-success me-1"></i>
+        Respuesta{{ (m.historial ?? []).length > 1 ? 's' : '' }} del equipo
+        ({{ (m.historial ?? []).length }})
+      </p>
+      @for (resp of m.historial ?? []; track resp.fecha) {
+      <div class="card border-0 shadow-sm rounded-4 p-4 mb-3"
+           style="border-left:3px solid #3b82f6 !important">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <div class="rounded-circle bg-primary-subtle text-primary fw-bold
+                      d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:32px;height:32px;font-size:12px">A</div>
+          <div>
+            <p class="fw-semibold mb-0 small">Equipo GreenUnity</p>
+            <p class="text-muted mb-0" style="font-size:11px">
+              {{ resp.fecha | date:'dd MMM yyyy, h:mm a' }}
+            </p>
+          </div>
+        </div>
+        <p class="text-dark mb-0 ms-5" style="white-space:pre-wrap;font-size:13px">
+          {{ resp.texto }}
+        </p>
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Si no hay respuestas aún -->
+    @if (!m.respondido) {
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 text-center"
+         style="background:#fefce8;border:1px solid #fef08a !important">
+      <p class="text-warning-emphasis mb-0 small">
+        <i class="bi bi-clock me-1"></i>
+        Tu consulta está pendiente de respuesta. Te notificaremos cuando el equipo responda.
+      </p>
+    </div>
+    }
+
+    } @else {
+    <!-- Empty state -->
+    <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+      <div class="text-center">
+        <i class="bi bi-envelope-open fs-1 d-block mb-3 opacity-50"></i>
+        <p class="fw-medium mb-1">Selecciona un mensaje para verlo</p>
+        <p class="small mb-3">o envía una nueva consulta al equipo</p>
+        <button class="btn btn-success px-4" (click)="abrirModal()">
+          <i class="bi bi-pencil-square me-2"></i>Nueva consulta
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+</div>
+
+<!-- ══ MODAL: Nueva consulta ══ -->
+@if (showModal) {
+<div class="gu-modal-backdrop" (click)="cerrarModal()"></div>
+<div class="gu-modal-panel" style="max-width:500px;padding:0;overflow:hidden">
+
+  <!-- Header -->
+  <div class="p-4 pb-3" style="background:linear-gradient(135deg,#2d9e5f,#1e7a48)">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h5 class="text-white fw-bold mb-1">
+          <i class="bi bi-pencil-square me-2"></i>Nueva consulta
+        </h5>
+        <p class="text-white-50 mb-0 small">Envía tu mensaje al equipo de GreenUnity</p>
+      </div>
+      <button class="btn-close btn-close-white" (click)="cerrarModal()"></button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="p-4">
+    <!-- Destinatario -->
+    <div class="mb-3">
+      <label class="form-label small fw-semibold">Destinatario</label>
+      <div class="d-flex flex-column gap-2">
+        @for (d of destinatarios; track d.email) {
+        <label class="d-flex align-items-center gap-3 p-3 rounded-3 cursor-pointer"
+               [style.border]="destinatarioSel?.email === d.email
+                 ? '2px solid #2d9e5f' : '2px solid #e5e7eb'"
+               [style.background]="destinatarioSel?.email === d.email ? '#f0fdf4' : 'white'">
+          <input type="radio" class="d-none" [value]="d" [(ngModel)]="destinatarioSel">
+          <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white flex-shrink-0"
+               [style.background]="d.tipo === 'admin' ? '#2d9e5f' : '#3b82f6'"
+               style="width:36px;height:36px;font-size:14px">
+            {{ d.nombre.charAt(0) }}
+          </div>
+          <div>
+            <p class="fw-semibold mb-0 small">{{ d.label }}</p>
+            <p class="text-muted mb-0" style="font-size:11px">
+              {{ d.tipo === 'admin' ? 'Administrador' : 'Organizador' }}
+            </p>
+          </div>
+          @if (destinatarioSel?.email === d.email) {
+          <i class="bi bi-check-circle-fill text-success ms-auto"></i>
+          }
+        </label>
+        }
+      </div>
+    </div>
+
+    <!-- Evento relacionado (opcional) -->
+    <div class="mb-3">
+      <label class="form-label small fw-semibold">
+        Evento relacionado <span class="text-muted fw-normal">(opcional)</span>
+      </label>
+      <select class="form-select" [(ngModel)]="eventoSel">
+        <option value="">— Sin evento específico —</option>
+        @for (ev of eventos; track ev) {
+        <option [value]="ev">{{ ev }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Asunto -->
+    <div class="mb-3">
+      <label class="form-label small fw-semibold">Asunto</label>
+      <input class="form-control" [(ngModel)]="nuevoAsunto"
+             placeholder="Ej: Consulta sobre el evento de limpieza">
+    </div>
+
+    <!-- Mensaje -->
+    <div class="mb-4">
+      <label class="form-label small fw-semibold">Mensaje</label>
+      <textarea class="form-control" rows="5" style="resize:none"
+                [(ngModel)]="nuevoMensaje"
+                placeholder="Describe tu consulta o duda..."></textarea>
+    </div>
+
+    <!-- Botones -->
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary flex-fill" (click)="cerrarModal()">
+        Cancelar
+      </button>
+      @if (enviandoNuevo) {
+      <button class="btn btn-light flex-fill fw-semibold" disabled>
+        <i class="bi bi-check-circle-fill text-success me-1"></i>¡Enviado!
+      </button>
+      } @else {
+      <button class="btn btn-success flex-fill fw-semibold"
+              (click)="enviarNuevo()"
+              [disabled]="!nuevoAsunto.trim() || !nuevoMensaje.trim() || !destinatarioSel">
+        <i class="bi bi-send me-1"></i>Enviar consulta
+      </button>
+      }
+    </div>
+  </div>
+</div>
+}

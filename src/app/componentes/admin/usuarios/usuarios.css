@@ -1,0 +1,11 @@
+.user-row {
+    transition: background .1s;
+}
+
+.user-row:hover {
+    background: #f8fafc;
+}
+
+.text-white-75 {
+    color: rgba(255, 255, 255, .75);
+}
