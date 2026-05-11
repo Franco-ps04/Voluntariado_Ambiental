@@ -97,7 +97,8 @@
                 {v:'suspendido', l:'Suspendido'}
                 ]; track e.v) {
                 <button class="btn btn-sm rounded-pill" [class.btn-success]="filtroEstado === e.v"
-                    [class.btn-outline-secondary]="filtroEstado !== e.v" (click)="filtroEstado = $any(e.v)">{{ e.l }}</button>
+                    [class.btn-outline-secondary]="filtroEstado !== e.v" (click)="filtroEstado = $any(e.v)">{{ e.l
+                    }}</button>
                 }
             </div>
         </div>
@@ -283,10 +284,6 @@
             <div>
                 <label class="form-label small fw-medium">Teléfono</label>
                 <input class="form-control" [(ngModel)]="editForm.telefono">
-            </div>
-            <div>
-                <label class="form-label small fw-medium">Distrito</label>
-                <input class="form-control" [(ngModel)]="editForm.distrito" placeholder="Ej: Miraflores, Lima">
             </div>
 
             <!-- Cambio de rol (voluntario ↔ organizador) -->

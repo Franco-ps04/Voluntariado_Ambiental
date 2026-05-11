@@ -5,7 +5,7 @@
        style="width:320px;min-width:280px;overflow:hidden">
 
     <!-- Cabecera -->
-    <div class="p-3 border-bottom flex-shrink-0">
+    <div class="p-3 border-bottom shrink-0">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="fw-bold mb-0">Mis mensajes</h5>
         @if (respuestasNoLeidas() > 0) {
@@ -28,14 +28,14 @@
     </div>
 
     <!-- Botón nuevo mensaje -->
-    <div class="px-3 py-2 border-bottom flex-shrink-0">
+    <div class="px-3 py-2 border-bottom shrink-0">
       <button class="btn btn-success w-100 fw-medium" (click)="abrirModal()">
         <i class="bi bi-pencil-square me-2"></i>Nueva consulta
       </button>
     </div>
 
     <!-- Lista scrollable -->
-    <div class="overflow-y-auto flex-grow-1">
+    <div class="overflow-y-auto grow">
       @for (m of misMensajes(); track m.id) {
       <div class="p-3 border-bottom cursor-pointer"
            [style.background]="selected()?.id === m.id ? '#f0fdf4'
@@ -44,7 +44,7 @@
         <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
           <span class="fw-semibold small text-truncate grow">{{ m.asunto }}</span>
           @if (tieneRespuestasNoLeidas(m)) {
-          <span class="rounded-circle bg-success d-block flex-shrink-0"
+          <span class="rounded-circle bg-success d-block shrink-0"
                 style="width:8px;height:8px;margin-top:4px"></span>
           }
         </div>
@@ -75,7 +75,7 @@
   </div>
 
   <!-- ══ Panel derecho: conversación ══ -->
-  <div class="flex-grow-1 overflow-y-auto p-4 bg-light">
+  <div class="grow overflow-y-auto p-4 bg-light">
     @if (selected(); as m) {
 
     <!-- Mensaje original enviado por el voluntario -->
@@ -93,7 +93,7 @@
             }
           </div>
         </div>
-        <span class="text-muted small flex-shrink-0">
+        <span class="text-muted small shrink-0">
           {{ m.fecha | date:'dd MMM yyyy, h:mm a' }}
         </span>
       </div>
@@ -120,7 +120,7 @@
            style="border-left:3px solid #3b82f6 !important">
         <div class="d-flex align-items-center gap-2 mb-2">
           <div class="rounded-circle bg-primary-subtle text-primary fw-bold
-                      d-flex align-items-center justify-content-center flex-shrink-0"
+                      d-flex align-items-center justify-content-center shrink-0"
                style="width:32px;height:32px;font-size:12px">A</div>
           <div>
             <p class="fw-semibold mb-0 small">Equipo GreenUnity</p>
@@ -194,7 +194,7 @@
                  ? '2px solid #2d9e5f' : '2px solid #e5e7eb'"
                [style.background]="destinatarioSel?.email === d.email ? '#f0fdf4' : 'white'">
           <input type="radio" class="d-none" [value]="d" [(ngModel)]="destinatarioSel">
-          <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white flex-shrink-0"
+          <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white shrink-0"
                [style.background]="d.tipo === 'admin' ? '#2d9e5f' : '#3b82f6'"
                style="width:36px;height:36px;font-size:14px">
             {{ d.nombre.charAt(0) }}

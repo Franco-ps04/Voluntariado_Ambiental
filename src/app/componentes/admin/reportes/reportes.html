@@ -47,17 +47,14 @@
         @for (b of tipoBarras; track b.label) {
         <div class="d-flex flex-column align-items-center gap-1 flex-fill">
           <span class="fw-bold" style="font-size:11px;color:#374151">{{ b.value }}</span>
-          <div class="w-100 rounded-top-2 d-flex align-items-end"
-               style="transition:height .4s ease"
-               [style.height]="(b.pct * 1.4) + 'px'"
-               [style.background-color]="b.color + '22'"
-               [style.border]="'2px solid ' + b.color">
-            <div class="w-100 rounded-top-2"
-                 [style.height]="(b.pct * 1.4) + 'px'"
-                 [style.background-color]="b.color"
-                 style="opacity:0.85"></div>
+          <div class="w-100 rounded-top-2 d-flex align-items-end" style="transition:height .4s ease"
+            [style.height]="(b.pct * 1.4) + 'px'" [style.background-color]="b.color + '22'"
+            [style.border]="'2px solid ' + b.color">
+            <div class="w-100 rounded-top-2" [style.height]="(b.pct * 1.4) + 'px'" [style.background-color]="b.color"
+              style="opacity:0.85"></div>
           </div>
-          <span class="text-muted text-center" style="font-size:10px;line-height:1.2;word-break:break-word;max-width:52px">{{ b.label }}</span>
+          <span class="text-muted text-center"
+            style="font-size:10px;line-height:1.2;word-break:break-word;max-width:52px">{{ b.label }}</span>
         </div>
         }
       </div>
@@ -72,16 +69,14 @@
         @for (b of eventoBarras; track b.label) {
         <div class="d-flex flex-column align-items-center gap-1 flex-fill">
           <span class="fw-bold" style="font-size:11px;color:#374151">{{ b.value }}</span>
-          <div class="w-100 rounded-top-2 d-flex align-items-end"
-               [style.height]="(b.pct * 1.4) + 'px'"
-               [style.background-color]="b.color + '22'"
-               [style.border]="'2px solid ' + b.color">
-            <div class="w-100 rounded-top-2"
-                 [style.height]="(b.pct * 1.4) + 'px'"
-                 [style.background-color]="b.color"
-                 style="opacity:0.85"></div>
+          <div class="w-100 rounded-top-2 d-flex align-items-end" [style.height]="(b.pct * 1.4) + 'px'"
+            [style.background-color]="b.color + '22'" [style.border]="'2px solid ' + b.color">
+            <div class="w-100 rounded-top-2" [style.height]="(b.pct * 1.4) + 'px'" [style.background-color]="b.color"
+              style="opacity:0.85"></div>
           </div>
-          <span class="text-muted text-center" style="font-size:10px;line-height:1.2;max-width:52px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">{{ b.label }}</span>
+          <span class="text-muted text-center"
+            style="font-size:10px;line-height:1.2;max-width:52px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">{{
+            b.label }}</span>
         </div>
         }
       </div>
@@ -96,20 +91,20 @@
     <div class="card border-0 shadow-sm rounded-3 p-4 h-100">
       <h6 class="fw-bold mb-3">Top eventos por ocupación</h6>
       @for (ev of topEventos; track ev.titulo) {
-        <div class="mb-3">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="small fw-medium text-truncate me-2" style="max-width:200px">
-              {{ ev.titulo }}
-            </span>
-            <span class="small text-muted shrink-0">
-              {{ ev.inscritos }} / {{ ev.capacidad }} · {{ ev.pct }}%
-            </span>
-          </div>
-          <div class="progress" style="height:6px;border-radius:99px">
-            <div class="progress-bar bg-success" style="border-radius:99px;transition:width .3s"
-                 [style.width]="ev.pct + '%'"></div>
-          </div>
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="small fw-medium text-truncate me-2" style="max-width:200px">
+            {{ ev.titulo }}
+          </span>
+          <span class="small text-muted shrink-0">
+            {{ ev.inscritos }} / {{ ev.capacidad }} · {{ ev.pct }}%
+          </span>
         </div>
+        <div class="progress" style="height:6px;border-radius:99px">
+          <div class="progress-bar bg-success" style="border-radius:99px;transition:width .3s"
+            [style.width]="ev.pct + '%'"></div>
+        </div>
+      </div>
       }
     </div>
   </div>
@@ -119,18 +114,18 @@
     <div class="card border-0 shadow-sm rounded-3 p-4 h-100">
       <h6 class="fw-bold mb-3">Participación por tipo de evento</h6>
       @for (t of tipoStats; track t.tipo) {
-        @if (t.count > 0) {
-        <div class="mb-3">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="small fw-medium">{{ t.tipo }}</span>
-            <span class="small text-muted fw-semibold">{{ t.count }}</span>
-          </div>
-          <div class="progress" style="height:6px;border-radius:99px">
-            <div class="progress-bar bg-primary" style="border-radius:99px;transition:width .3s"
-                 [style.width]="t.pct + '%'"></div>
-          </div>
+      @if (t.count > 0) {
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="small fw-medium">{{ t.tipo }}</span>
+          <span class="small text-muted fw-semibold">{{ t.count }}</span>
         </div>
-        }
+        <div class="progress" style="height:6px;border-radius:99px">
+          <div class="progress-bar bg-primary" style="border-radius:99px;transition:width .3s"
+            [style.width]="t.pct + '%'"></div>
+        </div>
+      </div>
+      }
       }
     </div>
   </div>
@@ -150,33 +145,122 @@
       </thead>
       <tbody>
         @for (v of voluntariosTop; track v.nombre; let i = $index) {
-          <tr>
-            <td class="text-muted fw-bold">{{ i + 1 }}</td>
-            <td>
-              <div class="d-flex align-items-center gap-2">
-                <div class="rounded-circle d-flex align-items-center justify-content-center
-                            text-white fw-bold shrink-0"
-                     [style.background]="v.color"
-                     style="width:32px;height:32px;font-size:12px">
-                  {{ v.iniciales }}
-                </div>
-                <span class="fw-medium">{{ v.nombre }}</span>
+        <tr>
+          <td class="text-muted fw-bold">{{ i + 1 }}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="rounded-circle d-flex align-items-center justify-content-center
+                            text-white fw-bold shrink-0" [style.background]="v.color"
+                style="width:32px;height:32px;font-size:12px">
+                {{ v.iniciales }}
               </div>
-            </td>
-            <td>
-              <div class="d-flex align-items-center gap-2">
-                <span class="fw-semibold">{{ v.eventos }}</span>
-                <div class="progress grow" style="height:4px;border-radius:99px;max-width:80px">
-                  <div class="progress-bar bg-success"
-                       [style.width]="(v.eventos / 25 * 100) + '%'"></div>
-                </div>
+              <span class="fw-medium">{{ v.nombre }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <span class="fw-semibold">{{ v.eventos }}</span>
+              <div class="progress grow" style="height:4px;border-radius:99px;max-width:80px">
+                <div class="progress-bar bg-success" [style.width]="(v.eventos / 25 * 100) + '%'"></div>
               </div>
-            </td>
-          </tr>
+            </div>
+          </td>
+        </tr>
         }
         @empty {
         <tr>
           <td colspan="3" class="text-center text-muted py-4">Sin datos de voluntarios.</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ Reporte de participación por evento ══ -->
+<div class="card border-0 shadow-sm rounded-3 p-4 mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+      <h6 class="fw-bold mb-1">Reporte de participación por evento</h6>
+      <p class="text-muted small mb-0">Historial completo · {{ reporteFiltrado().length }} evento{{
+        reporteFiltrado().length !== 1 ? 's' : '' }} · {{ totalParticipacion() }} participaciones totales</p>
+    </div>
+    <div class="d-flex gap-1">
+      @for (f of [{v:'todos',l:'Todos'},{v:'Finalizado',l:'Finalizados'},{v:'Próximo',l:'Próximos'}]; track f.v) {
+      <button class="btn btn-sm rounded-pill" [class.btn-success]="filtroReporte === f.v"
+        [class.btn-outline-secondary]="filtroReporte !== f.v" (click)="filtroReporte = $any(f.v)">{{ f.l }}</button>
+      }
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table align-middle mb-0" style="font-size:13px">
+      <thead class="table-light">
+        <tr>
+          <th>Evento</th>
+          <th>Tipo</th>
+          <th>Fecha</th>
+          <th>Inscritos / Cap.</th>
+          <th>% Ocupación</th>
+          <th>Asistieron</th>
+          <th>% Asistencia</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of reporteFiltrado(); track r.id) {
+        <tr>
+          <td class="fw-medium small" style="max-width:200px">
+            <div class="d-flex align-items-center gap-2">
+              <div class="rounded-2 hrink-0" [style.background]="r.color + '22'"
+                [style.border]="'1.5px solid ' + r.color" style="width:8px;height:32px"></div>
+              <span class="text-truncate" style="max-width:160px" [title]="r.titulo">{{ r.titulo }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="badge rounded-pill" style="font-size:11px" [style.background]="r.color + '22'"
+              [style.color]="r.color" [style.border]="'1px solid ' + r.color">
+              {{ r.tipo }}
+            </span>
+          </td>
+          <td class="text-muted small">{{ r.fecha | date:'dd MMM yyyy' }}</td>
+          <td class="fw-medium small">
+            {{ r.inscritos }} / {{ r.capacidad }}
+          </td>
+          <td style="min-width:110px">
+            <div class="d-flex align-items-center gap-2">
+              <div class="progress grow" style="height:5px;border-radius:99px">
+                <div class="progress-bar" style="border-radius:99px" [style.width]="r.pctOcupacion + '%'"
+                  [style.background]="r.color"></div>
+              </div>
+              <span class="small fw-semibold" style="min-width:32px">{{ r.pctOcupacion }}%</span>
+            </div>
+          </td>
+          <td class="small">
+            @if (r.pctAsistencia > 0) {
+            <span class="fw-medium text-success">{{ r.asistieron }}</span>
+            <span class="text-muted"> / {{ r.inscritos }}</span>
+            } @else {
+            <span class="text-muted fst-italic">Pendiente</span>
+            }
+          </td>
+          <td style="min-width:110px">
+            @if (r.pctAsistencia > 0) {
+            <div class="d-flex align-items-center gap-2">
+              <div class="progress grow" style="height:5px;border-radius:99px">
+                <div class="progress-bar bg-success" style="border-radius:99px" [style.width]="r.pctAsistencia + '%'">
+                </div>
+              </div>
+              <span class="small fw-semibold text-success" style="min-width:32px">{{ r.pctAsistencia }}%</span>
+            </div>
+            } @else {
+            <span class="text-muted small">—</span>
+            }
+          </td>
+        </tr>
+        }
+        @empty {
+        <tr>
+          <td colspan="7" class="text-center text-muted py-4">Sin eventos para este filtro.</td>
         </tr>
         }
       </tbody>

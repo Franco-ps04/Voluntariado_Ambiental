@@ -20,6 +20,8 @@ export class AdminEventos implements OnInit {
   // Modal confirmación eliminar
   deleteId: number | null = null;
   showDelete = signal(false);
+  showFinalizar = signal(false);
+  eventoAFinalizar = signal<VolunteerEvent | null>(null);
   // Subida de imagen
   selectedFile: File | null = null;
   previewUrl: string | null = null;
@@ -182,6 +184,31 @@ export class AdminEventos implements OnInit {
     this.events.update(list => list.filter(e => e.id !== this.deleteId));
     this.deleteId = null;
     this.showDelete.set(false);
+  }
+
+  pedirFinalizar(ev: VolunteerEvent): void {
+    this.eventoAFinalizar.set(ev);
+    this.showFinalizar.set(true);
+  }
+
+  confirmarFinalizar(): void {
+    const ev = this.eventoAFinalizar();
+    if (!ev) return;
+    this.events.update(list =>
+      list.map(e => e.id === ev.id ? { ...e, status: 'Finalizado' as const } : e)
+    );
+    this.showFinalizar.set(false);
+    this.eventoAFinalizar.set(null);
+  }
+
+  statusClass(status: string): string {
+    const m: Record<string, string> = {
+      'Próximo': 'bg-primary-subtle text-primary',
+      'En curso': 'bg-warning-subtle text-warning',
+      'Finalizado': 'bg-secondary-subtle text-secondary',
+      'Cancelado': 'bg-danger-subtle text-danger',
+    };
+    return m[status] ?? 'bg-secondary-subtle text-secondary';
   }
 
   badgeClass(type: string): string {
