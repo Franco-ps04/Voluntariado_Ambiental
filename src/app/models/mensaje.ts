@@ -15,6 +15,6 @@ export interface MensajeAdmin {
     respuesta?: string;
     fechaResp?: string;
     eventoRelacionado?: string;
-    /** Historial de respuestas del admin */
-    historial?: { texto: string; fecha: string }[];
+    /** Historial de la conversación (admin responde, voluntario hace seguimiento) */
+    historial?: { texto: string; fecha: string; tipo: 'admin' | 'voluntario' }[];
 }

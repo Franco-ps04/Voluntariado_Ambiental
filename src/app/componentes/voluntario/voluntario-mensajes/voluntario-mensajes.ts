@@ -5,12 +5,13 @@ import { MensajeAdmin } from '../../../models/mensaje';
 import { MensajesService } from '../../../services/mensajes.service';
 import { AuthService } from '../../../services/auth.service';
 import { MOCK_VOLUNTARIOS_EVENTO } from '../../../mocks/mock_eventos';
+import { VolunteerEvent } from '../../../models/event';
 
-interface DestinatarioOpcion {
-  label: string;
-  nombre: string;
-  email: string;
-  tipo: 'admin' | 'organizador';
+interface Borrador {
+  asunto: string;
+  mensaje: string;
+  eventoId: number | null;
+  guardadoEn: string;
 }
 
 @Component({
@@ -22,40 +23,27 @@ interface DestinatarioOpcion {
 export class VoluntarioMensajes implements OnInit {
   selected = signal<MensajeAdmin | null>(null);
   filtro: 'todos' | 'sin-leer' | 'respondidos' = 'todos';
-  respuestaTexto = '';
-  enviando = false;
 
-  // Modal nuevo mensaje
+  // Modal nueva consulta
   showModal = false;
   nuevoAsunto = '';
   nuevoMensaje = '';
-  destinatarioSel: DestinatarioOpcion | null = null;
-  eventoSel = '';
+  eventoSelId: number | null = null;
   enviandoNuevo = false;
+  borradorGuardado = false;
+  borrador: Borrador | null = null;
 
-  // Destinatarios disponibles
-  readonly destinatarios: DestinatarioOpcion[] = [
-    {
-      label: 'Administrador GreenUnity',
-      nombre: 'Administrador',
-      email: 'admingreen@gmail.com',
-      tipo: 'admin'
-    },
-    {
-      label: 'Diego Ramírez (Organizador - Verde Lima)',
-      nombre: 'Diego Ramírez',
-      email: 'organizador@gmail.com',
-      tipo: 'organizador'
-    }
-  ];
+  // Seguimiento dentro del hilo
+  seguimientoTexto = '';
+  enviandoSeguimiento = false;
 
-  // Lista de eventos del mock (para vincular)
-  readonly eventos = MOCK_VOLUNTARIOS_EVENTO.map(e => e.title);
+  // Eventos del mock para el selector
+  readonly todosEventos: VolunteerEvent[] = MOCK_VOLUNTARIOS_EVENTO;
 
   constructor(
     public mensajesService: MensajesService,
     public auth: AuthService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     const mis = this.misMensajes();
@@ -66,6 +54,13 @@ export class VoluntarioMensajes implements OnInit {
     return this.auth.currentUser?.id ?? 0;
   }
 
+  // ── Organizer info cuando se selecciona un evento ─────────────
+  get eventoSeleccionado(): VolunteerEvent | null {
+    if (!this.eventoSelId) return null;
+    return this.todosEventos.find(e => e.id === this.eventoSelId) ?? null;
+  }
+
+  // ── Lista ──────────────────────────────────────────────────────
   misMensajes(): MensajeAdmin[] {
     const todos = this.mensajesService.getMisMensajes(this.idUsuario);
     switch (this.filtro) {
@@ -84,50 +79,88 @@ export class VoluntarioMensajes implements OnInit {
 
   seleccionar(m: MensajeAdmin): void {
     this.mensajesService.marcarLeidoPorVoluntario(m.id);
-    this.respuestaTexto = '';
-    this.enviando = false;
-    // tomar versión actualizada del signal
+    this.seguimientoTexto = '';
+    this.enviandoSeguimiento = false;
     const actualizado = this.mensajesService.mensajes()
       .find(x => x.id === m.id) ?? m;
     this.selected.set({ ...actualizado, leidoPorVoluntario: true });
   }
 
-  // ── Enviar nueva consulta ───────────────────────────────────
+  // ── Seguimiento dentro del hilo ────────────────────────────────
+  enviarSeguimiento(): void {
+    const m = this.selected();
+    if (!this.seguimientoTexto.trim() || !m) return;
+    this.mensajesService.enviarSeguimiento(m.id, this.seguimientoTexto);
+    // Actualizar selected con la versión más reciente
+    const actualizado = this.mensajesService.mensajes().find(x => x.id === m.id);
+    if (actualizado) this.selected.set({ ...actualizado, leidoPorVoluntario: true });
+    this.seguimientoTexto = '';
+    this.enviandoSeguimiento = true;
+    setTimeout(() => (this.enviandoSeguimiento = false), 2000);
+  }
+
+  // ── Modal nueva consulta ────────────────────────────────────────
   abrirModal(): void {
     this.showModal = true;
-    this.nuevoAsunto = '';
-    this.nuevoMensaje = '';
-    this.destinatarioSel = this.destinatarios[0];
-    this.eventoSel = '';
+    this.borradorGuardado = false;
     this.enviandoNuevo = false;
+    if (this.borrador) {
+      this.nuevoAsunto = this.borrador.asunto;
+      this.nuevoMensaje = this.borrador.mensaje;
+      this.eventoSelId = this.borrador.eventoId;
+    } else {
+      this.nuevoAsunto = '';
+      this.nuevoMensaje = '';
+      this.eventoSelId = null;
+    }
   }
 
   cerrarModal(): void {
     this.showModal = false;
   }
 
+  guardarBorrador(): void {
+    if (!this.nuevoAsunto.trim() && !this.nuevoMensaje.trim()) return;
+    this.borrador = {
+      asunto: this.nuevoAsunto,
+      mensaje: this.nuevoMensaje,
+      eventoId: this.eventoSelId,
+      guardadoEn: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
+    };
+    this.borradorGuardado = true;
+    setTimeout(() => (this.borradorGuardado = false), 2500);
+  }
+
+  descartarBorrador(): void {
+    this.borrador = null;
+    this.nuevoAsunto = '';
+    this.nuevoMensaje = '';
+    this.eventoSelId = null;
+  }
+
   enviarNuevo(): void {
-    if (!this.nuevoAsunto.trim() || !this.nuevoMensaje.trim() || !this.destinatarioSel) return;
+    if (!this.nuevoAsunto.trim() || !this.nuevoMensaje.trim()) return;
     const user = this.auth.currentUser!;
+    const evento = this.eventoSeleccionado;
     this.mensajesService.enviarMensaje({
       idRemitente: user.id,
       remitente: user.nombre,
       emailRemitente: user.email,
       asunto: this.nuevoAsunto,
       mensaje: this.nuevoMensaje,
-      eventoRelacionado: this.eventoSel || undefined
+      eventoRelacionado: evento?.title
     });
+    this.borrador = null;
     this.enviandoNuevo = true;
     setTimeout(() => {
       this.showModal = false;
       this.enviandoNuevo = false;
-      // Seleccionar el mensaje recién enviado
       const mis = this.misMensajes();
       if (mis.length > 0) this.seleccionar(mis[0]);
     }, 1200);
   }
 
-  // ── Helpers UI ──────────────────────────────────────────────
+  // ── Helpers UI ─────────────────────────────────────────────────
   tieneRespuestasNoLeidas(m: MensajeAdmin): boolean {
     return (m.historial ?? []).length > 0 && !m.leidoPorVoluntario;
   }
@@ -137,6 +170,15 @@ export class VoluntarioMensajes implements OnInit {
       return { texto: 'Nueva respuesta', clase: 'bg-success text-white' };
     if (m.respondido)
       return { texto: 'Respondido', clase: 'bg-secondary-subtle text-secondary' };
-    return { texto: 'Sin respuesta', clase: 'bg-warning-subtle text-warning' };
+    return { texto: 'Pendiente', clase: 'bg-warning-subtle text-warning' };
   }
+
+  formularioValido(): boolean {
+    return !!(this.nuevoAsunto.trim() && this.nuevoMensaje.trim());
+  }
+
+  mostrarPendiente(m: MensajeAdmin): boolean {
+  return !m.respondido && (m.historial ?? []).every(h => h.tipo !== 'admin');
 }
+}
+

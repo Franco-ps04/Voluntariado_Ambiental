@@ -45,15 +45,27 @@ export class MensajesService {
     this._mensajes.update(list =>
       list.map(m => {
         if (m.id !== id || m.origen !== origen) return m;
-        const nuevoHistorial = [...(m.historial ?? []), { texto, fecha: now }];
+        const nuevoHistorial = [...(m.historial ?? []), { texto, fecha: now, tipo: 'admin' as const }];
         return {
           ...m,
           respondido: true,
           respuesta: texto,
           fechaResp: now,
           historial: nuevoHistorial,
-          leidoPorVoluntario: false   // al responder, el voluntario aún no leyó
+          leidoPorVoluntario: false
         };
+      })
+    );
+  }
+
+  /** El voluntario agrega un seguimiento dentro del hilo (no es un mensaje nuevo) */
+  enviarSeguimiento(id: number, texto: string): void {
+    const now = new Date().toISOString();
+    this._mensajes.update(list =>
+      list.map(m => {
+        if (m.id !== id) return m;
+        const nuevoHistorial = [...(m.historial ?? []), { texto, fecha: now, tipo: 'voluntario' as const }];
+        return { ...m, historial: nuevoHistorial, leido: false };
       })
     );
   }

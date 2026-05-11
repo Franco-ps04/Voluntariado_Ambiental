@@ -37,7 +37,8 @@ export const MOCK_MENSAJES: MensajeAdmin[] = [
         historial: [
             {
                 texto: 'Hola, ya verificamos tu inscripción. Ya debería aparecer en tu dashboard.',
-                fecha: new Date(Date.now() - 80000000).toISOString()
+                fecha: new Date(Date.now() - 80000000).toISOString(),
+                tipo: 'admin' as const
             }
         ]
     },
