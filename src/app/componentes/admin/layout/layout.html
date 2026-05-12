@@ -11,42 +11,41 @@
   </div>
 
   <p class="text-white-50 px-2 mb-2"
-     style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:600">
+    style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:600">
     @if (isAdmin()) { Administración } @else { Organización }
   </p>
 
   <!-- Rutas compartidas: admin + organizador -->
-  <a routerLink="/admin/eventos"       routerLinkActive="active" class="sidebar-link">
+  <a routerLink="/admin/eventos" routerLinkActive="active" class="sidebar-link">
     <i class="bi bi-calendar-event-fill"></i> Eventos
   </a>
   <a routerLink="/admin/inscripciones" routerLinkActive="active" class="sidebar-link">
     <i class="bi bi-people-fill"></i> Inscripción
   </a>
+  <a routerLink="/admin/notificaciones" routerLinkActive="active" class="sidebar-link">
+    <i class="bi bi-envelope-fill"></i> Mensajes
+    @if (sinLeerPanel() > 0) {
+    <span class="badge bg-danger rounded-pill ms-auto" style="font-size:10px">
+      {{ sinLeerPanel() }}
+    </span>
+    }
+  </a>
 
   <!-- Rutas exclusivas del admin -->
   @if (isAdmin()) {
-    <a routerLink="/admin/usuarios" routerLinkActive="active" class="sidebar-link">
-      <i class="bi bi-person-badge-fill"></i> Usuarios
-    </a>
-    <a routerLink="/admin/notificaciones" routerLinkActive="active" class="sidebar-link">
-      <i class="bi bi-envelope-fill"></i> Mensajes
-      @if (sinLeer > 0) {
-        <span class="badge bg-danger rounded-pill ms-auto" style="font-size:10px">
-          {{ sinLeer }}
-        </span>
-      }
-    </a>
-    <a routerLink="/admin/reportes" routerLinkActive="active" class="sidebar-link">
-      <i class="bi bi-bar-chart-fill"></i> Reportes
-    </a>
+  <a routerLink="/admin/usuarios" routerLinkActive="active" class="sidebar-link">
+    <i class="bi bi-person-badge-fill"></i> Usuarios
+  </a>
+  <a routerLink="/admin/reportes" routerLinkActive="active" class="sidebar-link">
+    <i class="bi bi-bar-chart-fill"></i> Reportes
+  </a>
   }
 
   <!-- Usuario al fondo -->
   <div class="admin-user-section">
     <div class="d-flex align-items-center gap-2 mb-2 px-1">
       <div class="rounded-circle bg-success d-flex align-items-center justify-content-center
-                  text-white fw-bold shrink-0"
-           style="width:32px;height:32px;font-size:12px">
+                  text-white fw-bold shrink-0" style="width:32px;height:32px;font-size:12px">
         {{ getInitials() }}
       </div>
       <div style="min-width:0">

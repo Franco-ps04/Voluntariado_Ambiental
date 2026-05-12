@@ -8,12 +8,33 @@ export class MensajesService {
 
   readonly mensajes = this._mensajes.asReadonly();
 
-  /** Para el admin: cuántos mensajes sin leer */
+  /** Para el admin: cuántos mensajes sin leer dirigidos a él (id=2) + contactos */
   readonly sinLeer = computed(() =>
-    this._mensajes().filter(m => !m.leido).length
+    this._mensajes().filter(m =>
+      !m.leido && (m.idDestinatario === 2 || m.origen === 'contacto')
+    ).length
   );
 
-  /** Para el voluntario: cuántas respuestas del admin no leídas por el voluntario */
+  /** Mensajes sin leer para un organizador específico */
+  sinLeerPara(idUsuario: number): number {
+    return this._mensajes().filter(m =>
+      !m.leido && m.idDestinatario === idUsuario
+    ).length;
+  }
+
+  /** Mensajes visibles para el panel admin/org según su rol e id */
+  getMensajesPanel(idUsuario: number, rol: string): MensajeAdmin[] {
+    if (rol === 'admin') {
+      // Admin ve: mensajes dirigidos a él + todos los contactos públicos
+      return this._mensajes().filter(m =>
+        m.idDestinatario === idUsuario || m.origen === 'contacto'
+      );
+    }
+    // Organizador: solo mensajes dirigidos a él
+    return this._mensajes().filter(m => m.idDestinatario === idUsuario);
+  }
+
+  /** Para el voluntario: cuántas respuestas del admin/org no leídas */
   sinRespuestasNoLeidas(idUsuario: number): number {
     return this._mensajes().filter(m =>
       m.idRemitente === idUsuario &&
@@ -30,7 +51,7 @@ export class MensajesService {
     );
   }
 
-  // ── Admin actions ──────────────────────────────────────────
+  // ── Admin / Org actions ────────────────────────────────────
 
   marcarLeido(id: number, origen: string): void {
     this._mensajes.update(list =>
@@ -58,23 +79,11 @@ export class MensajesService {
     );
   }
 
-  /** El voluntario agrega un seguimiento dentro del hilo (no es un mensaje nuevo) */
-  enviarSeguimiento(id: number, texto: string): void {
-    const now = new Date().toISOString();
-    this._mensajes.update(list =>
-      list.map(m => {
-        if (m.id !== id) return m;
-        const nuevoHistorial = [...(m.historial ?? []), { texto, fecha: now, tipo: 'voluntario' as const }];
-        return { ...m, historial: nuevoHistorial, leido: false };
-      })
-    );
-  }
-
   // ── Voluntario actions ─────────────────────────────────────
 
-  /** El voluntario envía un nuevo mensaje */
   enviarMensaje(params: {
     idRemitente: number;
+    idDestinatario: number;
     remitente: string;
     emailRemitente: string;
     asunto: string;
@@ -85,6 +94,7 @@ export class MensajesService {
     const nuevo: MensajeAdmin = {
       id: nuevoId,
       idRemitente: params.idRemitente,
+      idDestinatario: params.idDestinatario,
       leidoPorVoluntario: true,
       origen: 'mensaje',
       remitente: params.remitente,
@@ -100,7 +110,17 @@ export class MensajesService {
     this._mensajes.update(list => [nuevo, ...list]);
   }
 
-  /** Voluntario abre un mensaje → marcar respuestas como leídas */
+  enviarSeguimiento(id: number, texto: string): void {
+    const now = new Date().toISOString();
+    this._mensajes.update(list =>
+      list.map(m => {
+        if (m.id !== id) return m;
+        const nuevoHistorial = [...(m.historial ?? []), { texto, fecha: now, tipo: 'voluntario' as const }];
+        return { ...m, historial: nuevoHistorial, leido: false };
+      })
+    );
+  }
+
   marcarLeidoPorVoluntario(id: number): void {
     this._mensajes.update(list =>
       list.map(m =>

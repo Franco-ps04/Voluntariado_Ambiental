@@ -1,9 +1,11 @@
 import { MensajeAdmin } from '../models/mensaje';
 
+// idDestinatario: 2 = Admin, 3 = Organizador Diego Ramírez
 export const MOCK_MENSAJES: MensajeAdmin[] = [
     {
         id: 1, origen: 'mensaje',
-        idRemitente: 1, leidoPorVoluntario: false,
+        idRemitente: 1, idDestinatario: 2,
+        leidoPorVoluntario: false,
         remitente: 'Geeanfranco Geeal Cruz Marin',
         emailRemitente: 'franco@gmail.com',
         asunto: 'Consulta sobre evento de limpieza',
@@ -14,6 +16,7 @@ export const MOCK_MENSAJES: MensajeAdmin[] = [
     },
     {
         id: 2, origen: 'contacto',
+        idDestinatario: 2,
         leidoPorVoluntario: false,
         remitente: 'Juan Pérez',
         emailRemitente: 'juan@gmail.com',
@@ -25,7 +28,8 @@ export const MOCK_MENSAJES: MensajeAdmin[] = [
     },
     {
         id: 3, origen: 'mensaje',
-        idRemitente: 1, leidoPorVoluntario: true,
+        idRemitente: 1, idDestinatario: 2,
+        leidoPorVoluntario: true,
         remitente: 'Geeanfranco Geeal Cruz Marin',
         emailRemitente: 'franco@gmail.com',
         asunto: 'Problema con mi inscripción',
@@ -44,6 +48,7 @@ export const MOCK_MENSAJES: MensajeAdmin[] = [
     },
     {
         id: 4, origen: 'contacto',
+        idDestinatario: 2,
         leidoPorVoluntario: false,
         remitente: 'ONG Naturaleza Viva',
         emailRemitente: 'ong@naturaleza.com',
@@ -52,5 +57,38 @@ export const MOCK_MENSAJES: MensajeAdmin[] = [
         fecha: new Date(Date.now() - 172800000).toISOString(),
         leido: true, respondido: false,
         historial: []
+    },
+    // Mensajes dirigidos al organizador (id=3)
+    {
+        id: 5, origen: 'mensaje',
+        idRemitente: 1, idDestinatario: 3,
+        leidoPorVoluntario: false,
+        remitente: 'Geeanfranco Geeal Cruz Marin',
+        emailRemitente: 'franco@gmail.com',
+        asunto: 'Consulta sobre Reforestación en Chosica',
+        mensaje: '¿Se necesita experiencia previa para la actividad de reforestación?',
+        eventoRelacionado: 'Reforestación en Chosica',
+        fecha: new Date(Date.now() - 5400000).toISOString(),
+        leido: false, respondido: false,
+        historial: []
+    },
+    {
+        id: 6, origen: 'mensaje',
+        idRemitente: 1, idDestinatario: 3,
+        leidoPorVoluntario: true,
+        remitente: 'Geeanfranco Geeal Cruz Marin',
+        emailRemitente: 'franco@gmail.com',
+        asunto: 'Punto de encuentro del taller',
+        mensaje: '¿Cuál es el punto exacto de encuentro para el taller de reciclaje?',
+        eventoRelacionado: 'Taller de Reciclaje Creativo',
+        fecha: new Date(Date.now() - 90000000).toISOString(),
+        leido: true, respondido: true,
+        historial: [
+            {
+                texto: 'Hola, el punto de encuentro es en la puerta principal del centro cultural, te esperamos a las 9am.',
+                fecha: new Date(Date.now() - 85000000).toISOString(),
+                tipo: 'admin' as const
+            }
+        ]
     }
 ];

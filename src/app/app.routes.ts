@@ -52,7 +52,7 @@ export const routes: Routes = [
         children: [
             { path: 'eventos', component: AdminEventos },
             { path: 'inscripciones', component: AdminInscripciones },
-            { path: 'notificaciones', component: AdminNotificacion, canActivate: [roleGuard], data: { roles: ['admin'] } },
+            { path: 'notificaciones', component: AdminNotificacion },
             //ruta solo para admin
             { path: 'usuarios', component: Usuarios, canActivate: [roleGuard], data: { roles: ['admin'] }},
             {path: 'reportes', component: Reportes, canActivate: [roleGuard], data: {roles: ['admin']}},

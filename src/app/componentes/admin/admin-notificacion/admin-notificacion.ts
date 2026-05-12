@@ -1,8 +1,9 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MensajeAdmin } from '../../../models/mensaje';
 import { MensajesService } from '../../../services/mensajes.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-admin-notificacion',
@@ -12,47 +13,58 @@ import { MensajesService } from '../../../services/mensajes.service';
 })
 export class AdminNotificacion implements OnInit {
   selected = signal<MensajeAdmin | null>(null);
-  filtro: 'todos' | 'sin-leer' | 'mensaje' | 'contacto' = 'todos';
+  filtro: 'todos' | 'sin-leer' | 'mensaje' = 'todos';
   respuestaTexto = '';
   enviando = false;
 
-  constructor(public mensajesService: MensajesService) {}
+  constructor(
+    public mensajesService: MensajesService,
+    public auth: AuthService
+  ) { }
 
   ngOnInit(): void {
-    const primera = this.mensajesService.mensajes()[0];
-    if (primera) this.select(primera);
+    const lista = this.filtrados();
+    if (lista.length > 0) this.select(lista[0]);
+  }
+
+  private get miId(): number {
+    return this.auth.currentUser?.id ?? 0;
+  }
+
+  private get miRol(): string {
+    return this.auth.currentUser?.rol ?? '';
+  }
+
+  /** Mensajes que corresponden al usuario actual según su rol */
+  private get misMensajesPanel(): MensajeAdmin[] {
+    return this.mensajesService.getMensajesPanel(this.miId, this.miRol);
   }
 
   filtrados(): MensajeAdmin[] {
-    return this.mensajesService.mensajes().filter(m => {
+    return this.misMensajesPanel.filter(m => {
       if (this.filtro === 'sin-leer') return !m.leido;
-      if (this.filtro === 'mensaje')  return m.origen === 'mensaje';
-      if (this.filtro === 'contacto') return m.origen === 'contacto';
-      return true;
+      if (this.filtro === 'mensaje') return m.origen === 'mensaje';
+      return true; // 'todos'
     });
   }
 
+  sinLeer(): number {
+    return this.misMensajesPanel.filter(m => !m.leido).length;
+  }
+
   select(m: MensajeAdmin): void {
-    if (!m.leido) {
-      this.mensajesService.marcarLeido(m.id, m.origen);
-    }
+    if (!m.leido) this.mensajesService.marcarLeido(m.id, m.origen);
     this.respuestaTexto = '';
     this.enviando = false;
-    // Obtener la versión actualizada del mensaje
     const actualizado = this.mensajesService.mensajes()
       .find(x => x.id === m.id && x.origen === m.origen) ?? m;
     this.selected.set({ ...actualizado, leido: true });
-  }
-
-  sinLeer(): number {
-    return this.mensajesService.sinLeer();
   }
 
   responder(): void {
     const m = this.selected();
     if (!this.respuestaTexto.trim() || !m) return;
     this.mensajesService.responder(m.id, m.origen, this.respuestaTexto);
-    // Actualizar el selected con la versión más reciente
     const actualizado = this.mensajesService.mensajes()
       .find(x => x.id === m.id && x.origen === m.origen);
     if (actualizado) this.selected.set({ ...actualizado });
@@ -61,13 +73,7 @@ export class AdminNotificacion implements OnInit {
     setTimeout(() => (this.enviando = false), 2000);
   }
 
-  origenLabel(m: MensajeAdmin): string {
-    return m.origen === 'contacto' ? 'Formulario de contacto' : 'Voluntario registrado';
-  }
-
   origenClass(m: MensajeAdmin): string {
-    return m.origen === 'contacto'
-      ? 'bg-primary-subtle text-primary'
-      : 'bg-success-subtle text-success';
+    return 'bg-success-subtle text-success';
   }
 }

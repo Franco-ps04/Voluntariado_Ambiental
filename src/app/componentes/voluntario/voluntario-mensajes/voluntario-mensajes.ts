@@ -1,16 +1,19 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MensajeAdmin } from '../../../models/mensaje';
 import { MensajesService } from '../../../services/mensajes.service';
 import { AuthService } from '../../../services/auth.service';
-import { MOCK_VOLUNTARIOS_EVENTO } from '../../../mocks/mock_eventos';
-import { VolunteerEvent } from '../../../models/event';
+import { Inscripcion } from '../../../models/inscripciones';
+import { MOCK_INSCRIPCIONES } from '../../../mocks/mock_inscripciones';
+
+type DestinoTipo = 'admin' | 'evento';
 
 interface Borrador {
   asunto: string;
   mensaje: string;
-  eventoId: number | null;
+  destinoTipo: DestinoTipo;
+  eventoInscripcionId: number | null;
   guardadoEn: string;
 }
 
@@ -28,7 +31,8 @@ export class VoluntarioMensajes implements OnInit {
   showModal = false;
   nuevoAsunto = '';
   nuevoMensaje = '';
-  eventoSelId: number | null = null;
+  destinoTipo: DestinoTipo = 'admin';
+  eventoInscripcionId: number | null = null;
   enviandoNuevo = false;
   borradorGuardado = false;
   borrador: Borrador | null = null;
@@ -37,13 +41,20 @@ export class VoluntarioMensajes implements OnInit {
   seguimientoTexto = '';
   enviandoSeguimiento = false;
 
-  // Eventos del mock para el selector
-  readonly todosEventos: VolunteerEvent[] = MOCK_VOLUNTARIOS_EVENTO;
+  // Inscripciones del voluntario (solo las activas/próximas)
+  readonly misInscripciones: Inscripcion[];
+
+  // IDs fijos (en backend vendrán de la BD)
+  private readonly ID_ADMIN = 2;
 
   constructor(
     public mensajesService: MensajesService,
     public auth: AuthService
-  ) { }
+  ) {
+    this.misInscripciones = MOCK_INSCRIPCIONES.filter(
+      i => i.userId === (auth.currentUser?.id ?? 0)
+    );
+  }
 
   ngOnInit(): void {
     const mis = this.misMensajes();
@@ -54,13 +65,29 @@ export class VoluntarioMensajes implements OnInit {
     return this.auth.currentUser?.id ?? 0;
   }
 
-  // ── Organizer info cuando se selecciona un evento ─────────────
-  get eventoSeleccionado(): VolunteerEvent | null {
-    if (!this.eventoSelId) return null;
-    return this.todosEventos.find(e => e.id === this.eventoSelId) ?? null;
+  // ── Inscripción seleccionada → info del organizador ──────────
+  get inscripcionSel(): Inscripcion | null {
+    if (!this.eventoInscripcionId) return null;
+    return this.misInscripciones.find(i => i.id === this.eventoInscripcionId) ?? null;
   }
 
-  // ── Lista ──────────────────────────────────────────────────────
+  get nombreDestinatario(): string {
+    if (this.destinoTipo === 'admin') return 'Administrador GreenUnity';
+    return this.inscripcionSel?.event?.organizerName ?? 'Organizador';
+  }
+
+  get emailDestinatario(): string {
+    if (this.destinoTipo === 'admin') return 'admingreen@greenunity.pe';
+    return 'organizador@gmail.com';
+  }
+
+  /** Id del usuario destino: admin=2, organizador=3 (mock) */
+  private get idDestinatario(): number {
+    if (this.destinoTipo === 'admin') return this.ID_ADMIN;
+    return 3; // mock: único org. En backend: buscar org del evento
+  }
+
+  // ── Lista ─────────────────────────────────────────────────────
   misMensajes(): MensajeAdmin[] {
     const todos = this.mensajesService.getMisMensajes(this.idUsuario);
     switch (this.filtro) {
@@ -81,17 +108,15 @@ export class VoluntarioMensajes implements OnInit {
     this.mensajesService.marcarLeidoPorVoluntario(m.id);
     this.seguimientoTexto = '';
     this.enviandoSeguimiento = false;
-    const actualizado = this.mensajesService.mensajes()
-      .find(x => x.id === m.id) ?? m;
+    const actualizado = this.mensajesService.mensajes().find(x => x.id === m.id) ?? m;
     this.selected.set({ ...actualizado, leidoPorVoluntario: true });
   }
 
-  // ── Seguimiento dentro del hilo ────────────────────────────────
+  // ── Seguimiento en el hilo ────────────────────────────────────
   enviarSeguimiento(): void {
     const m = this.selected();
     if (!this.seguimientoTexto.trim() || !m) return;
     this.mensajesService.enviarSeguimiento(m.id, this.seguimientoTexto);
-    // Actualizar selected con la versión más reciente
     const actualizado = this.mensajesService.mensajes().find(x => x.id === m.id);
     if (actualizado) this.selected.set({ ...actualizado, leidoPorVoluntario: true });
     this.seguimientoTexto = '';
@@ -99,7 +124,7 @@ export class VoluntarioMensajes implements OnInit {
     setTimeout(() => (this.enviandoSeguimiento = false), 2000);
   }
 
-  // ── Modal nueva consulta ────────────────────────────────────────
+  // ── Modal ─────────────────────────────────────────────────────
   abrirModal(): void {
     this.showModal = true;
     this.borradorGuardado = false;
@@ -107,16 +132,21 @@ export class VoluntarioMensajes implements OnInit {
     if (this.borrador) {
       this.nuevoAsunto = this.borrador.asunto;
       this.nuevoMensaje = this.borrador.mensaje;
-      this.eventoSelId = this.borrador.eventoId;
+      this.destinoTipo = this.borrador.destinoTipo;
+      this.eventoInscripcionId = this.borrador.eventoInscripcionId;
     } else {
       this.nuevoAsunto = '';
       this.nuevoMensaje = '';
-      this.eventoSelId = null;
+      this.destinoTipo = 'admin';
+      this.eventoInscripcionId = null;
     }
   }
 
-  cerrarModal(): void {
-    this.showModal = false;
+  cerrarModal(): void { this.showModal = false; }
+
+  cambiarDestino(tipo: DestinoTipo): void {
+    this.destinoTipo = tipo;
+    if (tipo === 'admin') this.eventoInscripcionId = null;
   }
 
   guardarBorrador(): void {
@@ -124,7 +154,8 @@ export class VoluntarioMensajes implements OnInit {
     this.borrador = {
       asunto: this.nuevoAsunto,
       mensaje: this.nuevoMensaje,
-      eventoId: this.eventoSelId,
+      destinoTipo: this.destinoTipo,
+      eventoInscripcionId: this.eventoInscripcionId,
       guardadoEn: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
     };
     this.borradorGuardado = true;
@@ -135,20 +166,21 @@ export class VoluntarioMensajes implements OnInit {
     this.borrador = null;
     this.nuevoAsunto = '';
     this.nuevoMensaje = '';
-    this.eventoSelId = null;
+    this.destinoTipo = 'admin';
+    this.eventoInscripcionId = null;
   }
 
   enviarNuevo(): void {
-    if (!this.nuevoAsunto.trim() || !this.nuevoMensaje.trim()) return;
+    if (!this.formularioValido()) return;
     const user = this.auth.currentUser!;
-    const evento = this.eventoSeleccionado;
     this.mensajesService.enviarMensaje({
       idRemitente: user.id,
+      idDestinatario: this.idDestinatario,
       remitente: user.nombre,
       emailRemitente: user.email,
       asunto: this.nuevoAsunto,
       mensaje: this.nuevoMensaje,
-      eventoRelacionado: evento?.title
+      eventoRelacionado: this.inscripcionSel?.event?.title
     });
     this.borrador = null;
     this.enviandoNuevo = true;
@@ -160,7 +192,7 @@ export class VoluntarioMensajes implements OnInit {
     }, 1200);
   }
 
-  // ── Helpers UI ─────────────────────────────────────────────────
+  // ── Helpers UI ────────────────────────────────────────────────
   tieneRespuestasNoLeidas(m: MensajeAdmin): boolean {
     return (m.historial ?? []).length > 0 && !m.leidoPorVoluntario;
   }
@@ -174,11 +206,13 @@ export class VoluntarioMensajes implements OnInit {
   }
 
   formularioValido(): boolean {
-    return !!(this.nuevoAsunto.trim() && this.nuevoMensaje.trim());
+    if (!this.nuevoAsunto.trim() || !this.nuevoMensaje.trim()) return false;
+    if (this.destinoTipo === 'evento' && !this.eventoInscripcionId) return false;
+    return true;
   }
 
   mostrarPendiente(m: MensajeAdmin): boolean {
-  return !m.respondido && (m.historial ?? []).every(h => h.tipo !== 'admin');
-}
+    return !m.respondido && (m.historial ?? []).every(h => h.tipo !== 'admin');
+  }
 }
 

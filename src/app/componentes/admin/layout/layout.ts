@@ -14,7 +14,7 @@ export class AdminLayout {
     public auth: AuthService,
     private router: Router,
     public mensajesService: MensajesService
-  ) {}
+  ) { }
 
   isAdmin(): boolean { return this.auth.currentUser?.rol === 'admin'; }
   isOrganizador(): boolean { return this.auth.currentUser?.rol === 'organizador'; }
@@ -29,6 +29,13 @@ export class AdminLayout {
   logout(): void {
     this.auth.logout();
     this.router.navigate(['/admin/ingresar']);
+  }
+
+  /* Badge de mensajes sin leer según el rol del usuario actual */
+  sinLeerPanel(): number {
+    const user = this.auth.currentUser;
+    if (!user) return 0;
+    return this.mensajesService.sinLeerPara(user.id);
   }
 
   get sinLeer(): number {

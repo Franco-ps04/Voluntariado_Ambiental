@@ -2,6 +2,8 @@ export interface MensajeAdmin {
     id: number;
     /** id del Usuario que envió el mensaje (Voluntario); undefined para contactos anónimos */
     idRemitente?: number;
+    /** id del Usuario al que va dirigido el mensaje (admin u organizador) */
+    idDestinatario?: number;
     /** Si el voluntario ya leyó las respuestas del admin */
     leidoPorVoluntario?: boolean;
     origen: 'mensaje' | 'contacto';
