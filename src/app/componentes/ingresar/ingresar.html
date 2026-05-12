@@ -12,7 +12,7 @@
     </div>
 
     <!-- Google (visual) -->
-    <button class="btn btn-outline-secondary w-100 mb-3 d-flex align-items-center justify-content-center gap-2">
+    <!-- <button class="btn btn-outline-secondary w-100 mb-3 d-flex align-items-center justify-content-center gap-2">
       <svg width="18" height="18" viewBox="0 0 24 24">
         <path
           d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -28,9 +28,9 @@
           fill="#EA4335" />
       </svg>
       Continuar con Google
-    </button>
+    </button> -->
 
-    <div class="text-center text-muted small mb-3">— o con tu correo —</div>
+    <!-- <div class="text-center text-muted small mb-3">— o con tu correo —</div> -->
 
     @if (error) {
     <div class="alert alert-danger py-2 small">{{ error }}</div>
@@ -67,22 +67,5 @@
       ¿No tienes cuenta?
       <a routerLink="/registrarse" class="text-success fw-semibold">Regístrate gratis</a>
     </p>
-
-    <!-- Acceso rápido presentación -->
-    <div class="p-3 rounded-3 border" style="background:#f8fffe;border-color:#bbf7d0!important">
-      <p class="small fw-semibold text-muted mb-2 d-flex align-items-center gap-1">
-        <i class="bi bi-lightning-charge-fill text-warning"></i>
-        Acceso rápido (presentación)
-      </p>
-      <div class="d-flex gap-2">
-        <button class="btn btn-outline-success btn-sm flex-fill fw-medium" (click)="loginMock('voluntario')">
-          <i class="bi bi-person me-1"></i>Voluntario
-        </button>
-        <button class="btn btn-sm flex-fill fw-medium" style="background:#0d1b2a;color:#fff;border:none"
-          (click)="loginMock('admin')">
-          <i class="bi bi-shield me-1"></i>Admin
-        </button>
-      </div>
-    </div>
   </div>
 </div>
