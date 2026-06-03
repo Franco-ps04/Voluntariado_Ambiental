@@ -16,15 +16,21 @@ function passwordMatchValidator(g: AbstractControl): ValidationErrors | null {
   styleUrl: './registrarse.css',
 })
 export class Registrarse {
+
   form: FormGroup;
   loading = signal(false);
   error = signal('');
 
-  constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private auth: AuthService,
+    private router: Router
+  ) {
+
     this.form = this.fb.group({
       fullName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      phone: ['', Validators.required],
+      phone: ['', [Validators.required, Validators.pattern(/^\d{9}$/)]],
       password: ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: ['', Validators.required],
       acceptTerms: [false, Validators.requiredTrue]
@@ -37,12 +43,32 @@ export class Registrarse {
   }
 
   submit(): void {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
     this.loading.set(true);
-    // Mock — simular registro exitoso
-    setTimeout(() => {
-      this.loading.set(false);
-      this.router.navigate(['/ingresar']);
-    }, 800);
+    this.error.set('');
+
+    const data = {
+      nombre: this.form.value.fullName,
+      email: this.form.value.email,
+      password: this.form.value.password,
+      telefono: this.form.value.phone
+    };
+    //Llama HTTP del backend
+    this.auth.register(data).subscribe({
+      next: () => {
+        this.loading.set(false);
+        //Logueao automatico
+        this.router.navigate(['/']);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.error.set(
+          err.error?.message || 'Error al registrarse. Intentalo nuevamente.'
+        );
+      }
+    });
   }
 }

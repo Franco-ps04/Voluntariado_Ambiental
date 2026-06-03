@@ -4,28 +4,31 @@ export const ADMIN_INSCRIPTIONS_MOCK: AdminInscription[] = [
   {
     id: 1,
     eventId: 1,
-    eventTitle: 'Limpieza de río Rímac',
     volunteerName: 'Geeanfranco Geeal',
     volunteerEmail: 'franco@gmail.com',
+    volunteerPhone: '112321456',
     registeredAt: '15/04/2026',
-    status: 'Inscrito'
+    estado: 'Inscrito',
+    asistio: true
   },
   {
     id: 2,
     eventId: 1,
-    eventTitle: 'Limpieza de río Rímac',
     volunteerName: 'Ana Torres',
     volunteerEmail: 'ana@gmail.com',
+    volunteerPhone: '987456123',
     registeredAt: '15/04/2026',
-    status: 'Inscrito'
+    estado: 'Inscrito',
+    asistio: true
   },
   {
     id: 3,
     eventId: 2,
-    eventTitle: 'Jornada de reciclaje comunitario',
     volunteerName: 'Luis Gómez',
     volunteerEmail: 'luis@gmail.com',
+    volunteerPhone: '741258963',
     registeredAt: '16/04/2026',
-    status: 'Asistió'
+    estado: 'Inscrito',
+    asistio: null
   }
 ];

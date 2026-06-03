@@ -6,6 +6,7 @@ export const MOCK_CERTIFICADO: Certificado[] = [
         nombre: 'Primera participación',
         fecha: '19/03/26',
         razon: '1er participación',
+        cantidad: 1,
         color: 'success'
     },
     {
@@ -13,6 +14,7 @@ export const MOCK_CERTIFICADO: Certificado[] = [
         nombre: 'Participante bronce I',
         fecha: '01/04/26',
         razon: '5 participación',
+        cantidad: 5,
         color: 'primary'
     },
 ];

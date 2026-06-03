@@ -74,8 +74,8 @@ export class Reportes implements OnInit {
     // ── Reporte por evento ─────────────────────────────────────
     this.reporteEventos = evts.map(e => {
       const eventInscs = inscripciones.filter(i => i.eventId === e.id);
-      const asistieron = eventInscs.filter(i => i.status === 'Asistió').length;
-      const noAsistieron = eventInscs.filter(i => i.status === 'Inscrito').length;
+      const asistieron = eventInscs.filter(i => i.estado === 'Asistió').length;
+      const noAsistieron = eventInscs.filter(i => i.estado === 'Inscrito').length;
       const pctOcupacion = Math.round(e.enrolledCount / e.maxVolunteers * 100);
       const pctAsistencia = eventInscs.length > 0
         ? Math.round(asistieron / eventInscs.length * 100)

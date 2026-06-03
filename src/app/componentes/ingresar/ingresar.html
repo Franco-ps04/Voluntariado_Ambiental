@@ -59,8 +59,12 @@
       </div>
     </div>
 
-    <button class="btn btn-success w-100 py-2 fw-semibold mb-3" (click)="submit()">
+    <button class="btn btn-success w-100 py-2 fw-semibold mb-3" (click)="submit()" [disabled]="loading">
+      @if(loading){
+      <span class="spinner-border spinner-border-sm me-2"></span>Ingresando...
+      }@else{
       Ingresar
+      }
     </button>
 
     <p class="text-center small text-muted mb-4">

@@ -3,5 +3,6 @@ export interface Certificado {
   nombre: string;
   fecha: string;
   razon: string;
+  cantidad: number;
   color: string;
 }

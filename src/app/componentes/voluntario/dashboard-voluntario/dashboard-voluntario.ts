@@ -7,6 +7,8 @@ import { Inscripcion } from '../../../models/inscripciones';
 import { MOCK_INSCRIPCIONES } from '../../../mocks/mock_inscripciones';
 import { Certificado } from '../../../models/certificado';
 import { MOCK_CERTIFICADO } from '../../../mocks/mock_certificado';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-dashboard-voluntario',
@@ -18,13 +20,12 @@ export class DashboardVoluntario implements OnInit {
   inscriptions = signal<Inscripcion[]>([]);
   searchText = '';
   cancelTarget: Inscripcion | null = null;
-  badges = signal<Certificado[]>(MOCK_CERTIFICADO);
+  badges = signal<Certificado[]>([]);
+  loading = false;
 
   // ── Métricas principales ───────────────────────────────────
-  enrolledCount   = computed(() => this.inscriptions().length);
-  participatedCount = computed(() =>
-    this.inscriptions().filter(i => i.status === 'Finalizado').length
-  );
+  enrolledCount = computed(() => this.inscriptions().length);
+  participatedCount = computed(() => this.inscriptions().filter(i => i.status === 'Finalizado').length);
   badgeCount = computed(() => this.badges().length);
 
   // ── Métricas de asistencia ─────────────────────────────────
@@ -49,10 +50,58 @@ export class DashboardVoluntario implements OnInit {
     this.inscriptions().filter(i => i.status === 'Finalizado')
   );
 
-  constructor(public auth: AuthService) {}
+  constructor(public auth: AuthService, private http: HttpClient) { }
 
   ngOnInit(): void {
-    this.inscriptions.set(MOCK_INSCRIPCIONES);
+    /* this.inscriptions.set(MOCK_INSCRIPCIONES); */
+    this.loading = true;
+    // Inscripciones desde el backend
+    this.http.get<any[]>(`${environment.apiUrl}/inscripciones/mis`).subscribe({
+      next: (data) => {
+        this.loading = false;
+        this.inscriptions.set(data.map(d => ({
+          id: d.id_inscripcion,
+          userId: this.auth.currentUser?.id ?? 0,
+          eventId: d.id_evento,
+          enrolledAt: d.fecha_inscripcion,
+          status: d.estado as any,
+          asistio: d.asistio === 1 ? true : d.asistio === 0 ? false : null,
+          event: {
+            id: d.id_evento,
+            title: d.titulo,
+            description: d.descripcion,
+            type: d.tipo,
+            date: d.fecha,
+            time: d.hora,
+            location: d.ubicacion,
+            maxVolunteers: d.capacidad,
+            enrolledCount: d.inscritos,
+            organizerName: d.organizador,
+            imageUrl: d.imagen_url ?? '',
+            status: d.estado as any,
+            requirements: [],
+            latitude: d.latitud ?? 0,
+            longitude: d.longitud ?? 0
+          }
+        })));
+      },
+      error: () => { this.loading = false; this.inscriptions.set(MOCK_INSCRIPCIONES); }
+    });
+
+    // Certificados desde el backend
+    this.http.get<any[]>(`${environment.apiUrl}/certificados/mis`).subscribe({
+      next: (data) => {
+        this.badges.set(data.map(c => ({
+          id: c.id_certificado,
+          nombre: c.titulo,
+          razon: c.motivo,
+          color: c.color,
+          cantidad: c.cantidad_participacion,
+          fecha: c.fecha_emision
+        })));
+      },
+      error: () => this.badges.set(MOCK_CERTIFICADO)
+    });
   }
 
   filtered(): Inscripcion[] {
@@ -68,18 +117,18 @@ export class DashboardVoluntario implements OnInit {
     return status === 'Finalizado'
       ? 'bg-secondary-subtle text-secondary'
       : status === 'Cancelado'
-      ? 'bg-danger-subtle text-danger'
-      : 'bg-primary-subtle text-primary';
+        ? 'bg-danger-subtle text-danger'
+        : 'bg-primary-subtle text-primary';
   }
 
   badgeClass(type: string = ''): string {
     const m: Record<string, string> = {
-      'Limpieza':      'badge-limpieza',
+      'Limpieza': 'badge-limpieza',
       'Reforestación': 'badge-reforestacion',
-      'Taller':        'badge-taller',
-      'Reciclaje':     'badge-reciclaje',
-      'Educación':     'badge-educacion',
-      'Conservación':  'badge-conservacion',
+      'Taller': 'badge-taller',
+      'Reciclaje': 'badge-reciclaje',
+      'Educación': 'badge-educacion',
+      'Conservación': 'badge-conservacion',
     };
     return m[type] ?? 'bg-secondary-subtle text-secondary';
   }
@@ -92,11 +141,20 @@ export class DashboardVoluntario implements OnInit {
     this.cancelTarget = ins;
   }
 
-  confirmarCancelacion(): void {
+  /* confirmarCancelacion(): void {
     if (!this.cancelTarget) return;
     this.inscriptions.update(list =>
       list.filter(i => i.id !== this.cancelTarget!.id)
     );
+    this.cancelTarget = null;
+  } */
+  confirmarCancelacion(): void {
+    if (!this.cancelTarget) return;
+    const id = this.cancelTarget.id;
+    this.http.patch(`${environment.apiUrl}/inscripciones/${id}/cancelar`, {}).subscribe({
+      next: () => this.inscriptions.update(list => list.filter(i => i.id! == id)),
+      error: () => this.inscriptions.update(list => list.filter(i => i.id! == id))
+    });
     this.cancelTarget = null;
   }
 

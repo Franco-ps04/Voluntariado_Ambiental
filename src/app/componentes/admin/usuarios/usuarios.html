@@ -140,7 +140,8 @@
                             <div>
                                 <p class="fw-semibold mb-0">{{ u.nombre }}</p>
                                 <p class="text-muted mb-0 d-flex align-items-center gap-1" style="font-size:11px">
-                                    <i class="bi bi-geo-alt" style="font-size:10px"></i>{{ u.distrito }}
+                                    <!--                                     <i class="bi bi-geo-alt" style="font-size:10px"></i>{{ u.distrito }}
+ -->
                                 </p>
                             </div>
                         </div>
@@ -246,7 +247,7 @@
             </div>
             <div class="d-flex align-items-center gap-2 text-muted small">
                 <i class="bi bi-geo-alt text-success" style="width:16px"></i>
-                {{ modalUsuario.distrito }}
+                <!-- {{ modalUsuario.distrito }} -->
             </div>
             <div class="d-flex align-items-center gap-2 text-muted small">
                 <i class="bi bi-calendar text-success" style="width:16px"></i>
@@ -290,12 +291,13 @@
             <div>
                 <label class="form-label small fw-medium">Rol</label>
                 <div class="d-flex gap-2">
-                    @for (r of ['voluntario','organizador']; track r) {
-                    <button class="btn flex-fill fw-medium" [class.btn-success]="editForm.rol === r"
-                        [class.btn-outline-secondary]="editForm.rol !== r" (click)="setRol(r)">
-                        <i class="bi me-1" [class.bi-person]="r==='voluntario'"
-                            [class.bi-building]="r==='organizador'"></i>
-                        {{ r | titlecase }}
+                    @for (r of
+                    [{v:'voluntario',i:'bi-person'},{v:'organizador',i:'bi-building'},{v:'admin',i:'bi-shield-lock'}];
+                    track r.v) {
+                    <button class="btn flex-fill fw-medium" [class.btn-success]="editForm.rol === r.v"
+                        [class.btn-outline-secondary]="editForm.rol !== r.v" (click)="setRol(r.v)">
+                        <i class="bi me-1" [class]="r.i"></i>
+                        {{ r.v | titlecase }}
                     </button>
                     }
                 </div>

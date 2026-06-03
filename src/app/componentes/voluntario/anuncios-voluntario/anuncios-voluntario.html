@@ -15,7 +15,7 @@
                (click)="select(ann)">
             <p class="fw-semibold mb-1 small lh-sm">{{ ann.eventoTitulo }}</p>
             <p class="text-muted mb-1" style="font-size:11px">
-              Por: <strong>{{ ann.autorRol }}</strong> — {{ ann.autorNombre }}
+              Por: <strong><!-- {{ ann.autorRol }} --></strong> — {{ ann.autorNombre }}
             </p>
             <p class="text-muted mb-0" style="font-size:11px">
               <i class="bi bi-calendar3 me-1"></i>
@@ -36,7 +36,7 @@
           <h5 class="fw-bold mb-2">{{ ann.eventoTitulo }}</h5>
           <div class="d-flex gap-4 mb-3 pb-3 border-bottom flex-wrap">
             <span class="small text-muted">
-              Por: <strong class="text-dark">{{ ann.autorRol }}</strong>
+              Por: <strong class="text-dark"><!-- {{ ann.autorRol }} --></strong>
             </span>
             <span class="small text-muted">
               <i class="bi bi-calendar3 me-1"></i>

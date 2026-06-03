@@ -1,20 +1,57 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { AuthUser, UserRole } from '../models/UserRole';
-import { MOCK_USERS } from '../mocks/mock_users';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly storageKey = 'greenunity_user';
+
+  private readonly key = 'greenunity_user';
 
   private userSubject = new BehaviorSubject<AuthUser | null>(
     this.getUserFromStorage()
   );
 
-  // Observable para el menu
   user$ = this.userSubject.asObservable();
+
+  constructor(private http: HttpClient) {}
+
+  // LOGIN REAL
+  login(email: string, password: string): Observable<AuthUser> {
+    return this.http.post<AuthUser>(`${environment.apiUrl}/auth/login`, {
+      email,
+      password
+    }).pipe(
+      tap(user => this.saveUser(user))
+    );
+  }
+
+  // REGISTRO REAL
+  register(data: {
+    nombre: string;
+    email: string;
+    password: string;
+    telefono: string;
+  }): Observable<AuthUser> {
+    return this.http.post<AuthUser>(`${environment.apiUrl}/auth/register`, data)
+      .pipe(
+        tap(user => this.saveUser(user))
+      );
+  }
+
+  // PERFIL
+  me(): Observable<AuthUser> {
+    return this.http.get<AuthUser>(`${environment.apiUrl}/auth/me`);
+  }
+  
+  //Sesión activa
+  logout(): void {
+    localStorage.removeItem(this.key);
+    this.userSubject.next(null);
+  }
 
   get currentUser(): AuthUser | null {
     return this.userSubject.value;
@@ -24,40 +61,25 @@ export class AuthService {
     return this.currentUser?.token ?? null;
   }
 
-  /** Login con email (acepta cualquier contraseña mientras esté en el mock) */
-  login(email: string, _password: string): boolean {
-    const user = MOCK_USERS.find(
-      u => u.email.toLowerCase() === email.toLowerCase()
-    );
-    if (!user) return false;
-    this.saveUser(user);
-    return true;
+  isLoggedIn(): boolean {
+    return !!this.currentUser;
   }
 
-  /** Acceso rápido por rol (quitar luego de presentación de fronted, solo es un vista de como funciona)*/
-  loginByRole(role: UserRole): void {
-    const user = MOCK_USERS.find(u => u.rol === role) ?? MOCK_USERS[0];
-    this.saveUser(user);
+  isAdmin(): boolean {
+    return this.currentUser?.rol === 'admin';
   }
 
-  logout(): void {
-    localStorage.removeItem(this.storageKey);
-    this.userSubject.next(null);
+  hasRole(role: UserRole): boolean {
+    return this.currentUser?.rol === role;
   }
-
-  isLoggedIn(): boolean { return !!this.currentUser; }
-  isAdmin(): boolean { return this.currentUser?.rol === 'admin'; }
-  hasRole(role: UserRole): boolean { return this.currentUser?.rol === role; }
 
   private saveUser(user: AuthUser): void {
-    localStorage.setItem(this.storageKey, JSON.stringify(user));
+    localStorage.setItem(this.key, JSON.stringify(user));
     this.userSubject.next(user);
   }
 
   private getUserFromStorage(): AuthUser | null {
-    const data = localStorage.getItem(this.storageKey);
-    if (!data) return null;
-    const user = JSON.parse(data) as AuthUser;
-    return user;
+    const data = localStorage.getItem(this.key);
+    return data ? JSON.parse(data) : null;
   }
 }

@@ -14,9 +14,9 @@ export class Ingresar implements OnInit {
   password = '';
   showPass = false;
   error = '';
+  loading = false;
 
-  constructor(private auth: AuthService, private router: Router) {}
-
+  constructor(private auth: AuthService, private router: Router) { }
   ngOnInit(): void {
     // Si ya está autenticado, redirigir según su rol
     this.redirectIfLoggedIn();
@@ -32,33 +32,31 @@ export class Ingresar implements OnInit {
       this.router.navigate(['/voluntario/dashboard']);
     }
   }
-
   submit(): void {
     this.error = '';
     if (!this.email || !this.password) {
       this.error = 'Completa el correo y la contraseña.';
       return;
     }
-    const ok = this.auth.login(this.email, this.password);
-    if (ok) {
-      const rol = this.auth.currentUser?.rol;
-      if (rol === 'admin' || rol === 'organizador') {
-        this.router.navigate(['/admin/eventos']);
-      } else {
-        this.router.navigate(['/voluntario/dashboard']);
-      }
-      return;
-    }
-    this.error = 'Correo no encontrado. Usa el acceso rápido para presentar.';
-  }
+    this.loading = true;
 
-  loginMock(role: 'voluntario' | 'admin'): void {
-    this.auth.loginByRole(role);
-    const rol = this.auth.currentUser?.rol;
-    if (rol === 'admin' || rol === 'organizador') {
-      this.router.navigate(['/admin/eventos']);
-    } else {
-      this.router.navigate(['/voluntario/dashboard']);
-    }
+    //Llama del HTTP al backend
+    this.auth.login(this.email, this.password).subscribe({
+      next: (user) => {
+        this.loading = false;
+        const rol = user.rol;
+        if (rol === 'admin' || rol === 'organizador') {
+          this.router.navigate(['/admin/eventos']);
+        } else {
+          this.router.navigate(['/voluntario/dashboard']);
+        }
+      },
+      error: (err) => {
+        this.loading = false;
+        this.error =
+          err.error?.message ||
+          'Correo o contraseña incorrecto.';
+      }
+    });
   }
 }

@@ -3,6 +3,8 @@ import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EventType, VolunteerEvent } from '../../../models/event';
 import { MOCK_VOLUNTARIOS_EVENTO } from '../../../mocks/mock_eventos';
+import { AdminService } from '../../../services/admin.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-eventos',
@@ -26,6 +28,8 @@ export class AdminEventos implements OnInit {
   selectedFile: File | null = null;
   previewUrl: string | null = null;
   isDragging = false;
+  loading = false;
+  guardando = false;
 
   totalEvents = computed(() => this.events().length);
   upcoming = computed(() => this.events().filter(e => e.status === 'Próximo').length);
@@ -41,8 +45,25 @@ export class AdminEventos implements OnInit {
   // Para estadísticas
   statTypes = ['Reforestación', 'Limpieza', 'Reciclaje', 'Taller', 'Educación', 'Conservación'];
 
+  constructor(private adminService: AdminService, public auth:AuthService) { }
+
   ngOnInit(): void {
-    this.events.set(MOCK_VOLUNTARIOS_EVENTO);
+    /* this.events.set(MOCK_VOLUNTARIOS_EVENTO); */
+    this.loading = true;
+    // Cargar desde el backend
+    this.adminService.getEventoHttp().subscribe({
+      next: () => {
+        this.loading = false;
+        this.adminService.getEvents().subscribe(data =>
+          this.events.set(data as unknown as VolunteerEvent[])
+        );
+      },
+      error: () => {
+        // Fallback a mocks
+        this.loading = false;
+        this.events.set(MOCK_VOLUNTARIOS_EVENTO);
+      }
+    });
   }
 
   filtered(): VolunteerEvent[] {
@@ -125,7 +146,7 @@ export class AdminEventos implements OnInit {
       this.previewUrl = reader.result as string;
       // Para mock: usamos base64 como imageUrl
       // En producción: el backend devolverá la URL real tras subir con Multer
-      this.form.imageUrl = this.previewUrl;
+      this.form.imageUrl = this.previewUrl!;
     };
     reader.readAsDataURL(file);
   }
@@ -135,6 +156,19 @@ export class AdminEventos implements OnInit {
     this.previewUrl = null;
     this.form.imageUrl = '';
   }
+
+  private getTipoId(tipo: string): number {
+    const m: Record<string, number> = {
+      'Limpieza': 1,
+      'Reforestación': 2,
+      'Taller': 3,
+      'Reciclaje': 4,
+      'Educación': 5,
+      'Conservación': 6
+    };
+    return m[tipo] ?? 1;
+  }
+
   //Guardar
   save(): void {
     // Convertir requisitos de texto a array
@@ -142,8 +176,9 @@ export class AdminEventos implements OnInit {
       .split('\n')
       .map(r => r.trim())
       .filter(r => r.length > 0);
+    this.guardando = true;
 
-    if (!this.isEditing()) {
+    /* if (!this.isEditing()) {
       const newEv: VolunteerEvent = {
         id: Date.now(),
         title: this.form.title ?? '',
@@ -170,7 +205,68 @@ export class AdminEventos implements OnInit {
         )
       );
     }
-    this.showModal.set(false);
+    this.showModal.set(false); */
+    if (!this.isEditing()) {
+      // HTTP: crear evento en el backend
+      const body: any = {
+        nombre: this.form.title ?? '',
+        descripcion: this.form.description ?? '',
+        fecha: this.form.date ?? '',
+        hora: this.form.time ?? '',
+        ubicacion: this.form.location ?? '',
+        capacidad: this.form.maxVolunteers ?? 30,
+        idTipo: this.getTipoId(this.form.type ?? 'Limpieza'),
+        latitud: this.form.latitude ?? undefined,
+        longitud: this.form.longitude ?? undefined,
+        requisitos: reqs
+      }
+      this.adminService.crearEventoHttp(body).subscribe({
+        next: () => {
+          this.guardando = false;
+          // Recargar lista desde la API
+          this.adminService.getEventoHttp().subscribe(() => {
+            this.adminService.getEvents().subscribe(data =>
+              this.events.set(data as unknown as VolunteerEvent[])
+            );
+          });
+          this.showModal.set(false);
+        },
+        error: () => {
+          // Fallback local
+          this.guardando = false;
+          this.events.update(list => [{
+            id: Date.now(), title: this.form.title ?? '', description: this.form.description ?? '',
+            type: (this.form.type as EventType) ?? 'Limpieza', date: this.form.date ?? '',
+            time: this.form.time ?? '', location: this.form.location ?? '',
+            latitude: this.form.latitude ?? 0, longitude: this.form.longitude ?? 0,
+            maxVolunteers: this.form.maxVolunteers ?? 30, enrolledCount: 0,
+            organizerName: this.form.organizerName ?? '', imageUrl: this.form.imageUrl ?? '',
+            requirements: reqs, status: 'Próximo'
+          }, ...list]);
+          this.showModal.set(false);
+        }
+      });
+    } else {
+      // HTTP: cambiar estado si es edición simple
+      this.adminService.cambiarEstadoHttp(this.editingId!, this.form.status ?? 'Próximo').subscribe({
+        next: () => {
+          this.guardando = false;
+          this.events.update(list =>
+            list.map(e => e.id === this.editingId
+              ? { ...e, ...this.form, requirements: reqs } as VolunteerEvent : e)
+          );
+          this.showModal.set(false);
+        },
+        error: () => {
+          this.guardando = false;
+          this.events.update(list =>
+            list.map(e => e.id === this.editingId
+              ? { ...e, ...this.form, requirements: reqs } as VolunteerEvent : e)
+          );
+          this.showModal.set(false);
+        }
+      });
+    }
   }
 
   // Abrir modal de confirmación eliminar
@@ -181,7 +277,11 @@ export class AdminEventos implements OnInit {
 
   confirmDelete(): void {
     if (!this.deleteId) return;
-    this.events.update(list => list.filter(e => e.id !== this.deleteId));
+    /* this.events.update(list => list.filter(e => e.id !== this.deleteId)); */
+    this.adminService.eliminarEventoHttp(this.deleteId).subscribe({
+      next: () => this.events.update(list => list.filter(e => e.id !== this.deleteId)),
+      error: () => this.events.update(list => list.filter(e => e.id !== this.deleteId))
+    })
     this.deleteId = null;
     this.showDelete.set(false);
   }
@@ -194,11 +294,21 @@ export class AdminEventos implements OnInit {
   confirmarFinalizar(): void {
     const ev = this.eventoAFinalizar();
     if (!ev) return;
-    this.events.update(list =>
+    /* this.events.update(list =>
       list.map(e => e.id === ev.id ? { ...e, status: 'Finalizado' as const } : e)
-    );
+    ); */
+    this.adminService.cambiarEstadoHttp(ev.id, 'Finalizado').subscribe({
+      next: () => this.actualizarEstado(ev.id, 'Finalizado'),
+      error: () => this.actualizarEstado(ev.id, 'Finalizado')
+    })
     this.showFinalizar.set(false);
     this.eventoAFinalizar.set(null);
+  }
+
+  private actualizarEstado(id: number, estado: string): void {
+    this.events.update(list =>
+      list.map(e => e.id === id ? { ...e, status: estado as any } : e)
+    );
   }
 
   statusClass(status: string): string {
@@ -214,7 +324,8 @@ export class AdminEventos implements OnInit {
   badgeClass(type: string): string {
     const m: Record<string, string> = {
       'Limpieza': 'badge-limpieza', 'Reforestación': 'badge-reforestacion',
-      'Reciclaje': 'badge-reciclaje', 'Taller': 'badge-taller'
+      'Reciclaje': 'badge-reciclaje', 'Taller': 'badge-taller',
+      'Educación': 'badge-educacion', 'Conservación': 'badge-conservacion'
     };
     return m[type] ?? 'bg-secondary-subtle text-secondary';
   }

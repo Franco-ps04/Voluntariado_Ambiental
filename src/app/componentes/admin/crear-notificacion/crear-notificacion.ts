@@ -12,17 +12,40 @@ import { Router } from '@angular/router';
 export class CrearNotificacion {
   title = '';
   message = '';
+  idEvento: number | null = null;
+  enviando = false;
+  enviado = false;
+  error = '';
   audience = 'Todos';
 
   constructor(private adminService: AdminService, private router: Router) { }
 
   submit(): void {
-    this.adminService.createNotification({
+    if (!this.title || !this.idEvento || !this.message) {
+      this.error = 'Completa todos los campos obligatoriamente';;
+      return;
+    }
+    this.error = '';
+    this.enviando = true;
+
+    this.adminService.crearAnuncioHttp(this.idEvento, this.title, this.message).subscribe({
+      next: () => {
+        this.enviando = false;
+        this.enviado = true;
+        setTimeout(() => this.router.navigate(['/admin/inscripciones']), 1200);
+      },
+      error: (err) => {
+        this.enviando = false;
+        this.error = err.error?.message ?? 'Error al enviar. Intentalo nuevamente';
+      }
+    })
+    
+    /* this.adminService.createNotification({
       title: this.title,
       message: this.message,
       audience: this.audience
     });
 
-    this.router.navigate(['/admin/dashboard']);
+    this.router.navigate(['/admin/dashboard']); */
   }
 }

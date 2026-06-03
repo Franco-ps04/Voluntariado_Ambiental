@@ -1,5 +1,6 @@
 export interface VoluntarioInscrito {
     id: number;
+    inscripcionId: number;
     nombre: string;
     email: string;
     telefono: string;

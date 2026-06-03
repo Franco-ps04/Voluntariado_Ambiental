@@ -1,4 +1,4 @@
-import { Component, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, NgZone, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { VolunteerEvent } from '../../models/event';
 import { EventoService } from '../../services/evento-service';
 import { AuthService } from '../../services/auth.service';
@@ -20,14 +20,18 @@ export class Eventos implements OnInit, OnDestroy {
   selectedEvent: VolunteerEvent | null = null;
   search = '';
   selectedType = 'Todos';
-  types = ['Todos', 'Limpieza', 'Reforestación', 'Taller', 'Reciclaje'];
+  types = ['Todos', 'Limpieza', 'Reforestación', 'Taller', 'Reciclaje', 'Educación', 'Conservación'];
   mapMarkers: { lat: number; lng: number; label: string }[] = [];
+  loading = false;
 
   // Modal de información del evento
   infoEvent: VolunteerEvent | null = null;
 
   // Modal de confirmación de inscripción
   confirmEvent: VolunteerEvent | null = null;
+  inscribiendo = false;
+  inscritoConExito = signal(false);
+  errorInscripcion = '';
 
   constructor(
     private eventService: EventoService,
@@ -37,9 +41,28 @@ export class Eventos implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.eventService.getEvents().subscribe(evts => {
+    /* this.eventService.getEvents().subscribe(evts => {
       this.events = evts;
       this.updateMapMarkers();
+    }); */
+    this.loading = true;
+    // Cargar desde el backend
+    this.eventService.eventosHTTP().subscribe({
+      next: () => {
+        this.loading = false;
+        this.eventService.getEvents().subscribe(evts => {
+          this.events = evts;
+          this.updateMapMarkers();
+        });
+      },
+      error: () => {
+        // Fallback: mocks
+        this.loading = false;
+        this.eventService.getEvents().subscribe(evts => {
+          this.events = evts;
+          this.updateMapMarkers();
+        });
+      }
     });
   }
 
@@ -85,13 +108,37 @@ export class Eventos implements OnInit, OnDestroy {
       return;
     }
     this.confirmEvent = ev;
+    this.inscritoConExito.set(false);
+    this.errorInscripcion = '';
   }
 
   // Confirmar inscripción
   confirmarInscripcion(): void {
-    if (!this.confirmEvent) return;
+    /* if (!this.confirmEvent) return;
     alert(`✅ ¡Inscrito en "${this.confirmEvent.title}"!`);
-    this.confirmEvent = null;
+    this.confirmEvent = null; */
+    if (!this.confirmEvent) return;
+    this.inscribiendo = true;
+    this.errorInscripcion = '';
+
+    // HTTP real — POST /api/inscripciones
+    this.eventService.inscribirse(this.confirmEvent.id).subscribe({
+      next: () => {
+        this.inscribiendo = false;
+        this.inscritoConExito.set(true);
+        // Actualizar contador de inscritos localmente
+        this.events = this.events.map(e =>
+          e.id === this.confirmEvent!.id
+            ? { ...e, enrolledCount: e.enrolledCount + 1 }
+            : e
+        );
+        setTimeout(() => { this.confirmEvent = null; this.inscritoConExito.set(false); }, 1800);
+      },
+      error: (err) => {
+        this.inscribiendo = false;
+        this.errorInscripcion = err.error?.message ?? 'Error al inscribirse. Intenta nuevamente.';
+      }
+    });
   }
 
   cuposLibres(ev: VolunteerEvent): number {
@@ -101,7 +148,8 @@ export class Eventos implements OnInit, OnDestroy {
   badgeClass(type: string): string {
     const m: Record<string, string> = {
       'Limpieza': 'badge-limpieza', 'Reforestación': 'badge-reforestacion',
-      'Taller': 'badge-taller', 'Reciclaje': 'badge-reciclaje'
+      'Taller': 'badge-taller', 'Reciclaje': 'badge-reciclaje',
+      'Educación': 'badge-educacion', 'Conservación': 'badge-conservacion'
     };
     return m[type] ?? 'bg-secondary-subtle text-secondary';
   }

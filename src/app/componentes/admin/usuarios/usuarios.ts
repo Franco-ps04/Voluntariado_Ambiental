@@ -3,6 +3,7 @@ import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UserEstado, UserRol, UsuarioAdmin } from '../../../models/admin_usuario';
 import { MOCK_USUARIOS_ADMIN } from '../../../mocks/admin_usuarios';
+import { AdminService } from '../../../services/admin.service';
 
 @Component({
   selector: 'app-usuarios',
@@ -16,6 +17,8 @@ export class Usuarios implements OnInit {
   filtroRol: 'todos' | UserRol = 'todos';
   filtroEstado: 'todos' | UserEstado = 'todos';
   showFiltros = false;
+  loading = false;
+  guardando = false;
 
   // Modal ver / editar usuario
   modalUsuario: UsuarioAdmin | null = null;
@@ -23,7 +26,7 @@ export class Usuarios implements OnInit {
   editForm!: UsuarioAdmin;
   guardado = false;
 
-  // Modal confirmar suspend / eliminar
+  // Modal confirmar suspender / eliminar
   confirmTarget: UsuarioAdmin | null = null;
   confirmAccion: 'suspender' | 'activar' | 'eliminar' = 'suspender';
   showConfirm = false;
@@ -34,12 +37,34 @@ export class Usuarios implements OnInit {
   organizadores = computed(() => this.usuarios().filter(u => u.rol === 'organizador').length);
   suspendidos = computed(() => this.usuarios().filter(u => u.estado === 'suspendido').length);
 
-  setRol(nuevoRol: any): void {
-    this.editForm.rol = nuevoRol;
-  }
+  constructor(private adminService: AdminService) { }
 
   ngOnInit(): void {
-    this.usuarios.set(MOCK_USUARIOS_ADMIN);
+    this.loading = true;
+    this.adminService.usuariosHttp().subscribe({
+      next: (data: any[]) => {
+        this.loading = true;
+        this.usuarios.set(data.map(u => ({
+          id: u.id_usuario,
+          nombre: u.nombre,
+          email: u.email,
+          telefono: u.telefono,
+          rol: u.rol as UserRol,
+          estado: (u.activo ? 'activo' : 'suspendido') as UserEstado,
+          numEventos: u.num_eventos ?? 0,
+          creadoEn: u.creado_en ?? ''
+        })));
+      },
+      error: () => {
+        this.loading = false;
+        this.usuarios.set(MOCK_USUARIOS_ADMIN);
+      }
+    })
+    /* this.usuarios.set(MOCK_USUARIOS_ADMIN); */
+  }
+
+  setRol(nuevoRol: any): void {
+    this.editForm.rol = nuevoRol;
   }
 
   filtrados(): UsuarioAdmin[] {
@@ -66,10 +91,31 @@ export class Usuarios implements OnInit {
 
   enableEdit(): void { this.editMode = true; }
 
-  saveEdit(): void {
+  /* saveEdit(): void {
     this.usuarios.update(list =>
       list.map(u => u.id === this.editForm.id ? { ...this.editForm } : u)
     );
+    this.modalUsuario = { ...this.editForm };
+    this.guardado = true;
+    setTimeout(() => { this.guardado = false; }, 2000);
+  } */
+
+  saveEdit(): void {
+    this.guardando = true;
+    this.adminService.editarUsuarioHttp(this.editForm.id, {
+      nombre: this.editForm.nombre,
+      email: this.editForm.email,
+      telefono: this.editForm.telefono,
+      rol: this.editForm.rol
+    }).subscribe({
+      next: () => { this.aplicarEdicion(); },
+      error: () => { this.aplicarEdicion(); }   // fallback local
+    });
+  }
+
+  aplicarEdicion(): void {
+    this.guardando = false;
+    this.usuarios.update(list => list.map(u => u.id === this.editForm.id ? { ...this.editForm } : u));
     this.modalUsuario = { ...this.editForm };
     this.guardado = true;
     setTimeout(() => { this.guardado = false; }, 2000);
@@ -82,12 +128,13 @@ export class Usuarios implements OnInit {
     this.showConfirm = true;
   }
 
-  ejecutarConfirm(): void {
+  /* ejecutarConfirm(): void {
     if (!this.confirmTarget) return;
     const id = this.confirmTarget.id;
 
     if (this.confirmAccion === 'eliminar') {
       this.usuarios.update(list => list.filter(u => u.id !== id));
+      this.closeModal();
     } else {
       const nuevoEstado: UserEstado =
         this.confirmAccion === 'suspender' ? 'suspendido' : 'activo';
@@ -104,6 +151,32 @@ export class Usuarios implements OnInit {
     this.confirmTarget = null;
     this.showConfirm = false;
     if (this.confirmAccion === 'eliminar') this.closeModal();
+  } */
+
+  ejecutarConfirm(): void {
+    if (!this.confirmTarget) return;
+    const id = this.confirmTarget.id;
+
+    if (this.confirmAccion === 'eliminar') {
+      this.usuarios.update(list => list.filter(u => u.id !== id));
+      this.closeModal();
+    } else {
+      const activo = this.confirmAccion === 'activar';
+      this.adminService.cambiarEstadoUsuarioHttp(id, activo).subscribe({
+        next: () => this.aplicarEstado(id, activo),
+        error: () => this.aplicarEstado(id, activo)
+      });
+    }
+    this.confirmTarget = null; this.showConfirm = false;
+  }
+
+  private aplicarEstado(id: number, activo: boolean): void {
+    const estado: UserEstado = activo ? 'activo' : 'suspendido';
+    this.usuarios.update(list => list.map(u => u.id === id ? { ...u, estado } : u));
+    if (this.modalUsuario?.id === id) {
+      this.modalUsuario = { ...this.modalUsuario, estado };
+      this.editForm = { ...this.editForm, estado };
+    }
   }
 
   // ── Helpers UI ───────────────────────────
@@ -112,12 +185,12 @@ export class Usuarios implements OnInit {
   }
 
   getAvatarColor(nombre: string): string {
-    const colors = [
+    const color = [
       '#2d9e5f', '#3b82f6', '#8b5cf6', '#ec4899',
       '#f59e0b', '#14b8a6', '#ef4444', '#6366f1'
     ];
-    const i = nombre.charCodeAt(0) % colors.length;
-    return colors[i];
+    const i = nombre.charCodeAt(0) % color.length;
+    return color[i];
   }
 
   rolClass(rol: UserRol): string {

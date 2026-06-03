@@ -1,19 +1,24 @@
-<div class="container py-4" style="max-width: 980px;">
+<div class="container py-4" style="max-width:860px">
     <div class="mb-4">
         <h2 class="fw-bold mb-0">Crear nuevo evento</h2>
-        <p class="text-muted mb-0">Completa el formulario para publicar el evento</p>
+        <p class="text-muted mb-0 small">Los campos con <span class="text-danger">*</span> son obligatorios</p>
     </div>
-
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-4">
             <div class="row g-3">
+                <!-- Título -->
                 <div class="col-md-6">
-                    <label class="form-label">Título del evento</label>
-                    <input class="form-control" [(ngModel)]="title">
+                    <label class="form-label fw-medium small">Título <span class="text-danger">*</span></label>
+                    <input class="form-control" [(ngModel)]="title" [class.is-invalid]="submitted && errores['title']"
+                        placeholder="Ej: Limpieza en Costa Verde">
+                    @if (submitted && errores['title']) {
+                    <div class="invalid-feedback">{{ errores['title'] }}</div>
+                    }
                 </div>
-
+                <!-- Tipo -->
                 <div class="col-md-6">
-                    <label class="form-label">Tipo de actividad</label>
+                    <label class="form-label fw-medium small">Tipo de actividad <span
+                            class="text-danger">*</span></label>
                     <select class="form-select" [(ngModel)]="type">
                         <option>Limpieza</option>
                         <option>Reforestación</option>
@@ -23,62 +28,127 @@
                         <option>Conservación</option>
                     </select>
                 </div>
-
+                <!-- Descripción -->
                 <div class="col-12">
-                    <label class="form-label">Descripción</label>
-                    <textarea class="form-control" rows="4" [(ngModel)]="description"></textarea>
+                    <label class="form-label fw-medium small">Descripción <span class="text-danger">*</span></label>
+                    <textarea class="form-control" rows="4" [(ngModel)]="description"
+                        [class.is-invalid]="submitted && errores['description']"
+                        placeholder="Describe el objetivo del evento..."></textarea>
+                    @if (submitted && errores['description']) {
+                    <div class="invalid-feedback">{{ errores['description'] }}</div>
+                    }
                 </div>
-
+                <!-- Fecha, Hora, Máx voluntarios -->
                 <div class="col-md-4">
-                    <label class="form-label">Fecha</label>
-                    <input class="form-control" [(ngModel)]="date" placeholder="25/04/2026">
+                    <label class="form-label fw-medium small">Fecha <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" [(ngModel)]="date"
+                        [class.is-invalid]="submitted && errores['date']">
+                    @if (submitted && errores['date']) {
+                    <div class="invalid-feedback">{{ errores['date'] }}</div>
+                    }
                 </div>
-
                 <div class="col-md-4">
-                    <label class="form-label">Hora</label>
-                    <input class="form-control" [(ngModel)]="time" placeholder="08:00">
+                    <label class="form-label fw-medium small">Hora <span class="text-danger">*</span></label>
+                    <input type="time" class="form-control" [(ngModel)]="time"
+                        [class.is-invalid]="submitted && errores['time']">
+                    @if (submitted && errores['time']) {
+                    <div class="invalid-feedback">{{ errores['time'] }}</div>
+                    }
                 </div>
-
                 <div class="col-md-4">
-                    <label class="form-label">Máx. voluntarios</label>
-                    <input type="number" class="form-control" [(ngModel)]="maxVolunteers">
+                    <label class="form-label fw-medium small">Máx. voluntarios <span
+                            class="text-danger">*</span></label>
+                    <input type="number" class="form-control" [(ngModel)]="maxVolunteers" min="1"
+                        [class.is-invalid]="submitted && errores['maxVolunteers']">
+                    @if (submitted && errores['maxVolunteers']) {
+                    <div class="invalid-feedback">{{ errores['maxVolunteers'] }}</div>
+                    }
                 </div>
-
+                <!-- Ubicación -->
                 <div class="col-12">
-                    <label class="form-label">Ubicación (Texto)</label>
-                    <input class="form-control" [(ngModel)]="location">
-                    <small class="text-muted">Tip: busca el lugar en Google Maps, haz clic derecho y copia las
-                        coordenadas.</small>
+                    <label class="form-label fw-medium small">Ubicación <span class="text-danger">*</span></label>
+                    <input class="form-control" [(ngModel)]="location"
+                        [class.is-invalid]="submitted && errores['location']"
+                        placeholder="Ej: Playa Costa Verde, Miraflores, Lima">
+                    @if (submitted && errores['location']) {
+                    <div class="invalid-feedback">{{ errores['location'] }}</div>
+                    }
+                    <small class="text-muted">Tip: busca en Google Maps, clic derecho y copia las coordenadas.</small>
                 </div>
-
+                <!-- Latitud / Longitud -->
                 <div class="col-md-6">
-                    <label class="form-label">Latitud</label>
-                    <input class="form-control" [(ngModel)]="latitude">
+                    <label class="form-label fw-medium small">
+                        Latitud <span class="text-muted fw-normal">(opcional)</span>
+                    </label>
+                    <input class="form-control" [(ngModel)]="latitude" placeholder="-12.1234567">
                 </div>
-
                 <div class="col-md-6">
-                    <label class="form-label">Longitud</label>
-                    <input class="form-control" [(ngModel)]="longitude">
+                    <label class="form-label fw-medium small">
+                        Longitud <span class="text-muted fw-normal">(opcional)</span>
+                    </label>
+                    <input class="form-control" [(ngModel)]="longitude" placeholder="-77.0123456">
                 </div>
-
+                <!-- Organizador — selector si es admin, info fija si es organizador -->
+                @if (auth.currentUser?.rol === 'admin') {
                 <div class="col-md-6">
-                    <label class="form-label">Organizador / ONG</label>
-                    <input class="form-control" [(ngModel)]="organizer">
+                    <label class="form-label fw-medium small">Organizador <span class="text-danger">*</span></label>
+                    <select class="form-select" [(ngModel)]="idOrganizador"
+                        [class.is-invalid]="submitted && errores['organizador']">
+                        <option [ngValue]="null">— Selecciona un organizador —</option>
+                        @for (o of organizadores; track o.id) {
+                        <option [ngValue]="o.id">{{ o.nombre }} ({{ o.organizacion }})</option>
+                        }
+                    </select>
+                    @if (submitted && errores['organizador']) {
+                    <div class="invalid-feedback">{{ errores['organizador'] }}</div>
+                    }
                 </div>
-
+                } @else {
                 <div class="col-md-6">
-                    <label class="form-label">URL de imagen</label>
-                    <input class="form-control" [(ngModel)]="image">
+                    <label class="form-label fw-medium small">Organizador</label>
+                    <input class="form-control" [value]="auth.currentUser?.nombre" disabled>
+                    <small class="text-muted">El evento se asignará a tu cuenta de organizador.</small>
                 </div>
-
+                }
+                <!-- URL imagen -->
+                <div class="col-md-6">
+                    <label class="form-label fw-medium small">
+                        URL de imagen <span class="text-muted fw-normal">(opcional)</span>
+                    </label>
+                    <input class="form-control" [(ngModel)]="image" placeholder="https://...">
+                </div>
+                <!-- Requisitos -->
                 <div class="col-12">
-                    <label class="form-label">Requisitos (uno por línea)</label>
-                    <textarea class="form-control" rows="4" [(ngModel)]="requirementsText"></textarea>
+                    <label class="form-label fw-medium small">
+                        Requisitos <span class="text-muted fw-normal">(opcional — uno por línea)</span>
+                    </label>
+                    <textarea class="form-control" rows="3" [(ngModel)]="requirementsText"
+                        placeholder="Ropa cómoda&#10;Protector solar&#10;Agua"></textarea>
                 </div>
-
-                <div class="col-12 d-flex justify-content-end gap-2">
-                    <button class="btn btn-outline-secondary" routerLink="/admin/events">Cancelar</button>
-                    <button class="btn btn-success" (click)="submit()">Crear evento</button>
+                <!-- Error general -->
+                @if (error) {
+                <div class="col-12">
+                    <div class="alert alert-danger py-2 small d-flex align-items-center gap-2 mb-0">
+                        <i class="bi bi-exclamation-triangle-fill"></i>{{ error }}
+                    </div>
+                </div>
+                }
+                @if (submitted && !formularioValido && !error) {
+                <div class="col-12">
+                    <div class="alert alert-danger py-2 small d-flex align-items-center gap-2 mb-0">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        Completa todos los campos obligatorios antes de publicar.
+                    </div>
+                </div>
+                }
+                <!-- Botones -->
+                <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                    <button class="btn btn-outline-secondary" routerLink="/admin/eventos">Cancelar</button>
+                    <button class="btn btn-success fw-semibold px-4" (click)="submit()" [disabled]="guardando">
+                        @if (guardando) {
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                        } <i class="bi bi-plus-circle me-1"></i>Crear evento
+                    </button>
                 </div>
             </div>
         </div>

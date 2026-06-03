@@ -16,7 +16,7 @@ export class IngresarAdmin implements OnInit {
   error = '';
   loading = false;
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router) { }
 
   ngOnInit(): void {
     // Si ya está autenticado como admin u organizador, redirigir al dashboard
@@ -33,22 +33,22 @@ export class IngresarAdmin implements OnInit {
       return;
     }
     this.loading = true;
-    const ok = this.auth.login(this.email, this.password);
-    this.loading = false;
-
-    if (ok) {
-      const rol = this.auth.currentUser?.rol;
-      if (rol === 'admin' || rol === 'organizador') {
-        this.router.navigate(['/admin/eventos']);
-        return;
+    this.auth.login(this.email, this.password).subscribe({
+      next: (user) => {
+        this.loading = false;
+        if (user.rol === 'admin' || user.rol === 'organizador') {
+          this.router.navigate(['/admin/eventos']);
+          return;
+        }
+        this.error = 'No tienes permisos de administración.';
+        this.auth.logout();
+      },
+      error: (err) => {
+        this.loading = false;
+        this.error =
+          err.error?.message ||
+          'Credenciales inválidas.';
       }
-    }
-    this.error = 'Credenciales inválidas o sin permisos de administración.';
-  }
-
-  /** Acceso rápido para presentación */
-  quickAccess(): void {
-    this.auth.loginByRole('admin');
-    this.router.navigate(['/admin/eventos']);
+    });
   }
 }

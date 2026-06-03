@@ -3,10 +3,8 @@ import { Anuncio } from '../models/anuncio';
 export const MOCK_ANUNCIOS: Anuncio[] = [
   {
     id: 1,
-    eventoId: 1,
     eventoTitulo: 'Limpieza de playa - Costa Verde',
-    autorNombre: 'Geeanfranco Geeal Cruz Marin',
-    autorRol: 'Administrador',
+    autorNombre: 'Administrador GreenUnity',
     titulo: 'Limpieza de playa - Costa Verde',
     mensaje: `📣 Estimados voluntarios:
 
@@ -22,14 +20,13 @@ Fecha: 16/04/26 · Hora: 07:00 AM
 
 Atentamente,
 Geeanfranco Geeal Cruz Marin`,
-    publicado: '2026-04-11T06:00:00'
+    publicado: '2026-04-11T06:00:00',
+    leida: false
   },
   {
     id: 2,
-    eventoId: 2,
     eventoTitulo: 'Reforestación - Cerro San Cristóbal',
     autorNombre: 'Diego Ramírez',
-    autorRol: 'Organizador',
     titulo: 'Reforestación - Cerro San Cristóbal',
     mensaje: `🌱 Estimados voluntarios:
 
@@ -45,14 +42,13 @@ Llevar:
 ¡Los esperamos!
 
 Diego Ramírez — Verde Lima`,
-    publicado: '2026-04-01T20:00:00'
+    publicado: '2026-04-01T20:00:00',
+    leida: true
   },
   {
     id: 3,
-    eventoId: 3,
     eventoTitulo: 'Taller de reciclaje creativo - SJL',
     autorNombre: 'Geeanfranco Geeal Cruz Marin',
-    autorRol: 'Administrador',
     titulo: 'Taller de reciclaje creativo - SJL',
     mensaje: `♻️ ¡Hola voluntarios!
 
@@ -63,6 +59,7 @@ Traer materiales reciclables: botellas plásticas, cartones, tapas de colores.
 ¡Juntos crearemos arte con la basura! 🎨
 
 Administración GreenUnity`,
-    publicado: '2026-03-27T22:00:00'
+    publicado: '2026-03-27T22:00:00',
+    leida: false
   }
 ];

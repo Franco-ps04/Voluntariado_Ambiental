@@ -140,8 +140,24 @@
 
 <!-- MODAL — Confirmar inscripción -->
 @if (confirmEvent) {
-<div class="gu-modal-backdrop" (click)="confirmEvent = null"></div>
+<div class="gu-modal-backdrop" (click)="!inscribiendo && (confirmEvent= null)"></div>
 <div class="gu-modal-panel" style="max-width:380px;text-align:center">
+
+  @if (inscritoConExito()) {
+  <div class="d-flex justify-content-center mb-3">
+    <div class="rounded-circle bg-success-subtle d-flex align-items-center justify-content-center"
+      style="width:56px;height:56px">
+      <i class="bi bi-person-check-fill text-success fs-3"></i>
+    </div>
+  </div>
+  <!-- <h5 class="fw-bold mb-1">¿Confirmar inscripción?</h5> -->
+  <h5 class="fw-bold text-success mb-2">¡Inscripción exitosa!</h5>
+  <!-- <p class="text-muted small">
+    Te inscribirás en <strong>{{ confirmEvent.title }}</strong><br>
+    {{ confirmEvent.date }} — {{ confirmEvent.time }}
+  </p> -->
+  <p class="text-muted small">Ya estás inscrito en <strong>{{ confirmEvent.title }}</strong>.</p>
+  }@else {
   <div class="d-flex justify-content-center mb-3">
     <div class="rounded-circle bg-success-subtle d-flex align-items-center justify-content-center"
       style="width:56px;height:56px">
@@ -149,17 +165,28 @@
     </div>
   </div>
   <h5 class="fw-bold mb-1">¿Confirmar inscripción?</h5>
-  <p class="text-muted small mb-4">
+  <p class="text-muted small mb-3">
     Te inscribirás en <strong>{{ confirmEvent.title }}</strong><br>
     {{ confirmEvent.date }} — {{ confirmEvent.time }}
   </p>
+
+  @if (errorInscripcion) {
+  <div class="alert alert-danger py-2 mb-3 small text-start">
+    <i class="bi bi-exclamation-triangle me-1"></i>{{ errorInscripcion }}
+  </div>
+  }
   <div class="d-flex gap-3">
-    <button class="btn btn-outline-secondary flex-fill" (click)="confirmEvent = null">
+    <button class="btn btn-outline-secondary flex-fill" (click)="confirmEvent = null" [disabled]="inscribiendo">
       Cancelar
     </button>
-    <button class="btn btn-success flex-fill fw-semibold" (click)="confirmarInscripcion()">
-      Sí, inscribirme
+    <button class="btn btn-success flex-fill fw-semibold" (click)="confirmarInscripcion()" [disabled]="inscribiendo">
+      @if (inscribiendo) {
+      <span class="spinner-border spinner-border-sm me-1"></span>Inscribiendo...
+      } @else {
+      <i class="bi bi-person-plus me-1"></i>Sí, inscribirme
+      }
     </button>
   </div>
+  }
 </div>
 }

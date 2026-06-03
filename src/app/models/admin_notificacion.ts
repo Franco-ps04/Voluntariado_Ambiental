@@ -1,7 +1,7 @@
 export interface AdminNotification {
   id: number;
-  title: string;
-  message: string;
-  audience: string;
-  createdAt: string;
+  titulo: string;
+  mensaje: string;
+  evento: string;
+  fecha: string;
 }

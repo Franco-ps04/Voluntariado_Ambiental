@@ -15,13 +15,31 @@ import { AuthService } from '../../../services/auth.service';
 export class Dashboard implements OnInit {
   stats!: ReturnType<AdminService['getStats']>;
   events: AdminEvento[] = [];
+  loading = false;
+  error = '';
 
   constructor(private adminService: AdminService, public auth: AuthService) {}
 
   isAdmin(): boolean { return this.auth.currentUser?.rol === 'admin'; }
 
   ngOnInit(): void {
-    this.stats = this.adminService.getStats();
-    this.adminService.getEvents().subscribe(data => this.events = data);
+    this.loading = true;
+    //Cargar desde la API real
+    this.adminService.getEventoHttp().subscribe({
+      next: () => {
+        this.loading = false;
+        this.stats = this.adminService.getStats();
+        //AHORA HAY QUE tomar los datos ya mapeados del servicio
+        this.adminService.getEvents().subscribe(data => this.events = data);
+      },
+      error: () => {
+        this.loading = false;
+        //Llama a los mocks si el backend no esta disponible
+        this.stats = this.adminService.getStats();
+        this.adminService.getEvents().subscribe(data => this.events = data);
+      }
+    })
+    /* this.stats = this.adminService.getStats();
+    this.adminService.getEvents().subscribe(data => this.events = data); */
   }
 }

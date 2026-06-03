@@ -4,6 +4,7 @@ import { VolunteerEvent } from '../../../models/event';
 import { MOCK_VOLUNTARIOS_EVENTO } from '../../../mocks/mock_eventos';
 import { VoluntarioInscrito } from '../../../models/asistencia';
 import { MOCK_ASISTENCIA } from '../../../mocks/mock_asistencia';
+import { AdminService } from '../../../services/admin.service';
 
 @Component({
   selector: 'app-inscripciones',
@@ -18,35 +19,64 @@ export class AdminInscripciones implements OnInit {
   notifTitle = '';
   notifMessage = '';
   sent = signal(false);
+  enviandoNotif = false;
 
   // ── Modal asistencia ────────────────────────
   showAsistenciaModal = signal(false);
   asistenciaEventoTitulo = '';
+  asistenciaEventoId: number | null = null;
   voluntariosModal: VoluntarioInscrito[] = [];
   guardadoAsistencia = false;
+  cargandoAsistencia = false;
+
+  constructor(private adminService: AdminService) { }
 
   ngOnInit(): void {
-    // Mock — sustituir por: this.eventService.getAll().subscribe(...)
-    this.events.set(MOCK_VOLUNTARIOS_EVENTO);
+    /* this.events.set(MOCK_VOLUNTARIOS_EVENTO); */
+    this.adminService.getEventoHttp().subscribe({
+      next: () => this.adminService.getEvents().subscribe(data =>
+        this.events.set(data as unknown as VolunteerEvent[])
+      ),
+      error: () => this.events.set(MOCK_VOLUNTARIOS_EVENTO)
+    });
   }
+
   //Notificacion
   openNotif(eventId: number): void {
     this.selectedEventId = eventId;
     this.notifTitle = '';
     this.notifMessage = '';
     this.sent.set(false);
+    this.enviandoNotif = false;
     this.showNotifModal.set(true);
   }
 
-  sendNotif(): void {
+  /* sendNotif(): void {
     if (!this.notifTitle || !this.notifMessage) return;
     // Mock — sustituir por llamada al backend
     this.sent.set(true);
     setTimeout(() => this.showNotifModal.set(false), 1200);
+  } */
+  sendNotif(): void {
+    if (!this.notifTitle || !this.notifMessage || !this.selectedEventId) return;
+    this.enviandoNotif = true;
+    this.adminService.crearAnuncioHttp(this.selectedEventId, this.notifTitle, this.notifMessage)
+      .subscribe({
+        next: () => {
+          this.enviandoNotif = false;
+          this.sent.set(true);
+          setTimeout(() => this.showNotifModal.set(false), 1200);
+        },
+        error: () => {
+          this.enviandoNotif = false;
+          this.sent.set(true);
+          setTimeout(() => this.showNotifModal.set(false), 1200);
+        }
+      });
   }
 
   // Asistencia
-  openAsistencia(ev: VolunteerEvent): void {
+  /* openAsistencia(ev: VolunteerEvent): void {
     this.asistenciaEventoTitulo = ev.title;
     this.guardadoAsistencia = false;
 
@@ -56,6 +86,34 @@ export class AdminInscripciones implements OnInit {
     this.voluntariosModal = (data?.voluntarios ?? []).map(v => ({ ...v }));
 
     this.showAsistenciaModal.set(true);
+  } */
+
+  openAsistencia(ev: VolunteerEvent): void {
+    this.asistenciaEventoTitulo = ev.title;
+    this.asistenciaEventoId = ev.id;
+    this.guardadoAsistencia = false;
+    this.cargandoAsistencia = true;
+    this.showAsistenciaModal.set(true);
+
+    // Cargar inscritos desde el backend
+    this.adminService.InscripcionHtpp(ev.id).subscribe({
+      next: (data: any[]) => {
+        this.cargandoAsistencia = false;
+        this.voluntariosModal = data.map(d => ({
+          id: d.id_usuario,
+          inscripcionId: d.id_inscripcion,  // ← necesario para PUT /asistencia
+          nombre: d.nombre,
+          email: d.email,
+          telefono: d.telefono ?? '',
+          asistio: d.asistio === 1 ? true : d.asistio === 0 ? false : null
+        }));
+      },
+      error: () => {
+        this.cargandoAsistencia = false;
+        const data = MOCK_ASISTENCIA.find(a => a.eventoId === ev.id);
+        this.voluntariosModal = (data?.voluntarios ?? []).map(v => ({ ...v, inscripcionId: v.id }));
+      }
+    });
   }
 
   toggleAsistencia(v: VoluntarioInscrito): void {
@@ -85,12 +143,38 @@ export class AdminInscripciones implements OnInit {
     return 'bi-x-circle-fill';
   }
 
-  guardarAsistencia(): void {
+  /* guardarAsistencia(): void {
     // En producción: llamar al backend con los datos
     // this.adminService.guardarAsistencia(this.voluntariosModal).subscribe(...)
     console.log('Asistencia guardada:', this.voluntariosModal);
     this.guardadoAsistencia = true;
     setTimeout(() => this.showAsistenciaModal.set(false), 1200);
+  } */
+
+  guardarAsistencia(): void {
+    const pendientes = this.voluntariosModal.filter(v => v.asistio !== null && v.inscripcionId);
+    if (!pendientes.length) {
+      this.guardadoAsistencia = true;
+      setTimeout(() => this.showAsistenciaModal.set(false), 1200);
+      return;
+    }
+    let done = 0;
+    pendientes.forEach(v => {
+      this.adminService.registrarAsistenciaHttp(v.inscripcionId!, v.asistio!).subscribe({
+        next: () => {
+          if (++done === pendientes.length) {
+            this.guardadoAsistencia = true;
+            setTimeout(() => this.showAsistenciaModal.set(false), 1200);
+          }
+        },
+        error: () => {
+          if (++done === pendientes.length) {
+            this.guardadoAsistencia = true;
+            setTimeout(() => this.showAsistenciaModal.set(false), 1200);
+          }
+        }
+      });
+    });
   }
 
   countAsistieron(): number {
