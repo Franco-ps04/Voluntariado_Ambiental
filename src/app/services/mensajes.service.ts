@@ -1,40 +1,115 @@
 import { Injectable, signal, computed } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
+import { AuthUser, UserRole } from '../models/UserRole';
 import { MensajeAdmin } from '../models/mensaje';
-import { MOCK_MENSAJES } from '../mocks/mock_mensaje';
+
+type HistorialItem = {
+  texto: string;
+  fecha: string;
+  tipo: 'admin' | 'voluntario';
+};
 
 @Injectable({ providedIn: 'root' })
 export class MensajesService {
-  private _mensajes = signal<MensajeAdmin[]>([...MOCK_MENSAJES]);
-
+  private readonly _mensajes = signal<MensajeAdmin[]>([]);
   readonly mensajes = this._mensajes.asReadonly();
 
-  /** Para el admin: cuántos mensajes sin leer dirigidos a él (id=2) + contactos */
+  private usuarioActual: AuthUser | null = null;
+
   readonly sinLeer = computed(() =>
-    this._mensajes().filter(m =>
-      !m.leido && (m.idDestinatario === 2 || m.origen === 'contacto')
-    ).length
+    this._mensajes().filter(m => !m.leido).length
   );
 
-  /** Mensajes sin leer para un organizador específico */
-  sinLeerPara(idUsuario: number): number {
-    return this._mensajes().filter(m =>
-      !m.leido && m.idDestinatario === idUsuario
-    ).length;
+  constructor(
+    private http: HttpClient,
+    private auth: AuthService
+  ) {
+    this.auth.user$.subscribe(user => {
+      this.usuarioActual = user;
+      this.cargarSegunRol(user);
+    });
   }
 
-  /** Mensajes visibles para el panel admin/org según su rol e id */
-  getMensajesPanel(idUsuario: number, rol: string): MensajeAdmin[] {
-    if (rol === 'admin') {
-      // Admin ve: mensajes dirigidos a él + todos los contactos públicos
-      return this._mensajes().filter(m =>
-        m.idDestinatario === idUsuario || m.origen === 'contacto'
-      );
+  private cargarSegunRol(user: AuthUser | null): void {
+    if (!user) {
+      this._mensajes.set([]);
+      return;
     }
-    // Organizador: solo mensajes dirigidos a él
+
+    if (user.rol === 'voluntario') {
+      this.http.get<any[]>(`${environment.apiUrl}/mensajes/mis`).subscribe({
+        next: data => this._mensajes.set(data.map(m => this.mapMensajeBackend(m, 'voluntario'))),
+        error: () => this._mensajes.set([])
+      });
+      return;
+    }
+
+    if (user.rol === 'admin' || user.rol === 'organizador') {
+      this.http.get<any[]>(`${environment.apiUrl}/mensajes/panel`).subscribe({
+        next: data => this._mensajes.set(data.map(m => this.mapMensajeBackend(m, 'panel'))),
+        error: () => this._mensajes.set([])
+      });
+      return;
+    }
+
+    this._mensajes.set([]);
+  }
+
+  private mapMensajeBackend(raw: any, origenCarga: 'panel' | 'voluntario'): MensajeAdmin {
+    const historial: HistorialItem[] = Array.isArray(raw.historial)
+      ? raw.historial.map((h: any) => ({
+        texto: String(h.texto ?? ''),
+        fecha: String(h.fecha ?? new Date().toISOString()),
+        tipo: (h.tipo === 'voluntario' ? 'voluntario' : 'admin') as 'admin' | 'voluntario'
+      }))
+      : [];
+
+    return {
+      id: Number(raw.id_mensaje ?? raw.id ?? 0),
+      idRemitente: raw.idRemitente !== undefined ? Number(raw.idRemitente) : Number(raw.id_voluntario ?? 0),
+      idDestinatario: raw.idDestinatario !== undefined ? Number(raw.idDestinatario) : Number(raw.id_usuario_destino ?? 0),
+      leidoPorVoluntario: this.toBool(raw.leido_por_voluntario ?? raw.leidoPorVoluntario),
+      origen: 'mensaje',
+      remitente: String(raw.remitente ?? ''),
+      emailRemitente: String(raw.emailRemitente ?? raw.email_remitente ?? ''),
+      asunto: String(raw.asunto ?? ''),
+      mensaje: String(raw.mensaje ?? ''),
+      fecha: String(raw.fecha ?? new Date().toISOString()),
+      leido: this.toBool(raw.leido),
+      respondido: this.toBool(raw.respondido),
+      respuesta: raw.respuesta ? String(raw.respuesta) : undefined,
+      fechaResp: raw.fechaResp ? String(raw.fechaResp) : undefined,
+      eventoRelacionado: raw.eventoRelacionado ?? raw.evento_relacionado ?? undefined,
+      historial
+    };
+  }
+
+  private toBool(value: any): boolean {
+    return value === true || value === 1 || value === '1';
+  }
+
+  private refrescar(): void {
+    this.cargarSegunRol(this.usuarioActual);
+  }
+
+  // ─────────────────────────────
+  // Lectura de datos para la UI
+  // ─────────────────────────────
+
+  sinLeerPara(idUsuario: number): number {
+    return this._mensajes().filter(m => !m.leido && m.idDestinatario === idUsuario).length;
+  }
+
+  getMensajesPanel(idUsuario: number, rol: string): MensajeAdmin[] {
+    if (rol === 'admin' || rol === 'organizador') {
+      return this._mensajes().filter(m => m.idDestinatario === idUsuario || true);
+    }
+
     return this._mensajes().filter(m => m.idDestinatario === idUsuario);
   }
 
-  /** Para el voluntario: cuántas respuestas del admin/org no leídas */
   sinRespuestasNoLeidas(idUsuario: number): number {
     return this._mensajes().filter(m =>
       m.idRemitente === idUsuario &&
@@ -44,42 +119,67 @@ export class MensajesService {
     ).length;
   }
 
-  /** Mensajes enviados por un voluntario (su bandeja) */
   getMisMensajes(idUsuario: number): MensajeAdmin[] {
     return this._mensajes().filter(m =>
-      m.idRemitente === idUsuario && m.origen === 'mensaje'
+      m.idRemitente === idUsuario &&
+      m.origen === 'mensaje'
     );
   }
 
-  // ── Admin / Org actions ────────────────────────────────────
+  // ─────────────────────────────
+  // Admin / Organizador
+  // ─────────────────────────────
 
   marcarLeido(id: number, origen: string): void {
-    this._mensajes.update(list =>
-      list.map(m =>
-        m.id === id && m.origen === origen ? { ...m, leido: true } : m
-      )
-    );
+    if (!this.usuarioActual) return;
+
+    this.http.patch(`${environment.apiUrl}/mensajes/${id}/marcar-leido`, {})
+      .subscribe({
+        next: () => {
+          this._mensajes.update(list =>
+            list.map(m => (m.id === id && m.origen === origen) ? { ...m, leido: true } : m)
+          );
+        },
+        error: () => {
+          // no cambia el estado local si falla
+        }
+      });
   }
 
   responder(id: number, origen: string, texto: string): void {
-    const now = new Date().toISOString();
-    this._mensajes.update(list =>
-      list.map(m => {
-        if (m.id !== id || m.origen !== origen) return m;
-        const nuevoHistorial = [...(m.historial ?? []), { texto, fecha: now, tipo: 'admin' as const }];
-        return {
-          ...m,
-          respondido: true,
-          respuesta: texto,
-          fechaResp: now,
-          historial: nuevoHistorial,
-          leidoPorVoluntario: false
-        };
-      })
-    );
+    if (!texto.trim() || !this.usuarioActual) return;
+
+    this.http.post(`${environment.apiUrl}/mensajes/${id}/responder`, { texto: texto.trim() })
+      .subscribe({
+        next: () => {
+          const now = new Date().toISOString();
+          this._mensajes.update(list =>
+            list.map(m => {
+              if (m.id !== id || m.origen !== origen) return m;
+              const nuevoHistorial = [
+                ...(m.historial ?? []),
+                { texto: texto.trim(), fecha: now, tipo: 'admin' as const }
+              ];
+              return {
+                ...m,
+                respondido: true,
+                respuesta: texto.trim(),
+                fechaResp: now,
+                historial: nuevoHistorial,
+                leidoPorVoluntario: false
+              };
+            })
+          );
+        },
+        error: () => {
+          // no cambia el estado local si falla
+        }
+      });
   }
 
-  // ── Voluntario actions ─────────────────────────────────────
+  // ─────────────────────────────
+  // Voluntario
+  // ─────────────────────────────
 
   enviarMensaje(params: {
     idRemitente: number;
@@ -89,43 +189,64 @@ export class MensajesService {
     asunto: string;
     mensaje: string;
     eventoRelacionado?: string;
+    idEvento?: number;
   }): void {
-    const nuevoId = Math.max(0, ...this._mensajes().map(m => m.id)) + 1;
-    const nuevo: MensajeAdmin = {
-      id: nuevoId,
-      idRemitente: params.idRemitente,
+    if (!this.usuarioActual) return;
+
+    this.http.post<{ ok: boolean; id: number }>(`${environment.apiUrl}/mensajes`, {
+      idUsuarioDestino: params.idDestinatario,
       idDestinatario: params.idDestinatario,
-      leidoPorVoluntario: true,
-      origen: 'mensaje',
-      remitente: params.remitente,
-      emailRemitente: params.emailRemitente,
       asunto: params.asunto,
       mensaje: params.mensaje,
-      fecha: new Date().toISOString(),
-      leido: false,
-      respondido: false,
-      historial: [],
-      eventoRelacionado: params.eventoRelacionado
-    };
-    this._mensajes.update(list => [nuevo, ...list]);
+      idEvento: params.idEvento ?? null
+    }).subscribe({
+      next: () => {
+        this.refrescar();
+      },
+      error: () => {
+        // no cambia el estado local si falla
+      }
+    });
   }
 
   enviarSeguimiento(id: number, texto: string): void {
-    const now = new Date().toISOString();
-    this._mensajes.update(list =>
-      list.map(m => {
-        if (m.id !== id) return m;
-        const nuevoHistorial = [...(m.historial ?? []), { texto, fecha: now, tipo: 'voluntario' as const }];
-        return { ...m, historial: nuevoHistorial, leido: false };
-      })
-    );
+    if (!texto.trim() || !this.usuarioActual) return;
+
+    this.http.post(`${environment.apiUrl}/mensajes/${id}/seguimiento`, {
+      texto: texto.trim()
+    }).subscribe({
+      next: () => {
+        const now = new Date().toISOString();
+        this._mensajes.update(list =>
+          list.map(m => {
+            if (m.id !== id) return m;
+            const nuevoHistorial = [
+              ...(m.historial ?? []),
+              { texto: texto.trim(), fecha: now, tipo: 'voluntario' as const }
+            ];
+            return { ...m, historial: nuevoHistorial, leido: false };
+          })
+        );
+      },
+      error: () => {
+        // no cambia el estado local si falla
+      }
+    });
   }
 
   marcarLeidoPorVoluntario(id: number): void {
-    this._mensajes.update(list =>
-      list.map(m =>
-        m.id === id ? { ...m, leidoPorVoluntario: true } : m
-      )
-    );
+    if (!this.usuarioActual) return;
+
+    this.http.patch(`${environment.apiUrl}/mensajes/${id}/leido`, {})
+      .subscribe({
+        next: () => {
+          this._mensajes.update(list =>
+            list.map(m => (m.id === id ? { ...m, leidoPorVoluntario: true } : m))
+          );
+        },
+        error: () => {
+          // no cambia el estado local si falla
+        }
+      });
   }
 }

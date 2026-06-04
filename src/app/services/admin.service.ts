@@ -72,7 +72,7 @@ export class AdminService {
   //Crear evento real con HTTP
   crearEventoHttp(event: {
     nombre: string; descripcion: string; fecha: string; hora: string;
-    ubicacion: string; capacidad: number; idTipo: number;
+    ubicacion: string; capacidad: number; idTipo: number; idOrganizador: number;
     latitud?: number; longitud?: number; imagenUrl?: string;
     requisitos?: string[];
   }): Observable<any> {

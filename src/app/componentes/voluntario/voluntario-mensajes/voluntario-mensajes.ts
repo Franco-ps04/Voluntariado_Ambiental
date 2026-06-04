@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, effect, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MensajeAdmin } from '../../../models/mensaje';
 import { MensajesService } from '../../../services/mensajes.service';
@@ -54,6 +54,17 @@ export class VoluntarioMensajes implements OnInit {
     this.misInscripciones = MOCK_INSCRIPCIONES.filter(
       i => i.userId === (auth.currentUser?.id ?? 0)
     );
+
+    effect(() => {
+      const userId = this.auth.currentUser?.id ?? 0;
+      const mis = this.mensajesService.mensajes().filter(m =>
+        m.origen === 'mensaje' && m.idRemitente === userId
+      );
+
+      if (mis.length > 0 && !this.selected()) {
+        this.seleccionar(mis[0]);
+      }
+    });
   }
 
   ngOnInit(): void {
