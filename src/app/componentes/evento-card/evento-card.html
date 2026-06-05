@@ -3,10 +3,9 @@
 
   <!-- Imagen clickeable → abre modal info -->
   <div style="position:relative;cursor:pointer;overflow:hidden" (click)="verInfo.emit(event)">
-    <img [src]="event.imageUrl || 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=80'"
-      [alt]="event.title" class="card-img-top" style="height:170px;object-fit:cover;transition:transform .2s"
-      onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'"
-      (error)="event.imageUrl='https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=80'">
+    <img [src]="getImageUrl()" [alt]="event.title" class="card-img-top"
+      style="height:170px;object-fit:cover;transition:transform .2s" onmouseover="this.style.transform='scale(1.03)'"
+      onmouseout="this.style.transform='scale(1)'">
 
     <!-- Overlay hover -->
     <div style="position:absolute;inset:0;background:rgba(0,0,0,.25);
@@ -53,9 +52,11 @@
         (click)="verInfo.emit(event); $event.stopPropagation()">
         <i class="bi bi-info-circle me-1"></i>Información
       </button>
-      <button class="btn btn-success btn-sm flex-fill" style="font-size:11px"
-        (click)="inscribirse.emit(event); $event.stopPropagation()">
-        <i class="bi bi-person-plus me-1"></i>Inscribirse
+      <button class="btn btn-sm flex-fill" style="font-size:11px" [class.btn-success]="!inscrito"
+        [class.btn-outline-secondary]="inscrito" [disabled]="inscrito"
+        (click)="!inscrito && inscribirse.emit(event); $event.stopPropagation()">
+        <i class="bi me-1" [class.bi-person-check]="inscrito" [class.bi-person-plus]="!inscrito"></i>
+        {{ inscrito ? 'Inscrito' : 'Inscribirse' }}
       </button>
     </div>
   </div>

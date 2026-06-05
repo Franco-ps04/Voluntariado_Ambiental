@@ -261,11 +261,19 @@
   <div class="row g-3 mb-1">
     <div class="col">
       <label class="form-label small fw-medium">Latitud</label>
-      <input type="number" class="form-control" [(ngModel)]="form.latitude" step="0.0001" placeholder="-12.046">
+      <input type="number" class="form-control" [(ngModel)]="form.latitude" step="any"
+        placeholder="-11.983415154998962">
+      @if (submitted && formErrors['latitude']) {
+      <div class="invalid-feedback d-block">{{ formErrors['latitude'] }}</div>
+      }
     </div>
     <div class="col">
       <label class="form-label small fw-medium">Longitud</label>
-      <input type="number" class="form-control" [(ngModel)]="form.longitude" step="0.0001" placeholder="-77.042">
+      <input type="number" class="form-control" [(ngModel)]="form.longitude" step="any"
+        placeholder="-77.00490666352067">
+      @if (submitted && formErrors['longitude']) {
+      <div class="invalid-feedback d-block">{{ formErrors['longitude'] }}</div>
+      }
     </div>
   </div>
 
@@ -280,7 +288,7 @@
     <select class="form-select" [(ngModel)]="idOrganizador" [class.is-invalid]="submitted && formErrors['organizador']">
       <option [ngValue]="null">— Selecciona un organizador —</option>
       @for (o of organizadores; track o.id_organizador) {
-      <option [ngValue]="o.id_organizador">{{ o.nombre }} ({{ o.nombre_organizacion }})</option>
+      <option [ngValue]="o.id_organizador">{{ o.nombre }} ({{ o.organizacion }})</option>
       }
     </select>
     @if (submitted && formErrors['organizador']) {
@@ -294,12 +302,11 @@
   </div>
   }
 
-
   <div class="mb-3">
     <label class="form-label small fw-medium">Imagen del evento</label>
 
     <div class="upload-zone rounded-3 text-center p-4" [class.dragging]="isDragging" (click)="fileInput.click()"
-      (drop)="onDrop($event)" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)" (dragover)="onDragOver($event)" (dragleave)="onDragLeave()"
       style="cursor:pointer;border:2px dashed #2d9e5f;background:#f8fffe;transition:background .15s">
 
       @if (previewUrl) {
@@ -324,6 +331,16 @@
     <input #fileInput type="file" accept="image/jpeg,image/png,image/webp" class="d-none"
       (change)="onFileSelected($event)">
   </div>
+
+  @if (previewUrl || form.image) {
+  <div class="mb-3 p-2 rounded-3 border" style="background:#f8fffe">
+    <div style="height:150px;overflow:hidden;border-radius:10px">
+      <img [src]="previewUrl || resolveImageUrl(form.image)" alt="preview" class="w-100 h-100" style="object-fit:cover"
+        (error)="previewUrl = null; form.image=''">
+    </div>
+  </div>
+  }
+
   <div class="mb-3">
     <label class="form-label small fw-medium">Requisitos (uno por línea)</label>
     <textarea class="form-control" rows="4" style="resize:vertical" [(ngModel)]="form.requirementsText"

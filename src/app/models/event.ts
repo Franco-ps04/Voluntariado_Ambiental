@@ -17,6 +17,7 @@ export interface VolunteerEvent {
   maxVolunteers: number;
   enrolledCount: number;
   organizerName: string;
+  organizerUserId?: number;
   imageUrl: string;
   requirements: string[];
   status: EventStatus;

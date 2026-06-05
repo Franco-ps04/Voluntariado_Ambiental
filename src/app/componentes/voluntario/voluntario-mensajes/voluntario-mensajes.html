@@ -245,7 +245,7 @@
             <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center
                         fw-bold text-white mb-2" style="width:40px;height:40px;background:#2d9e5f;font-size:16px">A
             </div>
-            <p class="fw-semibold mb-0 small">Administrador</p>
+            <p class="fw-semibold mb-0 small">Administrador activo</p>
             <p class="text-muted mb-0" style="font-size:11px">GreenUnity</p>
             @if (destinoTipo === 'admin') {
             <i class="bi bi-check-circle-fill text-success mt-1 d-block"></i>
@@ -272,6 +272,20 @@
         </label>
       </div>
     </div>
+
+    @if (destinoTipo === 'admin') {
+    <div class="mb-3">
+      <label class="form-label small fw-semibold">Selecciona un administrador activo</label>
+      <select class="form-select" [(ngModel)]="destinoAdminId">
+        <option [ngValue]="null">— Elige un administrador —</option>
+        @for (u of destinatariosActivos; track u.id) {
+        <option [ngValue]="u.id">
+          {{ u.nombre }} ({{ u.rol }})
+        </option>
+        }
+      </select>
+    </div>
+    }
 
     <!-- Selector de inscripción (solo si eligió evento) -->
     @if (destinoTipo === 'evento') {

@@ -84,13 +84,21 @@
                     <label class="form-label fw-medium small">
                         Latitud <span class="text-muted fw-normal">(opcional)</span>
                     </label>
-                    <input class="form-control" [(ngModel)]="latitude" placeholder="-12.1234567">
+                    <input class="form-control" [(ngModel)]="latitude" step="any" placeholder="-11.983415154998962"
+                        [class.is-invalid]="submitted && errores['latitude']">
+                    @if (submitted && errores['latitude']) {
+                    <div class="invalid-feedback">{{ errores['latitude'] }}</div>
+                    }
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-medium small">
                         Longitud <span class="text-muted fw-normal">(opcional)</span>
                     </label>
-                    <input class="form-control" [(ngModel)]="longitude" placeholder="-77.0123456">
+                    <input class="form-control" [(ngModel)]="longitude" step="any" placeholder="-77.00490666352067"
+                        [class.is-invalid]="submitted && errores['longitude']">
+                    @if (submitted && errores['longitude']) {
+                    <div class="invalid-feedback">{{ errores['longitude'] }}</div>
+                    }
                 </div>
                 <!-- Organizador — selector si es admin, info fija si es organizador -->
                 @if (auth.currentUser?.rol === 'admin') {
@@ -100,7 +108,7 @@
                         [class.is-invalid]="submitted && errores['organizador']">
                         <option [ngValue]="null">— Selecciona un organizador —</option>
                         @for (o of organizadores; track o.id_organizador) {
-                        <option [ngValue]="o.id_organizador">{{ o.nombre }} ({{ o.nombre_organizacion }})</option>
+                        <option [ngValue]="o.id_organizador">{{ o.nombre }} ({{ o.organizacion }})</option>
                         }
                     </select>
                     @if (submitted && errores['organizador']) {
@@ -114,7 +122,18 @@
                     <small class="text-muted">El evento se asignará a tu cuenta de organizador.</small>
                 </div>
                 }
-                
+                <!-- URL imagen -->
+                <div class="col-md-6">
+                    <input class="form-control" [(ngModel)]="image" placeholder="https://...">
+                    @if (image) {
+                    <div class="mt-2 p-2 border rounded-3" style="background:#f8fffe">
+                        <div style="height:150px;overflow:hidden;border-radius:10px">
+                            <img [src]="resolveImageUrl(image)" alt="preview" class="w-100 h-100"
+                                style="object-fit:cover">
+                        </div>
+                    </div>
+                    }
+                </div>
                 <!-- Requisitos -->
                 <div class="col-12">
                     <label class="form-label fw-medium small">

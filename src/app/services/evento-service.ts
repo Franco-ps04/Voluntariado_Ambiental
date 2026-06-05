@@ -12,6 +12,18 @@ export class EventoService {
   private eventsSubject = new BehaviorSubject<VolunteerEvent[]>(MOCK_VOLUNTARIOS_EVENTO);
 
   constructor(private http: HttpClient) { }
+  
+  private buildImageUrl(url?: string | null): string {
+    if (!url) return '';
+    const raw = String(url).trim();
+    if (!raw) return '';
+    if (raw.startsWith('data:') || raw.startsWith('http://') || raw.startsWith('https://')) {
+      return raw;
+    }
+    const baseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
+    const normalized = raw.startsWith('/') ? raw : `/${raw}`;
+    return `${baseUrl}${normalized}`;
+  }
 
   //Con mock
   getEvents(): Observable<VolunteerEvent[]> {
@@ -37,7 +49,8 @@ export class EventoService {
           maxVolunteers: e.capacidad,
           enrolledCount: e.inscritos,
           organizerName: e.organizador,
-          imageUrl: e.imagen_url ?? '',
+          organizerUserId: e.id_usuario_organizador ?? e.idUsuarioOrganizador ?? undefined,
+          imageUrl: this.buildImageUrl(e.imagen_url),
           status: e.estado as any,
           requirements: e.requisitos ?? [],
           latitude: e.latitud ?? 0,
@@ -69,7 +82,8 @@ export class EventoService {
           maxVolunteers: data.capacidad,
           enrolledCount: data.inscritos,
           organizerName: data.organizador,
-          imageUrl: data.imagen_url ?? '',
+          organizerUserId: data.id_usuario_organizador ?? data.idUsuarioOrganizador ?? undefined,
+          imageUrl: this.buildImageUrl(data.imagen_url),
           status: data.estado as any,
           requirements: data.requisitos ?? [],
           latitude: data.latitud ?? 0,
@@ -86,11 +100,12 @@ export class EventoService {
     );
   }
 
+  misInscripcionesHTTP(): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/inscripciones/mis`);
+  }
+
   //Inscripcion con HTTP
   inscribirse(idEvento: number): Observable<any> {
     return this.http.post(`${environment.apiUrl}/inscripciones`, { idEvento });
   }
 }
-
-
-

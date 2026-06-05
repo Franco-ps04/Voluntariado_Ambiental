@@ -20,6 +20,18 @@ export class AdminService {
 
   constructor(private http: HttpClient) { }
 
+  private buildImageUrl(url?: string | null): string {
+    if (!url) return '';
+    const raw = String(url).trim();
+    if (!raw) return '';
+    if (raw.startsWith('data:') || raw.startsWith('http://') || raw.startsWith('https://')) {
+      return raw;
+    }
+    const normalized = raw.startsWith('/') ? raw : `/${raw}`;
+    const baseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
+    return `${baseUrl}${normalized}`;
+  }
+
   private mapEvento(e: any): AdminEvento {
     return {
       id: e.id_evento,
@@ -34,7 +46,7 @@ export class AdminService {
       organizer: e.organizador,
       idOrganizador: e.id_organizador,
       idTipo: e.id_tipo,
-      image: e.imagen_url ?? '',
+      image: this.buildImageUrl(e.imagen_url),
       requirements: e.requisitos ?? [],
       maxVolunteers: e.capacidad,
       registered: e.inscritos,
@@ -98,6 +110,10 @@ export class AdminService {
 
   obtenerOrganizadoresHttp(): Observable<any[]> {
     return this.http.get<any[]>(`${environment.apiUrl}/eventos/organizadores/lista`);
+  }
+
+  obtenerReporteResumenHttp(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/reportes/resumen`);
   }
 
   actualizarEventoHttp(idEvento: number, event: any): Observable<any> {

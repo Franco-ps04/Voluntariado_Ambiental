@@ -3,10 +3,9 @@ import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../services/admin.service';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 
-interface OrgOption { id_organizador: number; nombre: string; nombre_organizacion: string; }
+interface OrgOption { id_organizador: number; nombre: string; organizacion: string; }
 
 @Component({
   selector: 'app-crear-eventos',
@@ -36,22 +35,23 @@ export class CrearEventos implements OnInit {
   constructor(
     private adminService: AdminService,
     public auth: AuthService,
-    private http: HttpClient,
     private router: Router
   ) { }
 
   ngOnInit(): void {
     if (this.auth.currentUser?.rol === 'admin') {
       this.adminService.obtenerOrganizadoresHttp().subscribe({
-        next: (data: any[]) => {
+        next: (data) => {
           this.organizadores = data.map((u: any) => ({
-            id_organizador: Number(u.id_organizador ?? u.id),
+            id_organizador: Number(u.id_organizador ?? u.id_usuario ?? u.id),
             nombre: u.nombre ?? '',
-            nombre_organizacion: u.nombre_organizacion ?? u.organizacion ?? ''
+            organizacion: u.nombre_organizacion ?? u.organizacion ?? ''
           }));
+          this.idOrganizador = this.organizadores[0]?.id_organizador ?? null;
         },
         error: () => {
           this.organizadores = [];
+          this.idOrganizador = null;
         }
       });
     }
@@ -68,6 +68,21 @@ export class CrearEventos implements OnInit {
     if (!Number.isFinite(this.maxVolunteers) || this.maxVolunteers < 1) {
       e['maxVolunteers'] = 'Debe haber al menos 1 voluntario.';
     }
+
+    const lat = this.parseCoordinate(this.latitude);
+    if (this.latitude && (lat === null || Number.isNaN(lat))) {
+      e['latitude'] = 'Latitud inválida.';
+    } else if (lat !== null && !Number.isNaN(lat) && (lat < -90 || lat > 90)) {
+      e['latitude'] = 'La latitud debe estar entre -90 y 90.';
+    }
+
+    const lon = this.parseCoordinate(this.longitude);
+    if (this.longitude && (lon === null || Number.isNaN(lon))) {
+      e['longitude'] = 'Longitud inválida.';
+    } else if (lon !== null && !Number.isNaN(lon) && (lon < -180 || lon > 180)) {
+      e['longitude'] = 'La longitud debe estar entre -180 y 180.';
+    }
+
     if (this.auth.currentUser?.rol === 'admin' && !this.idOrganizador) {
       e['organizador'] = 'Selecciona un organizador.';
     }
@@ -76,6 +91,24 @@ export class CrearEventos implements OnInit {
 
   get formularioValido(): boolean {
     return Object.keys(this.errores).length === 0;
+  }
+
+
+  private parseCoordinate(value: string): number | null {
+    const raw = String(value ?? '').trim();
+    if (!raw) return null;
+    const n = Number(raw.replace(',', '.'));
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  resolveImageUrl(url?: string | null): string {
+    if (!url) return '';
+    const raw = String(url).trim();
+    if (!raw) return '';
+    if (raw.startsWith('data:') || raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+    const normalized = raw.startsWith('/') ? raw : `/${raw}`;
+    const baseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
+    return `${baseUrl}${normalized}`;
   }
 
   private getTipoId(tipo: string): number {
@@ -97,6 +130,9 @@ export class CrearEventos implements OnInit {
 
     this.guardando = true;
 
+    const lat = this.parseCoordinate(this.latitude);
+    const lon = this.parseCoordinate(this.longitude);
+
     const body: any = {
       nombre: this.title.trim(),
       descripcion: this.description.trim(),
@@ -105,8 +141,8 @@ export class CrearEventos implements OnInit {
       ubicacion: this.location.trim(),
       capacidad: Number(this.maxVolunteers),
       idTipo: this.getTipoId(this.type),
-      latitud: this.latitude ? Number(this.latitude) : undefined,
-      longitud: this.longitude ? Number(this.longitude) : undefined,
+      latitud: lat !== null && !Number.isNaN(lat) ? lat : undefined,
+      longitud: lon !== null && !Number.isNaN(lon) ? lon : undefined,
       imagenUrl: this.image || undefined,
       requisitos: this.requirementsText.split('\n').map(r => r.trim()).filter(Boolean)
     };
@@ -128,4 +164,3 @@ export class CrearEventos implements OnInit {
     });
   }
 }
-

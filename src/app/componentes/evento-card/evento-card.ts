@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { VolunteerEvent } from '../../models/event';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-evento-card',
@@ -10,10 +11,19 @@ import { VolunteerEvent } from '../../models/event';
 export class EventoCard {
   @Input({ required: true }) event!: VolunteerEvent;
   @Input() selected = false;
+  @Input() inscrito = false;
 
   @Output() inscribirse = new EventEmitter<VolunteerEvent>();
   @Output() verMapa = new EventEmitter<VolunteerEvent>();
   @Output() verInfo = new EventEmitter<VolunteerEvent>(); // ← nuevo
+
+  getImageUrl(): string {
+    const img = (this.event.imageUrl ?? '').trim();
+    if (!img) return 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=80';
+    if (img.startsWith('http') || img.startsWith('data:')) return img;
+    const baseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
+    return `${baseUrl}/${img.replace(/^\/+/, '')}`;
+  }
 
   badgeClass(): string {
     const m: Record<string, string> = {
