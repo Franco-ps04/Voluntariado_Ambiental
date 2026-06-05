@@ -19,14 +19,18 @@
                 <div class="col-md-6">
                     <label class="form-label fw-medium small">Tipo de actividad <span
                             class="text-danger">*</span></label>
-                    <select class="form-select" [(ngModel)]="type">
-                        <option>Limpieza</option>
-                        <option>Reforestación</option>
-                        <option>Reciclaje</option>
-                        <option>Taller</option>
-                        <option>Educación</option>
-                        <option>Conservación</option>
+                    <select class="form-select" [(ngModel)]="type" [class.is-invalid]="submitted && errores['type']">
+                        <option value="">— Selecciona un tipo —</option>
+                        <option value="Limpieza">Limpieza</option>
+                        <option value="Reforestación">Reforestación</option>
+                        <option value="Reciclaje">Reciclaje</option>
+                        <option value="Taller">Taller</option>
+                        <option value="Educación">Educación</option>
+                        <option value="Conservación">Conservación</option>
                     </select>
+                    @if (submitted && errores['type']) {
+                    <div class="invalid-feedback">{{ errores['type'] }}</div>
+                    }
                 </div>
                 <!-- Descripción -->
                 <div class="col-12">
@@ -95,8 +99,8 @@
                     <select class="form-select" [(ngModel)]="idOrganizador"
                         [class.is-invalid]="submitted && errores['organizador']">
                         <option [ngValue]="null">— Selecciona un organizador —</option>
-                        @for (o of organizadores; track o.id) {
-                        <option [ngValue]="o.id">{{ o.nombre }} ({{ o.organizacion }})</option>
+                        @for (o of organizadores; track o.id_organizador) {
+                        <option [ngValue]="o.id_organizador">{{ o.nombre }} ({{ o.nombre_organizacion }})</option>
                         }
                     </select>
                     @if (submitted && errores['organizador']) {
@@ -110,13 +114,7 @@
                     <small class="text-muted">El evento se asignará a tu cuenta de organizador.</small>
                 </div>
                 }
-                <!-- URL imagen -->
-                <div class="col-md-6">
-                    <label class="form-label fw-medium small">
-                        URL de imagen <span class="text-muted fw-normal">(opcional)</span>
-                    </label>
-                    <input class="form-control" [(ngModel)]="image" placeholder="https://...">
-                </div>
+                
                 <!-- Requisitos -->
                 <div class="col-12">
                     <label class="form-label fw-medium small">
@@ -144,7 +142,8 @@
                 <!-- Botones -->
                 <div class="col-12 d-flex justify-content-end gap-2 pt-2">
                     <button class="btn btn-outline-secondary" routerLink="/admin/eventos">Cancelar</button>
-                    <button class="btn btn-success fw-semibold px-4" (click)="submit()" [disabled]="guardando">
+                    <button class="btn btn-success fw-semibold px-4" (click)="submit()"
+                        [disabled]="guardando || !formularioValido && submitted">
                         @if (guardando) {
                         <span class="spinner-border spinner-border-sm me-1"></span>
                         } <i class="bi bi-plus-circle me-1"></i>Crear evento

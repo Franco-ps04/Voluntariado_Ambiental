@@ -190,41 +190,74 @@
   </div>
 
   <div class="mb-3">
-    <label class="form-label small fw-medium">Título del evento</label>
-    <input type="text" class="form-control" [(ngModel)]="form.title" placeholder="Ej: Limpieza de Playa — Costa Verde">
+    <label class="form-label small fw-medium">Título del evento <span class="text-danger">*</span></label>
+    <input type="text" class="form-control" [(ngModel)]="form.title"
+      [class.is-invalid]="submitted && formErrors['title']" placeholder="Ej: Limpieza de Playa — Costa Verde">
+    @if (submitted && formErrors['title']) {
+    <div class="invalid-feedback">{{ formErrors['title'] }}</div>
+    }
   </div>
+
   <div class="mb-3">
-    <label class="form-label small fw-medium">Descripción</label>
-    <textarea class="form-control" rows="3" style="resize:none" [(ngModel)]="form.description"></textarea>
+    <label class="form-label small fw-medium">Descripción <span class="text-danger">*</span></label>
+    <textarea class="form-control" rows="3" style="resize:none" [(ngModel)]="form.description"
+      [class.is-invalid]="submitted && formErrors['description']"></textarea>
+    @if (submitted && formErrors['description']) {
+    <div class="invalid-feedback">{{ formErrors['description'] }}</div>
+    }
   </div>
+
   <div class="row g-3 mb-3">
     <div class="col">
-      <label class="form-label small fw-medium">Tipo de actividad</label>
-      <select class="form-select" [(ngModel)]="form.type">
+      <label class="form-label small fw-medium">Tipo de actividad <span class="text-danger">*</span></label>
+      <select class="form-select" [(ngModel)]="form.type" [class.is-invalid]="submitted && formErrors['type']">
+        <option value="">— Selecciona un tipo —</option>
         @for (t of EVENT_TYPES; track t) {
         <option [value]="t">{{ t }}</option>
         }
       </select>
+      @if (submitted && formErrors['type']) {
+      <div class="invalid-feedback">{{ formErrors['type'] }}</div>
+      }
     </div>
     <div class="col">
-      <label class="form-label small fw-medium">Máx. voluntarios</label>
-      <input type="number" class="form-control" [(ngModel)]="form.maxVolunteers" min="1">
+      <label class="form-label small fw-medium">Máx. voluntarios <span class="text-danger">*</span></label>
+      <input type="number" class="form-control" [(ngModel)]="form.maxVolunteers" min="1"
+        [class.is-invalid]="submitted && formErrors['maxVolunteers']">
+      @if (submitted && formErrors['maxVolunteers']) {
+      <div class="invalid-feedback">{{ formErrors['maxVolunteers'] }}</div>
+      }
     </div>
   </div>
+
   <div class="row g-3 mb-3">
     <div class="col">
-      <label class="form-label small fw-medium">Fecha</label>
-      <input type="date" class="form-control" [(ngModel)]="form.date">
+      <label class="form-label small fw-medium">Fecha <span class="text-danger">*</span></label>
+      <input type="date" class="form-control" [(ngModel)]="form.date"
+        [class.is-invalid]="submitted && formErrors['date']">
+      @if (submitted && formErrors['date']) {
+      <div class="invalid-feedback">{{ formErrors['date'] }}</div>
+      }
     </div>
     <div class="col">
-      <label class="form-label small fw-medium">Hora</label>
-      <input type="time" class="form-control" [(ngModel)]="form.time">
+      <label class="form-label small fw-medium">Hora <span class="text-danger">*</span></label>
+      <input type="time" class="form-control" [(ngModel)]="form.time"
+        [class.is-invalid]="submitted && formErrors['time']">
+      @if (submitted && formErrors['time']) {
+      <div class="invalid-feedback">{{ formErrors['time'] }}</div>
+      }
     </div>
   </div>
+
   <div class="mb-3">
-    <label class="form-label small fw-medium">Ubicación (Texto)</label>
-    <input type="text" class="form-control" [(ngModel)]="form.location" placeholder="Ej: Costa Verde, Miraflores, Lima">
+    <label class="form-label small fw-medium">Ubicación (Texto) <span class="text-danger">*</span></label>
+    <input type="text" class="form-control" [(ngModel)]="form.location"
+      [class.is-invalid]="submitted && formErrors['location']" placeholder="Ej: Costa Verde, Miraflores, Lima">
+    @if (submitted && formErrors['location']) {
+    <div class="invalid-feedback">{{ formErrors['location'] }}</div>
+    }
   </div>
+
   <div class="row g-3 mb-1">
     <div class="col">
       <label class="form-label small fw-medium">Latitud</label>
@@ -235,66 +268,64 @@
       <input type="number" class="form-control" [(ngModel)]="form.longitude" step="0.0001" placeholder="-77.042">
     </div>
   </div>
+
   <p class="text-muted small mb-3">
     <i class="bi bi-info-circle me-1"></i>
     Busca el lugar en Google Maps, haz clic derecho y copia las coordenadas.
   </p>
-  <div class="row g-3 mb-3">
-    <div class="col">
-      <label class="form-label small fw-medium">Organizador / ONG</label>
-      <input type="text" class="form-control" [(ngModel)]="form.organizerName">
-    </div>
-    <!-- ── Imagen: drag & drop + seleccionar archivo ── -->
-    <div class="mb-3">
-      <label class="form-label small fw-medium">Imagen del evento</label>
 
-      <!-- Zona de arrastre -->
-      <div class="upload-zone rounded-3 text-center p-4" [class.dragging]="isDragging" (click)="fileInput.click()"
-        (drop)="onDrop($event)" (dragover)="onDragOver($event)" (dragleave)="onDragLeave()"
-        style="cursor:pointer;border:2px dashed #2d9e5f;background:#f8fffe;transition:background .15s">
-
-        @if (previewUrl) {
-        <!-- Preview de imagen seleccionada -->
-        <div style="position:relative;display:inline-block">
-          <img [src]="previewUrl" alt="preview" class="rounded-3"
-            style="max-height:130px;max-width:100%;object-fit:cover">
-          <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle"
-            style="width:22px;height:22px;padding:0;font-size:11px;margin:-8px -8px 0 0"
-            (click)="removeImage(); $event.stopPropagation()">
-            <i class="bi bi-x"></i>
-          </button>
-        </div>
-        <p class="small text-muted mb-0 mt-2">Haz clic o arrastra para cambiar</p>
-        } @else {
-        <i class="bi bi-cloud-upload text-success fs-1 d-block mb-2"></i>
-        <p class="fw-medium mb-1" style="font-size:14px">Arrastra una imagen aquí</p>
-        <p class="small text-muted mb-1">o haz clic para seleccionar desde tu computadora</p>
-        <p class="text-muted" style="font-size:11px">JPG, PNG, WEBP · Máx. 5 MB</p>
-        }
-      </div>
-
-      <!-- Input oculto -->
-      <input #fileInput type="file" accept="image/jpeg,image/png,image/webp" class="d-none"
-        (change)="onFileSelected($event)">
-
-      <!-- Fallback: URL manual -->
-      <div class="mt-2">
-        <input type="text" class="form-control form-control-sm" [(ngModel)]="form.imageUrl"
-          placeholder="O pega una URL de imagen: https://..." (input)="previewUrl = form.imageUrl ?? null">
-      </div>
-    </div>
+  @if (auth.currentUser?.rol === 'admin') {
+  <div class="mb-3">
+    <label class="form-label small fw-medium">Organizador / ONG <span class="text-danger">*</span></label>
+    <select class="form-select" [(ngModel)]="idOrganizador" [class.is-invalid]="submitted && formErrors['organizador']">
+      <option [ngValue]="null">— Selecciona un organizador —</option>
+      @for (o of organizadores; track o.id_organizador) {
+      <option [ngValue]="o.id_organizador">{{ o.nombre }} ({{ o.nombre_organizacion }})</option>
+      }
+    </select>
+    @if (submitted && formErrors['organizador']) {
+    <div class="invalid-feedback">{{ formErrors['organizador'] }}</div>
+    }
   </div>
-
-  @if (form.imageUrl) {
-  <img [src]="form.imageUrl" alt="preview" class="w-100 rounded-3 mb-3" style="height:110px;object-fit:cover"
-    (error)="form.imageUrl=''">
+  } @else {
+  <div class="mb-3">
+    <label class="form-label small fw-medium">Organizador</label>
+    <input type="text" class="form-control" [value]="auth.currentUser?.nombre" disabled>
+  </div>
   }
 
-  <!-- Requisitos (uno por línea) -->
+
   <div class="mb-3">
-    <label class="form-label small fw-medium">
-      Requisitos (uno por línea)
-    </label>
+    <label class="form-label small fw-medium">Imagen del evento</label>
+
+    <div class="upload-zone rounded-3 text-center p-4" [class.dragging]="isDragging" (click)="fileInput.click()"
+      (drop)="onDrop($event)" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)"
+      style="cursor:pointer;border:2px dashed #2d9e5f;background:#f8fffe;transition:background .15s">
+
+      @if (previewUrl) {
+      <div style="position:relative;display:inline-block">
+        <img [src]="previewUrl" alt="preview" class="rounded-3"
+          style="max-height:130px;max-width:100%;object-fit:cover">
+        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle"
+          style="width:22px;height:22px;padding:0;font-size:11px;margin:-8px -8px 0 0"
+          (click)="removeImage(); $event.stopPropagation()">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+      <p class="small text-muted mb-0 mt-2">Haz clic o arrastra para cambiar</p>
+      } @else {
+      <i class="bi bi-cloud-upload text-success fs-1 d-block mb-2"></i>
+      <p class="fw-medium mb-1" style="font-size:14px">Arrastra una imagen aquí</p>
+      <p class="small text-muted mb-1">o haz clic para seleccionar desde tu computadora</p>
+      <p class="text-muted" style="font-size:11px">JPG, PNG, WEBP · Máx. 5 MB</p>
+      }
+    </div>
+
+    <input #fileInput type="file" accept="image/jpeg,image/png,image/webp" class="d-none"
+      (change)="onFileSelected($event)">
+  </div>
+  <div class="mb-3">
+    <label class="form-label small fw-medium">Requisitos (uno por línea)</label>
     <textarea class="form-control" rows="4" style="resize:vertical" [(ngModel)]="form.requirementsText"
       placeholder="Ropa cómoda&#10;Mayores de 16 años&#10;Llevar agua"></textarea>
     <p class="text-muted" style="font-size:11px;margin-top:4px">
@@ -302,9 +333,25 @@
     </p>
   </div>
 
+  @if (error) {
+  <div class="alert alert-danger py-2 small d-flex align-items-center gap-2 mb-3">
+    <i class="bi bi-exclamation-triangle-fill"></i>{{ error }}
+  </div>
+  }
+
+  @if (submitted && !formularioValido && !error) {
+  <div class="alert alert-danger py-2 small d-flex align-items-center gap-2 mb-3">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    Completa todos los campos obligatorios antes de guardar.
+  </div>
+  }
+
   <div class="d-flex justify-content-end gap-2 pt-3 border-top">
     <button class="btn btn-outline-secondary px-4" (click)="showModal.set(false)">Cancelar</button>
-    <button class="btn btn-success px-4" (click)="save()">
+    <button class="btn btn-success px-4" (click)="save()" [disabled]="guardando">
+      @if (guardando) {
+      <span class="spinner-border spinner-border-sm me-1"></span>
+      }
       {{ isEditing() ? 'Guardar cambios' : 'Crear evento' }}
     </button>
   </div>
@@ -352,7 +399,8 @@
     <strong>{{ eventoAFinalizar()?.title }}</strong>
   </p>
   <p class="text-muted small mb-4">
-    El estado cambiará a <span class="badge bg-secondary">Finalizado</span>. Podrás registrar asistencias desde inscripciones.
+    El estado cambiará a <span class="badge bg-secondary">Finalizado</span>. Podrás registrar asistencias desde
+    inscripciones.
   </p>
   <div class="d-flex gap-3">
     <button class="btn btn-outline-secondary flex-fill" (click)="showFinalizar.set(false)">

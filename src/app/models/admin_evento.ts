@@ -9,9 +9,12 @@ export interface AdminEvento {
   latitude: number;
   longitude: number;
   organizer: string;
+  idOrganizador?: number | null;
+  idTipo?: number | null;
   image: string;
   requirements: string[];
   maxVolunteers: number;
   registered: number;
-  status: 'Próximo' | 'Finalizado' | 'Cancelado';
+  enrolledCount: number;
+  status: 'Próximo' | 'En curso' | 'Finalizado' | 'Cancelado';
 }

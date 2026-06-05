@@ -16,6 +16,7 @@ export const ADMIN_EVENTS_MOCK: AdminEvento[] = [
     requirements: ['Ropa cómoda', 'Guantes', 'Bloqueador'],
     maxVolunteers: 60,
     registered: 15,
+    enrolledCount: 0,
     status: 'Próximo'
   },
   {
@@ -33,6 +34,7 @@ export const ADMIN_EVENTS_MOCK: AdminEvento[] = [
     requirements: ['Llevar botella de agua'],
     maxVolunteers: 30,
     registered: 15,
+    enrolledCount: 0,
     status: 'Próximo'
   },
   {
@@ -50,6 +52,7 @@ export const ADMIN_EVENTS_MOCK: AdminEvento[] = [
     requirements: ['Zapatos cerrados', 'Sombrero'],
     maxVolunteers: 30,
     registered: 18,
+    enrolledCount: 0,
     status: 'Próximo'
   }
 ];

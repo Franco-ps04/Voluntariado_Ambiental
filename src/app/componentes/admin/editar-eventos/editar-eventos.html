@@ -8,38 +8,74 @@
         <div class="card-body p-4">
             <div class="row g-3">
                 <div class="col-md-6">
-                    <label class="form-label">Título del evento</label>
-                    <input class="form-control" [(ngModel)]="event.title">
+                    <label class="form-label">Título del evento <span class="text-danger">*</span></label>
+                    <input class="form-control" [(ngModel)]="event.title"
+                        [class.is-invalid]="submitted && errores['title']">
+                    @if (submitted && errores['title']) {
+                    <div class="invalid-feedback">{{ errores['title'] }}</div>
+                    }
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label">Tipo de actividad</label>
-                    <input class="form-control" [(ngModel)]="event.type">
+                    <label class="form-label">Tipo de actividad <span class="text-danger">*</span></label>
+                    <select class="form-select" [(ngModel)]="event.type"
+                        [class.is-invalid]="submitted && errores['type']">
+                        <option value="">— Selecciona un tipo —</option>
+                        <option value="Limpieza">Limpieza</option>
+                        <option value="Reforestación">Reforestación</option>
+                        <option value="Reciclaje">Reciclaje</option>
+                        <option value="Taller">Taller</option>
+                        <option value="Educación">Educación</option>
+                        <option value="Conservación">Conservación</option>
+                    </select>
+                    @if (submitted && errores['type']) {
+                    <div class="invalid-feedback">{{ errores['type'] }}</div>
+                    }
                 </div>
 
                 <div class="col-12">
-                    <label class="form-label">Descripción</label>
-                    <textarea class="form-control" rows="4" [(ngModel)]="event.description"></textarea>
+                    <label class="form-label">Descripción <span class="text-danger">*</span></label>
+                    <textarea class="form-control" rows="4" [(ngModel)]="event.description"
+                        [class.is-invalid]="submitted && errores['description']"></textarea>
+                    @if (submitted && errores['description']) {
+                    <div class="invalid-feedback">{{ errores['description'] }}</div>
+                    }
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">Fecha</label>
-                    <input class="form-control" [(ngModel)]="event.date">
+                    <label class="form-label">Fecha <span class="text-danger">*</span></label>
+                    <input class="form-control" type="date" [(ngModel)]="event.date"
+                        [class.is-invalid]="submitted && errores['date']">
+                    @if (submitted && errores['date']) {
+                    <div class="invalid-feedback">{{ errores['date'] }}</div>
+                    }
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">Hora</label>
-                    <input class="form-control" [(ngModel)]="event.time">
+                    <label class="form-label">Hora <span class="text-danger">*</span></label>
+                    <input class="form-control" type="time" [(ngModel)]="event.time"
+                        [class.is-invalid]="submitted && errores['time']">
+                    @if (submitted && errores['time']) {
+                    <div class="invalid-feedback">{{ errores['time'] }}</div>
+                    }
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label">Máx. voluntarios</label>
-                    <input type="number" class="form-control" [(ngModel)]="event.maxVolunteers">
+                    <label class="form-label">Máx. voluntarios <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" [(ngModel)]="event.maxVolunteers" min="1"
+                        [class.is-invalid]="submitted && errores['maxVolunteers']">
+                    @if (submitted && errores['maxVolunteers']) {
+                    <div class="invalid-feedback">{{ errores['maxVolunteers'] }}</div>
+                    }
                 </div>
 
                 <div class="col-12">
-                    <label class="form-label">Ubicación (Texto)</label>
-                    <input class="form-control" [(ngModel)]="event.location">
+                    <label class="form-label">Ubicación (Texto) <span class="text-danger">*</span></label>
+                    <input class="form-control" [(ngModel)]="event.location"
+                        [class.is-invalid]="submitted && errores['location']">
+                    @if (submitted && errores['location']) {
+                    <div class="invalid-feedback">{{ errores['location'] }}</div>
+                    }
                 </div>
 
                 <div class="col-md-6">
@@ -52,14 +88,18 @@
                     <input class="form-control" type="number" [(ngModel)]="event.longitude">
                 </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">Organizador / ONG</label>
-                    <input class="form-control" [(ngModel)]="event.organizer">
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">URL de imagen</label>
-                    <input class="form-control" [(ngModel)]="event.image">
+                <div class="col-md-6" *ngIf="auth.currentUser?.rol === 'admin'">
+                    <label class="form-label">Organizador / ONG <span class="text-danger">*</span></label>
+                    <select class="form-select" [(ngModel)]="idOrganizador"
+                        [class.is-invalid]="submitted && errores['organizador']">
+                        <option [ngValue]="null">— Selecciona un organizador —</option>
+                        @for (o of organizadores; track o.id_organizador) {
+                        <option [ngValue]="o.id_organizador">{{ o.nombre }} ({{ o.nombre_organizacion }})</option>
+                        }
+                    </select>
+                    @if (submitted && errores['organizador']) {
+                    <div class="invalid-feedback">{{ errores['organizador'] }}</div>
+                    }
                 </div>
 
                 <div class="col-12">
@@ -67,9 +107,31 @@
                     <textarea class="form-control" rows="4" [(ngModel)]="requirementsText"></textarea>
                 </div>
 
+                @if (error) {
+                <div class="col-12">
+                    <div class="alert alert-danger py-2 small d-flex align-items-center gap-2 mb-0">
+                        <i class="bi bi-exclamation-triangle-fill"></i>{{ error }}
+                    </div>
+                </div>
+                }
+
+                @if (submitted && !formularioValido && !error) {
+                <div class="col-12">
+                    <div class="alert alert-danger py-2 small d-flex align-items-center gap-2 mb-0">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        Completa todos los campos obligatorios antes de guardar.
+                    </div>
+                </div>
+                }
+
                 <div class="col-12 d-flex justify-content-end gap-2">
-                    <button class="btn btn-outline-secondary" routerLink="/admin/events">Cancelar</button>
-                    <button class="btn btn-success" (click)="submit()">Guardar cambios</button>
+                    <button class="btn btn-outline-secondary" routerLink="/admin/eventos">Cancelar</button>
+                    <button class="btn btn-success" (click)="submit()" [disabled]="guardando">
+                        @if (guardando) {
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                        }
+                        Guardar cambios
+                    </button>
                 </div>
             </div>
         </div>

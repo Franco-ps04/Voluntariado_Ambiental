@@ -6,7 +6,7 @@ import { AuthService } from '../../../services/auth.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 
-interface OrgOption { id: number; nombre: string; organizacion: string; }
+interface OrgOption { id_organizador: number; nombre: string; nombre_organizacion: string; }
 
 @Component({
   selector: 'app-crear-eventos',
@@ -17,7 +17,7 @@ interface OrgOption { id: number; nombre: string; organizacion: string; }
 export class CrearEventos implements OnInit {
   title = '';
   description = '';
-  type = 'Limpieza';
+  type = '';
   date = '';
   time = '';
   location = '';
@@ -33,24 +33,25 @@ export class CrearEventos implements OnInit {
   guardando = false;
   error = '';
 
-  constructor(private adminService: AdminService, public auth: AuthService,
-    private http: HttpClient, private router: Router) { }
+  constructor(
+    private adminService: AdminService,
+    public auth: AuthService,
+    private http: HttpClient,
+    private router: Router
+  ) { }
 
   ngOnInit(): void {
-    // Si es admin, carga la lista de organizadores para elegir
     if (this.auth.currentUser?.rol === 'admin') {
-      this.http.get<any[]>(`${environment.apiUrl}/usuarios`, {
-        params: { rol: 'organizador' }
-      }).subscribe({
-        next: (data) => {
-          this.organizadores = data.map(u => ({
-            id: u.id_usuario,
-            nombre: u.nombre,
-            organizacion: u.organizacion ?? u.nombre
+      this.adminService.obtenerOrganizadoresHttp().subscribe({
+        next: (data: any[]) => {
+          this.organizadores = data.map((u: any) => ({
+            id_organizador: Number(u.id_organizador ?? u.id),
+            nombre: u.nombre ?? '',
+            nombre_organizacion: u.nombre_organizacion ?? u.organizacion ?? ''
           }));
-          if (this.organizadores.length > 0) {
-            this.idOrganizador = this.organizadores[0].id;
-          }
+        },
+        error: () => {
+          this.organizadores = [];
         }
       });
     }
@@ -59,15 +60,17 @@ export class CrearEventos implements OnInit {
   get errores(): Record<string, string> {
     const e: Record<string, string> = {};
     if (!this.title.trim()) e['title'] = 'El título es obligatorio.';
+    if (!this.type.trim()) e['type'] = 'El tipo de actividad es obligatorio.';
     if (!this.description.trim()) e['description'] = 'La descripción es obligatoria.';
     if (!this.date.trim()) e['date'] = 'La fecha es obligatoria.';
     if (!this.time.trim()) e['time'] = 'La hora es obligatoria.';
     if (!this.location.trim()) e['location'] = 'La ubicación es obligatoria.';
-    if (!this.organizer.trim()) e['organizer'] = 'El organizador es obligatorio.';
-    if (this.maxVolunteers < 1) e['maxVolunteers'] = 'Debe haber al menos 1 voluntario.';
-    // Si es admin, debe seleccionar organizador
-    if (this.auth.currentUser?.rol === 'admin' && !this.idOrganizador)
+    if (!Number.isFinite(this.maxVolunteers) || this.maxVolunteers < 1) {
+      e['maxVolunteers'] = 'Debe haber al menos 1 voluntario.';
+    }
+    if (this.auth.currentUser?.rol === 'admin' && !this.idOrganizador) {
       e['organizador'] = 'Selecciona un organizador.';
+    }
     return e;
   }
 
@@ -77,9 +80,14 @@ export class CrearEventos implements OnInit {
 
   private getTipoId(tipo: string): number {
     const m: Record<string, number> = {
-      'Limpieza': 1, 'Reforestación': 2, 'Taller': 3, 'Reciclaje': 4, 'Educación': 5, 'Conservación': 6
+      'Limpieza': 1,
+      'Reforestación': 2,
+      'Taller': 3,
+      'Reciclaje': 4,
+      'Educación': 5,
+      'Conservación': 6
     };
-    return m[tipo] ?? 1;
+    return m[tipo] ?? 0;
   }
 
   submit(): void {
@@ -89,54 +97,21 @@ export class CrearEventos implements OnInit {
 
     this.guardando = true;
 
-    /* // HTTP real — POST /api/eventos
-    this.adminService.crearEventoHttp({
-      nombre: this.title,
-      descripcion: this.description,
-      fecha: this.date,
-      hora: this.time,
-      ubicacion: this.location,
-      capacidad: Number(this.maxVolunteers),
-      idTipo: this.getTipoId(this.type),
-      latitud: this.latitude ? Number(this.latitude) : undefined,
-      longitud: this.longitude ? Number(this.longitude) : undefined,
-      imagenUrl: this.image || undefined,
-      requisitos: this.requirementsText.split('\n').filter(Boolean)
-    }).subscribe({
-      next: () => {
-        this.guardando = false;
-        this.router.navigate(['/admin/eventos']);
-      },
-      error: () => {
-        this.guardando = false;
-        // Fallback: guardar localmente
-        this.adminService.createEvent({
-          title: this.title, description: this.description, type: this.type as any,
-          date: this.date, time: this.time, location: this.location,
-          latitude: Number(this.latitude), longitude: Number(this.longitude),
-          organizer: this.organizer, image: this.image,
-          requirements: this.requirementsText.split('\n').filter(Boolean),
-          maxVolunteers: Number(this.maxVolunteers)
-        });
-        this.router.navigate(['/admin/eventos']);
-      }
-    }); */
     const body: any = {
-      nombre: this.title,
-      descripcion: this.description,
+      nombre: this.title.trim(),
+      descripcion: this.description.trim(),
       fecha: this.date,
       hora: this.time,
-      ubicacion: this.location,
+      ubicacion: this.location.trim(),
       capacidad: Number(this.maxVolunteers),
       idTipo: this.getTipoId(this.type),
       latitud: this.latitude ? Number(this.latitude) : undefined,
       longitud: this.longitude ? Number(this.longitude) : undefined,
       imagenUrl: this.image || undefined,
-      requisitos: this.requirementsText.split('\n').filter(Boolean)
+      requisitos: this.requirementsText.split('\n').map(r => r.trim()).filter(Boolean)
     };
 
-    // Si es admin, pasar el organizador seleccionado
-    if (this.auth.currentUser?.rol === 'admin' && this.idOrganizador) {
+    if (this.auth.currentUser?.rol === 'admin') {
       body.idOrganizador = this.idOrganizador;
     }
 
@@ -153,3 +128,4 @@ export class CrearEventos implements OnInit {
     });
   }
 }
+

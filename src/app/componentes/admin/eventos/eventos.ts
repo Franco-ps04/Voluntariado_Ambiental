@@ -1,10 +1,18 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { EventType, VolunteerEvent } from '../../../models/event';
+import { AdminEvento } from '../../../models/admin_evento';
 import { MOCK_VOLUNTARIOS_EVENTO } from '../../../mocks/mock_eventos';
 import { AdminService } from '../../../services/admin.service';
 import { AuthService } from '../../../services/auth.service';
+
+interface OrgOption {
+  id_organizador: number;
+  nombre: string;
+  nombre_organizacion: string;
+}
+
+type EventForm = Partial<AdminEvento> & { requirementsText?: string };
 
 @Component({
   selector: 'app-eventos',
@@ -13,71 +21,103 @@ import { AuthService } from '../../../services/auth.service';
   styleUrl: './eventos.css',
 })
 export class AdminEventos implements OnInit {
-  events = signal<VolunteerEvent[]>([]);
+  events = signal<AdminEvento[]>([]);
   searchText = '';
   activeTab: 'eventos' | 'estadisticas' = 'eventos';
   showModal = signal(false);
   isEditing = signal(false);
   editingId: number | null = null;
-  // Modal confirmación eliminar
   deleteId: number | null = null;
   showDelete = signal(false);
   showFinalizar = signal(false);
-  eventoAFinalizar = signal<VolunteerEvent | null>(null);
-  // Subida de imagen
+  eventoAFinalizar = signal<AdminEvento | null>(null);
   selectedFile: File | null = null;
   previewUrl: string | null = null;
+  imageCleared = false;
   isDragging = false;
   loading = false;
   guardando = false;
+  organizadores: OrgOption[] = [];
+  idOrganizador: number | null = null;
+  submitted = false;
+  error = '';
 
   totalEvents = computed(() => this.events().length);
   upcoming = computed(() => this.events().filter(e => e.status === 'Próximo').length);
-  totalEnrolled = computed(() => this.events().reduce((s, e) => s + e.enrolledCount, 0));
+  totalEnrolled = computed(() => this.events().reduce((s, e) => s + (e.enrolledCount ?? e.registered ?? 0), 0));
 
-  readonly EVENT_TYPES: EventType[] = [
-    'Limpieza', 'Reforestación', 'Taller',
-    'Reciclaje', 'Educación', 'Conservación'
-  ];
+  readonly EVENT_TYPES = ['Limpieza', 'Reforestación', 'Taller', 'Reciclaje', 'Educación', 'Conservación'];
 
-  form: Partial<VolunteerEvent> & { requirementsText?: string } = this.emptyForm();
+  form: EventForm = this.emptyForm();
 
-  // Para estadísticas
   statTypes = ['Reforestación', 'Limpieza', 'Reciclaje', 'Taller', 'Educación', 'Conservación'];
 
-  constructor(private adminService: AdminService, public auth:AuthService) { }
+  constructor(private adminService: AdminService, public auth: AuthService) { }
 
   ngOnInit(): void {
-    /* this.events.set(MOCK_VOLUNTARIOS_EVENTO); */
     this.loading = true;
-    // Cargar desde el backend
+
+    if (this.auth.currentUser?.rol === 'admin') {
+      this.adminService.obtenerOrganizadoresHttp().subscribe({
+        next: (data: any[]) => {
+          this.organizadores = data.map((u: any) => ({
+            id_organizador: Number(u.id_organizador ?? u.id),
+            nombre: u.nombre ?? '',
+            nombre_organizacion: u.nombre_organizacion ?? u.organizacion ?? ''
+          }));
+          this.idOrganizador = this.organizadores[0]?.id_organizador ?? null;
+        },
+        error: () => {
+          this.organizadores = [];
+          this.idOrganizador = null;
+        }
+      });
+    }
+
     this.adminService.getEventoHttp().subscribe({
       next: () => {
         this.loading = false;
-        this.adminService.getEvents().subscribe(data =>
-          this.events.set(data as unknown as VolunteerEvent[])
-        );
+        this.adminService.getEvents().subscribe(data => this.events.set(data));
       },
       error: () => {
-        // Fallback a mocks
         this.loading = false;
-        this.events.set(MOCK_VOLUNTARIOS_EVENTO);
+        this.events.set(MOCK_VOLUNTARIOS_EVENTO as unknown as AdminEvento[]);
       }
     });
   }
 
-  filtered(): VolunteerEvent[] {
+  get formErrors(): Record<string, string> {
+    const e: Record<string, string> = {};
+    if (!this.form.title?.trim()) e['title'] = 'El título es obligatorio.';
+    if (!this.form.type?.trim()) e['type'] = 'El tipo de actividad es obligatorio.';
+    if (!this.form.description?.trim()) e['description'] = 'La descripción es obligatoria.';
+    if (!this.form.date?.trim()) e['date'] = 'La fecha es obligatoria.';
+    if (!this.form.time?.trim()) e['time'] = 'La hora es obligatoria.';
+    if (!this.form.location?.trim()) e['location'] = 'La ubicación es obligatoria.';
+    if (!Number.isFinite(Number(this.form.maxVolunteers)) || Number(this.form.maxVolunteers) < 1) {
+      e['maxVolunteers'] = 'Debe haber al menos 1 voluntario.';
+    }
+    if (this.auth.currentUser?.rol === 'admin' && !this.idOrganizador) {
+      e['organizador'] = 'Selecciona un organizador.';
+    }
+    return e;
+  }
+
+  get formularioValido(): boolean {
+    return Object.keys(this.formErrors).length === 0;
+  }
+
+  filtered(): AdminEvento[] {
     const q = this.searchText.toLowerCase();
     return this.events().filter(e =>
       !q || e.title.toLowerCase().includes(q) || e.type.toLowerCase().includes(q)
     );
   }
 
-  // Estadísticas
   voluntariosPorTipo(type: string): number {
     return this.events()
       .filter(e => e.type === type)
-      .reduce((s, e) => s + e.enrolledCount, 0);
+      .reduce((s, e) => s + (e.enrolledCount ?? e.registered ?? 0), 0);
   }
 
   eventosPorTipo(type: string): number {
@@ -92,28 +132,36 @@ export class AdminEventos implements OnInit {
     return Math.max(...this.statTypes.map(t => this.eventosPorTipo(t)), 1);
   }
 
-  // Formulario
   openCreate(): void {
     this.isEditing.set(false);
+    this.editingId = null;
     this.form = this.emptyForm();
+    this.submitted = false;
+    this.error = '';
     this.selectedFile = null;
     this.previewUrl = null;
+    this.imageCleared = false;
+    this.idOrganizador = this.organizadores[0]?.id_organizador ?? null;
     this.showModal.set(true);
   }
 
-  openEdit(ev: VolunteerEvent): void {
+  openEdit(ev: AdminEvento): void {
     this.isEditing.set(true);
     this.editingId = ev.id;
     this.form = {
       ...ev,
+      image: ev.image ?? '',
       requirementsText: (ev.requirements ?? []).join('\n')
     };
+    this.submitted = false;
+    this.error = '';
     this.selectedFile = null;
-    this.previewUrl = ev.imageUrl ?? null;
+    this.previewUrl = ev.image ?? null;
+    this.imageCleared = false;
+    this.idOrganizador = ev.idOrganizador ?? this.idOrganizador ?? null;
     this.showModal.set(true);
   }
 
-  // ── Subida de imagen ────────────────────────
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
@@ -133,28 +181,28 @@ export class AdminEventos implements OnInit {
     this.isDragging = true;
   }
 
-  onDragLeave(): void { this.isDragging = false; }
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragging = false;
+  }
 
   private processFile(file: File): void {
     if (file.size > 5 * 1024 * 1024) {
       alert('La imagen no debe superar los 5MB.');
       return;
     }
+
     this.selectedFile = file;
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.previewUrl = reader.result as string;
-      // Para mock: usamos base64 como imageUrl
-      // En producción: el backend devolverá la URL real tras subir con Multer
-      this.form.imageUrl = this.previewUrl!;
-    };
-    reader.readAsDataURL(file);
+    this.imageCleared = false;
+    this.previewUrl = URL.createObjectURL(file);
+    this.form.image = '';
   }
 
   removeImage(): void {
     this.selectedFile = null;
     this.previewUrl = null;
-    this.form.imageUrl = '';
+    this.imageCleared = true;
+    this.form.image = '';
   }
 
   private getTipoId(tipo: string): number {
@@ -166,110 +214,86 @@ export class AdminEventos implements OnInit {
       'Educación': 5,
       'Conservación': 6
     };
-    return m[tipo] ?? 1;
+    return m[tipo] ?? 0;
   }
 
-  //Guardar
-  save(): void {
-    // Convertir requisitos de texto a array
+  private normalizeHora(value: string): string {
+  const raw = (value ?? '').trim();
+  const m = raw.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (!m) return raw;
+
+  const hh = String(Number(m[1])).padStart(2, '0');
+  const mm = String(Number(m[2])).padStart(2, '0');
+  const ss = String(Number(m[3] ?? 0)).padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
+}
+
+  private buildPayload(): FormData {
+    const fd = new FormData();
     const reqs = (this.form.requirementsText ?? '')
       .split('\n')
       .map(r => r.trim())
       .filter(r => r.length > 0);
-    this.guardando = true;
 
-    /* if (!this.isEditing()) {
-      const newEv: VolunteerEvent = {
-        id: Date.now(),
-        title: this.form.title ?? '',
-        description: this.form.description ?? '',
-        type: (this.form.type as EventType) ?? 'Limpieza',
-        date: this.form.date ?? '',
-        time: this.form.time ?? '',
-        location: this.form.location ?? '',
-        latitude: this.form.latitude ?? 0,
-        longitude: this.form.longitude ?? 0,
-        maxVolunteers: this.form.maxVolunteers ?? 30,
-        enrolledCount: 0,
-        organizerName: this.form.organizerName ?? '',
-        imageUrl: this.form.imageUrl ?? '',
-        requirements: reqs,
-        status: 'Próximo'
-      };
-      this.events.update(list => [newEv, ...list]);
-    } else {
-      this.events.update(list =>
-        list.map(e => e.id === this.editingId
-          ? { ...e, ...this.form, requirements: reqs } as VolunteerEvent
-          : e
-        )
-      );
+    fd.append('nombre', this.form.title?.trim() ?? '');
+    fd.append('descripcion', this.form.description?.trim() ?? '');
+    fd.append('fecha', this.form.date ?? '');
+    fd.append('hora', this.normalizeHora(this.form.time ?? ''));
+    fd.append('ubicacion', this.form.location?.trim() ?? '');
+    fd.append('capacidad', String(this.form.maxVolunteers ?? 30));
+    fd.append('idTipo', String(this.getTipoId(this.form.type ?? '')));
+
+    if (this.form.latitude !== undefined && this.form.latitude !== null) {
+      fd.append('latitud', String(this.form.latitude));
     }
-    this.showModal.set(false); */
-    if (!this.isEditing()) {
-      // HTTP: crear evento en el backend
-      const body: any = {
-        nombre: this.form.title ?? '',
-        descripcion: this.form.description ?? '',
-        fecha: this.form.date ?? '',
-        hora: this.form.time ?? '',
-        ubicacion: this.form.location ?? '',
-        capacidad: this.form.maxVolunteers ?? 30,
-        idTipo: this.getTipoId(this.form.type ?? 'Limpieza'),
-        latitud: this.form.latitude ?? undefined,
-        longitud: this.form.longitude ?? undefined,
-        requisitos: reqs
-      }
-      this.adminService.crearEventoHttp(body).subscribe({
-        next: () => {
-          this.guardando = false;
-          // Recargar lista desde la API
-          this.adminService.getEventoHttp().subscribe(() => {
-            this.adminService.getEvents().subscribe(data =>
-              this.events.set(data as unknown as VolunteerEvent[])
-            );
-          });
-          this.showModal.set(false);
-        },
-        error: () => {
-          // Fallback local
-          this.guardando = false;
-          this.events.update(list => [{
-            id: Date.now(), title: this.form.title ?? '', description: this.form.description ?? '',
-            type: (this.form.type as EventType) ?? 'Limpieza', date: this.form.date ?? '',
-            time: this.form.time ?? '', location: this.form.location ?? '',
-            latitude: this.form.latitude ?? 0, longitude: this.form.longitude ?? 0,
-            maxVolunteers: this.form.maxVolunteers ?? 30, enrolledCount: 0,
-            organizerName: this.form.organizerName ?? '', imageUrl: this.form.imageUrl ?? '',
-            requirements: reqs, status: 'Próximo'
-          }, ...list]);
-          this.showModal.set(false);
-        }
-      });
-    } else {
-      // HTTP: cambiar estado si es edición simple
-      this.adminService.cambiarEstadoHttp(this.editingId!, this.form.status ?? 'Próximo').subscribe({
-        next: () => {
-          this.guardando = false;
-          this.events.update(list =>
-            list.map(e => e.id === this.editingId
-              ? { ...e, ...this.form, requirements: reqs } as VolunteerEvent : e)
-          );
-          this.showModal.set(false);
-        },
-        error: () => {
-          this.guardando = false;
-          this.events.update(list =>
-            list.map(e => e.id === this.editingId
-              ? { ...e, ...this.form, requirements: reqs } as VolunteerEvent : e)
-          );
-          this.showModal.set(false);
-        }
-      });
+
+    if (this.form.longitude !== undefined && this.form.longitude !== null) {
+      fd.append('longitud', String(this.form.longitude));
     }
+
+    fd.append('requisitos', JSON.stringify(reqs));
+
+    if (this.auth.currentUser?.rol === 'admin' && this.idOrganizador) {
+      fd.append('idOrganizador', String(this.idOrganizador));
+    }
+
+    if (this.selectedFile) {
+      fd.append('imagen', this.selectedFile);
+    } else if (this.isEditing() && this.imageCleared) {
+      fd.append('imagenUrl', '');
+    }
+
+    return fd;
   }
 
-  // Abrir modal de confirmación eliminar
+  save(): void {
+    this.submitted = true;
+    this.error = '';
+    if (!this.formularioValido) return;
+
+    const payload = this.buildPayload();
+    this.guardando = true;
+
+    const request$ = this.isEditing() && this.editingId
+      ? this.adminService.actualizarEventoHttp(this.editingId, payload)
+      : this.adminService.crearEventoHttp(payload);
+
+    request$.subscribe({
+      next: () => {
+        this.guardando = false;
+        this.showModal.set(false);
+        this.adminService.getEventoHttp().subscribe({
+          next: () => this.adminService.getEvents().subscribe(data => this.events.set(data)),
+          error: () => void 0
+        });
+      },
+      error: (err) => {
+        this.guardando = false;
+        this.error = err.error?.message ?? 'No se pudo guardar el evento.';
+      }
+    });
+  }
+
   askDelete(id: number): void {
     this.deleteId = id;
     this.showDelete.set(true);
@@ -277,16 +301,16 @@ export class AdminEventos implements OnInit {
 
   confirmDelete(): void {
     if (!this.deleteId) return;
-    /* this.events.update(list => list.filter(e => e.id !== this.deleteId)); */
-    this.adminService.eliminarEventoHttp(this.deleteId).subscribe({
-      next: () => this.events.update(list => list.filter(e => e.id !== this.deleteId)),
-      error: () => this.events.update(list => list.filter(e => e.id !== this.deleteId))
-    })
+    const id = this.deleteId;
+    this.adminService.eliminarEventoHttp(id).subscribe({
+      next: () => this.events.update(list => list.filter(e => e.id !== id)),
+      error: () => this.events.update(list => list.filter(e => e.id !== id))
+    });
     this.deleteId = null;
     this.showDelete.set(false);
   }
 
-  pedirFinalizar(ev: VolunteerEvent): void {
+  pedirFinalizar(ev: AdminEvento): void {
     this.eventoAFinalizar.set(ev);
     this.showFinalizar.set(true);
   }
@@ -294,13 +318,10 @@ export class AdminEventos implements OnInit {
   confirmarFinalizar(): void {
     const ev = this.eventoAFinalizar();
     if (!ev) return;
-    /* this.events.update(list =>
-      list.map(e => e.id === ev.id ? { ...e, status: 'Finalizado' as const } : e)
-    ); */
     this.adminService.cambiarEstadoHttp(ev.id, 'Finalizado').subscribe({
       next: () => this.actualizarEstado(ev.id, 'Finalizado'),
       error: () => this.actualizarEstado(ev.id, 'Finalizado')
-    })
+    });
     this.showFinalizar.set(false);
     this.eventoAFinalizar.set(null);
   }
@@ -323,20 +344,31 @@ export class AdminEventos implements OnInit {
 
   badgeClass(type: string): string {
     const m: Record<string, string> = {
-      'Limpieza': 'badge-limpieza', 'Reforestación': 'badge-reforestacion',
-      'Reciclaje': 'badge-reciclaje', 'Taller': 'badge-taller',
-      'Educación': 'badge-educacion', 'Conservación': 'badge-conservacion'
+      'Limpieza': 'badge-limpieza',
+      'Reforestación': 'badge-reforestacion',
+      'Reciclaje': 'badge-reciclaje',
+      'Taller': 'badge-taller',
+      'Educación': 'badge-educacion',
+      'Conservación': 'badge-conservacion'
     };
     return m[type] ?? 'bg-secondary-subtle text-secondary';
   }
 
-  private emptyForm(): Partial<VolunteerEvent> & { requirementsText?: string } {
+  private emptyForm(): EventForm {
     return {
-      title: '', description: '', type: 'Limpieza',
-      date: '', time: '', location: '',
-      latitude: 0, longitude: 0,
-      maxVolunteers: 30, organizerName: '', imageUrl: '',
-      requirements: [], requirementsText: ''
+      title: '',
+      description: '',
+      type: '',
+      date: '',
+      time: '',
+      location: '',
+      latitude: 0,
+      longitude: 0,
+      maxVolunteers: 30,
+      organizer: '',
+      image: '',
+      requirements: [],
+      requirementsText: ''
     };
   }
 }
