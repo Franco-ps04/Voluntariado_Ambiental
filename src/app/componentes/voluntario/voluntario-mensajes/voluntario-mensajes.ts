@@ -1,12 +1,11 @@
 import { DatePipe } from '@angular/common';
 import { Component, effect, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
 import { MensajeAdmin } from '../../../models/mensaje';
 import { MensajesService } from '../../../services/mensajes.service';
 import { AuthService } from '../../../services/auth.service';
 import { Inscripcion } from '../../../models/inscripciones';
+import { MOCK_INSCRIPCIONES } from '../../../mocks/mock_inscripciones';
 
 type DestinoTipo = 'admin' | 'evento';
 
@@ -16,13 +15,6 @@ interface Borrador {
   destinoTipo: DestinoTipo;
   eventoInscripcionId: number | null;
   guardadoEn: string;
-}
-
-interface DestinatarioActivo {
-  id: number;
-  nombre: string;
-  email: string;
-  rol: string;
 }
 
 @Component({
@@ -35,27 +27,36 @@ export class VoluntarioMensajes implements OnInit {
   selected = signal<MensajeAdmin | null>(null);
   filtro: 'todos' | 'sin-leer' | 'respondidos' = 'todos';
 
+  // Modal nueva consulta
   showModal = false;
   nuevoAsunto = '';
   nuevoMensaje = '';
   destinoTipo: DestinoTipo = 'admin';
   eventoInscripcionId: number | null = null;
+  destinatariosActivos: any[] = [];
+  adminSeleccionadoId: number | null = null;
   enviandoNuevo = false;
   borradorGuardado = false;
   borrador: Borrador | null = null;
 
+  // Seguimiento dentro del hilo
   seguimientoTexto = '';
   enviandoSeguimiento = false;
 
-  misInscripciones: Inscripcion[] = [];
-  destinatariosActivos: DestinatarioActivo[] = [];
-  destinoAdminId: number | null = null;
+  // Inscripciones del voluntario (solo las activas/próximas)
+  readonly misInscripciones: Inscripcion[];
+
+  // IDs fijos (en backend vendrán de la BD)
+  private readonly ID_ADMIN = 2;
 
   constructor(
     public mensajesService: MensajesService,
-    public auth: AuthService,
-    private http: HttpClient
+    public auth: AuthService
   ) {
+    this.misInscripciones = MOCK_INSCRIPCIONES.filter(
+      i => i.userId === (auth.currentUser?.id ?? 0)
+    );
+
     effect(() => {
       const userId = this.auth.currentUser?.id ?? 0;
       const mis = this.mensajesService.mensajes().filter(m =>
@@ -69,99 +70,57 @@ export class VoluntarioMensajes implements OnInit {
   }
 
   ngOnInit(): void {
-    this.cargarInscripciones();
-    this.cargarDestinatarios();
-
-    const mis = this.misMensajes();
-    if (mis.length > 0) this.seleccionar(mis[0]);
-  }
-
-  private cargarInscripciones(): void {
-    this.http.get<any[]>(`${environment.apiUrl}/inscripciones/mis`).subscribe({
-      next: (data) => {
-        this.misInscripciones = data.map(d => ({
-          id: d.id_inscripcion,
-          userId: this.auth.currentUser?.id ?? 0,
-          eventId: d.id_evento,
-          enrolledAt: d.fecha_inscripcion,
-          status: d.estado as any,
-          asistio: d.asistio === 1 ? true : d.asistio === 0 ? false : null,
-          event: {
-            id: d.id_evento,
-            title: d.titulo,
-            description: d.descripcion,
-            type: d.tipo,
-            date: d.fecha,
-            time: d.hora,
-            location: d.ubicacion,
-            maxVolunteers: d.capacidad,
-            enrolledCount: d.inscritos,
-            organizerName: d.organizador,
-            organizerUserId: d.id_usuario_organizador ?? undefined,
-            imageUrl: d.imagen_url ?? '',
-            status: d.estado as any,
-            requirements: [],
-            latitude: d.latitud ?? 0,
-            longitude: d.longitud ?? 0
-          }
-        }));
-      },
-      error: () => {
-        this.misInscripciones = [];
-      }
-    });
-  }
-
-  private cargarDestinatarios(): void {
-    this.http.get<any[]>(`${environment.apiUrl}/mensajes/destinatarios`).subscribe({
-      next: (data) => {
-        this.destinatariosActivos = data.map(d => ({
-          id: Number(d.id_usuario),
-          nombre: String(d.nombre ?? ''),
-          email: String(d.email ?? ''),
-          rol: String(d.rol ?? '')
-        }));
-
-        this.destinoAdminId = this.destinatariosActivos.find(d => d.rol === 'admin')?.id
-          ?? this.destinatariosActivos[0]?.id
-          ?? null;
+    this.mensajesService.destinatariosActivosHttp().subscribe({
+      next: (data: any[]) => {
+        this.destinatariosActivos = data.filter(u => (u.rol === 'admin' || u.rol === 'organizador'));
+        this.adminSeleccionadoId = this.destinatariosActivos[0]?.id_usuario ?? null;
       },
       error: () => {
         this.destinatariosActivos = [];
-        this.destinoAdminId = null;
+        this.adminSeleccionadoId = null;
       }
     });
+
+    const mis = this.misMensajes();
+    if (mis.length > 0) this.seleccionar(mis[0]);
   }
 
   private get idUsuario(): number {
     return this.auth.currentUser?.id ?? 0;
   }
 
-  get destinatarioSeleccionado(): DestinatarioActivo | null {
-    if (this.destinoTipo !== 'admin' || !this.destinoAdminId) return null;
-    return this.destinatariosActivos.find(d => d.id === this.destinoAdminId) ?? null;
-  }
-
+  // ── Inscripción seleccionada → info del organizador ──────────
   get inscripcionSel(): Inscripcion | null {
     if (!this.eventoInscripcionId) return null;
     return this.misInscripciones.find(i => i.id === this.eventoInscripcionId) ?? null;
   }
 
   get nombreDestinatario(): string {
-    if (this.destinoTipo === 'admin') return this.destinatarioSeleccionado?.nombre ?? 'Administrador activo';
+    if (this.destinoTipo === 'admin') {
+      return this.destinatarioSeleccionado?.nombre ?? 'Administrador GreenUnity';
+    }
     return this.inscripcionSel?.event?.organizerName ?? 'Organizador';
   }
 
   get emailDestinatario(): string {
-    if (this.destinoTipo === 'admin') return this.destinatarioSeleccionado?.email ?? '—';
-    return 'organizador del evento';
+    if (this.destinoTipo === 'admin') {
+      return this.destinatarioSeleccionado?.email ?? 'admingreen@greenunity.pe';
+    }
+    return 'organizador@gmail.com';
   }
 
+  get destinatarioSeleccionado(): any | null {
+    if (this.destinoTipo !== 'admin') return null;
+    return this.destinatariosActivos.find(a => a.id_usuario === this.adminSeleccionadoId) ?? null;
+  }
+
+  /** Id del usuario destino: admin/organizador activo seleccionado */
   private get idDestinatario(): number {
-    if (this.destinoTipo === 'admin') return this.destinoAdminId ?? 0;
-    return this.inscripcionSel?.event?.organizerUserId ?? 0;
+    if (this.destinoTipo === 'admin') return Number(this.adminSeleccionadoId ?? this.ID_ADMIN);
+    return 3; // mock: único org. En backend: buscar org del evento
   }
 
+  // ── Lista ─────────────────────────────────────────────────────
   misMensajes(): MensajeAdmin[] {
     const todos = this.mensajesService.getMisMensajes(this.idUsuario);
     switch (this.filtro) {
@@ -186,6 +145,7 @@ export class VoluntarioMensajes implements OnInit {
     this.selected.set({ ...actualizado, leidoPorVoluntario: true });
   }
 
+  // ── Seguimiento en el hilo ────────────────────────────────────
   enviarSeguimiento(): void {
     const m = this.selected();
     if (!this.seguimientoTexto.trim() || !m) return;
@@ -197,6 +157,7 @@ export class VoluntarioMensajes implements OnInit {
     setTimeout(() => (this.enviandoSeguimiento = false), 2000);
   }
 
+  // ── Modal ─────────────────────────────────────────────────────
   abrirModal(): void {
     this.showModal = true;
     this.borradorGuardado = false;
@@ -211,9 +172,6 @@ export class VoluntarioMensajes implements OnInit {
       this.nuevoMensaje = '';
       this.destinoTipo = 'admin';
       this.eventoInscripcionId = null;
-      this.destinoAdminId = this.destinatariosActivos.find(d => d.rol === 'admin')?.id
-        ?? this.destinatariosActivos[0]?.id
-        ?? null;
     }
   }
 
@@ -221,14 +179,7 @@ export class VoluntarioMensajes implements OnInit {
 
   cambiarDestino(tipo: DestinoTipo): void {
     this.destinoTipo = tipo;
-    if (tipo === 'admin') {
-      this.eventoInscripcionId = null;
-      if (!this.destinoAdminId) {
-        this.destinoAdminId = this.destinatariosActivos.find(d => d.rol === 'admin')?.id
-          ?? this.destinatariosActivos[0]?.id
-          ?? null;
-      }
-    }
+    if (tipo === 'admin') this.eventoInscripcionId = null;
   }
 
   guardarBorrador(): void {
@@ -262,7 +213,7 @@ export class VoluntarioMensajes implements OnInit {
       emailRemitente: user.email,
       asunto: this.nuevoAsunto,
       mensaje: this.nuevoMensaje,
-      eventoRelacionado: this.inscripcionSel?.event?.title,
+      eventoRelacionado: this.inscripcionSel?.event?.title
     });
     this.borrador = null;
     this.enviandoNuevo = true;
@@ -274,6 +225,7 @@ export class VoluntarioMensajes implements OnInit {
     }, 1200);
   }
 
+  // ── Helpers UI ────────────────────────────────────────────────
   tieneRespuestasNoLeidas(m: MensajeAdmin): boolean {
     return (m.historial ?? []).length > 0 && !m.leidoPorVoluntario;
   }
@@ -289,7 +241,7 @@ export class VoluntarioMensajes implements OnInit {
   formularioValido(): boolean {
     if (!this.nuevoAsunto.trim() || !this.nuevoMensaje.trim()) return false;
     if (this.destinoTipo === 'evento' && !this.eventoInscripcionId) return false;
-    if (this.destinoTipo === 'admin' && !this.destinoAdminId) return false;
+    if (this.destinoTipo === 'admin' && !this.adminSeleccionadoId) return false;
     return true;
   }
 

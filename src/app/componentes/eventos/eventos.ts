@@ -6,7 +6,6 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { EventoCard } from '../evento-card/evento-card';
 import { MapaVista } from '../mapa-vista/mapa-vista';
-import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-eventos',
@@ -23,6 +22,7 @@ export class Eventos implements OnInit, OnDestroy {
   selectedType = 'Todos';
   types = ['Todos', 'Limpieza', 'Reforestación', 'Taller', 'Reciclaje', 'Educación', 'Conservación'];
   mapMarkers: { lat: number; lng: number; label: string }[] = [];
+  inscritoEventIds = new Set<number>();
   loading = false;
 
   // Modal de información del evento
@@ -33,7 +33,6 @@ export class Eventos implements OnInit, OnDestroy {
   inscribiendo = false;
   inscritoConExito = signal(false);
   errorInscripcion = '';
-  activeInscriptionIds = new Set<number>();
 
   constructor(
     private eventService: EventoService,
@@ -48,6 +47,22 @@ export class Eventos implements OnInit, OnDestroy {
       this.updateMapMarkers();
     }); */
     this.loading = true;
+
+    if (this.auth.isLoggedIn() && this.auth.currentUser?.rol === 'voluntario') {
+      this.eventService.misInscripcionesHTTP().subscribe({
+        next: (data) => {
+          this.inscritoEventIds = new Set(
+            data
+              .filter((i: any) => (i.estado ?? '').toString().toLowerCase() !== 'cancelado')
+              .map((i: any) => Number(i.id_evento))
+          );
+        },
+        error: () => {
+          this.inscritoEventIds = new Set();
+        }
+      });
+    }
+
     // Cargar desde el backend
     this.eventService.eventosHTTP().subscribe({
       next: () => {
@@ -56,7 +71,6 @@ export class Eventos implements OnInit, OnDestroy {
           this.events = evts;
           this.updateMapMarkers();
         });
-        this.cargarMisInscripcionesActivas();
       },
       error: () => {
         // Fallback: mocks
@@ -65,7 +79,6 @@ export class Eventos implements OnInit, OnDestroy {
           this.events = evts;
           this.updateMapMarkers();
         });
-        this.cargarMisInscripcionesActivas();
       }
     });
   }
@@ -87,46 +100,6 @@ export class Eventos implements OnInit, OnDestroy {
     this.mapMarkers = this.events
       .filter(e => e.latitude && e.longitude)
       .map(e => ({ lat: e.latitude!, lng: e.longitude!, label: e.title }));
-  }
-
-  private cargarMisInscripcionesActivas(): void {
-    if (!this.auth.isLoggedIn() || this.auth.currentUser?.rol !== 'voluntario') {
-      this.activeInscriptionIds.clear();
-      return;
-    }
-
-    this.eventService.misInscripcionesHTTP().subscribe({
-      next: (data: any[]) => {
-        this.activeInscriptionIds = new Set(
-          data
-            .filter(i => i.estado !== 'Cancelado')
-            .map(i => Number(i.id_evento))
-            .filter(id => Number.isFinite(id))
-        );
-      },
-      error: () => {
-        this.activeInscriptionIds.clear();
-      }
-    });
-  }
-
-  esInscrito(idEvento: number): boolean {
-    return this.activeInscriptionIds.has(Number(idEvento));
-  }
-
-  resolveImageUrl(url?: string | null): string {
-    if (!url) {
-      return 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800';
-    }
-    const raw = String(url).trim();
-    if (!raw) {
-      return 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800';
-    }
-    if (raw.startsWith('data:') || raw.startsWith('http://') || raw.startsWith('https://')) {
-      return raw;
-    }
-    const baseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
-    return `${baseUrl}/${raw.replace(/^\/+/, '')}`;
   }
 
   selectEvent(ev: VolunteerEvent): void {
@@ -151,10 +124,6 @@ export class Eventos implements OnInit, OnDestroy {
       this.router.navigate(['/ingresar']);
       return;
     }
-    if (this.esInscrito(ev.id)) {
-      this.errorInscripcion = 'Ya estás inscrito en este evento.';
-      return;
-    }
     this.confirmEvent = ev;
     this.inscritoConExito.set(false);
     this.errorInscripcion = '';
@@ -174,12 +143,13 @@ export class Eventos implements OnInit, OnDestroy {
       next: () => {
         this.inscribiendo = false;
         this.inscritoConExito.set(true);
-        this.activeInscriptionIds.add(this.confirmEvent!.id);
+        // Actualizar contador de inscritos localmente
         this.events = this.events.map(e =>
           e.id === this.confirmEvent!.id
             ? { ...e, enrolledCount: e.enrolledCount + 1 }
             : e
         );
+        this.inscritoEventIds.add(this.confirmEvent!.id);
         setTimeout(() => { this.confirmEvent = null; this.inscritoConExito.set(false); }, 1800);
       },
       error: (err) => {
@@ -187,6 +157,10 @@ export class Eventos implements OnInit, OnDestroy {
         this.errorInscripcion = err.error?.message ?? 'Error al inscribirse. Intenta nuevamente.';
       }
     });
+  }
+
+  isInscrito(idEvento: number): boolean {
+    return this.inscritoEventIds.has(Number(idEvento));
   }
 
   cuposLibres(ev: VolunteerEvent): number {

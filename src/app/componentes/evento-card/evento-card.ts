@@ -21,8 +21,7 @@ export class EventoCard {
     const img = (this.event.imageUrl ?? '').trim();
     if (!img) return 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=80';
     if (img.startsWith('http') || img.startsWith('data:')) return img;
-    const baseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
-    return `${baseUrl}/${img.replace(/^\/+/, '')}`;
+    return `${environment.apiUrl.replace('/api', '')}/${img.replace(/^\/+/, '')}`;
   }
 
   badgeClass(): string {

@@ -128,8 +128,7 @@ export class EditarEventos implements OnInit {
     if (!raw) return '';
     if (raw.startsWith('data:') || raw.startsWith('http://') || raw.startsWith('https://')) return raw;
     const normalized = raw.startsWith('/') ? raw : `/${raw}`;
-    const baseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
-    return `${baseUrl}${normalized}`;
+    return `${environment.apiUrl.replace('/api', '')}${normalized}`;
   }
 
   private getTipoId(tipo: string): number {

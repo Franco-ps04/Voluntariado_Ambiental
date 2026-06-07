@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, Input, NgZone, OnDestroy } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, NgZone, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import * as L from 'leaflet';
 
 //Icono por defecto de Leaflet en Angular
@@ -15,13 +15,14 @@ L.Icon.Default.mergeOptions({
   template: `<div #mapEl class="leaflet-map"></div>`,
   styleUrl: './mapa-vista.css',
 })
-export class MapaVista implements AfterViewInit, OnDestroy {
+export class MapaVista implements AfterViewInit, OnChanges, OnDestroy {
   @Input() latitude = -12.0464;
   @Input() longitude = -77.0428;
   @Input() title = 'Ubicación';
   @Input() markers: { lat: number; lng: number; label: string }[] = [];
 
   private map?: L.Map;
+  private markerLayer?: L.LayerGroup;
 
   constructor(private el: ElementRef, private ngZone: NgZone) { }
 
@@ -33,6 +34,13 @@ export class MapaVista implements AfterViewInit, OnDestroy {
         });
       });
     });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!this.map) return;
+    if (changes['latitude'] || changes['longitude'] || changes['markers']) {
+      this.refreshMarkers();
+    }
   }
 
   ngOnDestroy(): void {
@@ -57,23 +65,34 @@ export class MapaVista implements AfterViewInit, OnDestroy {
       maxZoom: 19
     }).addTo(this.map);
 
-    // Marcadores extra (página de eventos)
+    this.markerLayer = L.layerGroup().addTo(this.map);
+    this.refreshMarkers();
+
+    setTimeout(() => this.map?.invalidateSize(true), 100);
+    setTimeout(() => this.map?.invalidateSize(true), 400);
+  }
+
+  private refreshMarkers(): void {
+    if (!this.map) return;
+    if (!this.markerLayer) {
+      this.markerLayer = L.layerGroup().addTo(this.map);
+    }
+    this.markerLayer.clearLayers();
+
     if (this.markers.length > 0) {
       this.markers.forEach(m => {
         L.marker([m.lat, m.lng])
-          .addTo(this.map!)
+          .addTo(this.markerLayer!)
           .bindPopup(`<strong>${m.label}</strong>`);
       });
     } else {
-      // Marcador único
       L.marker([this.latitude, this.longitude])
-        .addTo(this.map)
+        .addTo(this.markerLayer)
         .bindPopup(this.title)
         .openPopup();
     }
 
-    setTimeout(() => this.map?.invalidateSize(true), 100);
-    setTimeout(() => this.map?.invalidateSize(true), 400);
+    setTimeout(() => this.map?.invalidateSize(true), 50);
   }
 
   //Llamar desde el padre para mover el mapa 

@@ -39,18 +39,26 @@ export class Usuarios implements OnInit {
 
   constructor(private adminService: AdminService) { }
 
+
+  private toEstado(value: any): UserEstado {
+    if (value === true || value === 1 || value === '1' || String(value).toLowerCase() === 'activo') return 'activo';
+    if (value === false || value === 0 || value === '0' || String(value).toLowerCase() === 'suspendido') return 'suspendido';
+    return 'inactivo';
+  }
+
+
   ngOnInit(): void {
     this.loading = true;
     this.adminService.usuariosHttp().subscribe({
       next: (data: any[]) => {
-        this.loading = true;
+        this.loading = false;
         this.usuarios.set(data.map(u => ({
           id: u.id_usuario,
           nombre: u.nombre,
           email: u.email,
           telefono: u.telefono,
           rol: u.rol as UserRol,
-          estado: (u.activo ? 'activo' : 'suspendido') as UserEstado,
+          estado: this.toEstado(u.activo) as UserEstado,
           numEventos: u.num_eventos ?? 0,
           creadoEn: u.creado_en ?? ''
         })));

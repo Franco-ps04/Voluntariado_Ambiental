@@ -15,7 +15,7 @@
 
     @for (ev of filteredEvents; track ev.id) {
     <div class="mb-3" (click)="selectEvent(ev)">
-      <app-evento-card [event]="ev" [selected]="selectedEvent?.id === ev.id" [inscrito]="esInscrito(ev.id)"
+      <app-evento-card [event]="ev" [selected]="selectedEvent?.id === ev.id" [inscrito]="isInscrito(ev.id)"
         (inscribirse)="pedirInscripcion($event)" (verMapa)="selectEvent($event)" (verInfo)="openInfo($event)" />
     </div>
     }
@@ -41,8 +41,8 @@
 
   <!-- Imagen cabecera -->
   <div style="margin:-24px -24px 20px;overflow:hidden;border-radius:16px 16px 0 0">
-    <img [src]="resolveImageUrl(infoEvent.imageUrl)" [alt]="infoEvent.title"
-      style="width:100%;height:200px;object-fit:cover">
+    <img [src]="infoEvent.imageUrl || 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800'"
+      [alt]="infoEvent.title" style="width:100%;height:200px;object-fit:cover">
   </div>
 
   <!-- Badge + título -->
@@ -131,12 +131,8 @@
     <button class="btn btn-outline-secondary px-4" (click)="closeInfo()">
       Cerrar
     </button>
-    <button class="btn px-4 fw-medium" [class.btn-success]="!esInscrito(infoEvent.id)"
-      [class.btn-outline-secondary]="esInscrito(infoEvent.id)" [disabled]="esInscrito(infoEvent.id)"
-      (click)="!esInscrito(infoEvent.id) && pedirInscripcion(infoEvent); closeInfo()">
-      <i class="bi me-1" [class.bi-person-check]="esInscrito(infoEvent.id)"
-        [class.bi-person-plus]="!esInscrito(infoEvent.id)"></i>
-      {{ esInscrito(infoEvent.id) ? 'Inscrito' : 'Inscribirse' }}
+    <button class="btn btn-success px-4 fw-medium" (click)="pedirInscripcion(infoEvent); closeInfo()">
+      <i class="bi bi-person-plus me-1"></i>Inscribirse
     </button>
   </div>
 </div>

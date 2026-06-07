@@ -20,9 +20,28 @@ export class EventoService {
     if (raw.startsWith('data:') || raw.startsWith('http://') || raw.startsWith('https://')) {
       return raw;
     }
-    const baseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
     const normalized = raw.startsWith('/') ? raw : `/${raw}`;
-    return `${baseUrl}${normalized}`;
+    return `${environment.apiUrl.replace('/api', '')}${normalized}`;
+  }
+
+   private parseRequirements(raw: any): string[] {
+    if (Array.isArray(raw)) return raw.map(x => String(x).trim()).filter(Boolean);
+    if (raw === undefined || raw === null) return [];
+    const text = String(raw).trim();
+    if (!text) return [];
+    if (text.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+          return parsed.map(x => String(x).trim()).filter(Boolean);
+        }
+      } catch {}
+    }
+    return text
+      .replace(/\r/g, '')
+      .split(/\n|,|;/)
+      .map(x => x.trim())
+      .filter(Boolean);
   }
 
   //Con mock
@@ -49,10 +68,9 @@ export class EventoService {
           maxVolunteers: e.capacidad,
           enrolledCount: e.inscritos,
           organizerName: e.organizador,
-          organizerUserId: e.id_usuario_organizador ?? e.idUsuarioOrganizador ?? undefined,
           imageUrl: this.buildImageUrl(e.imagen_url),
           status: e.estado as any,
-          requirements: e.requisitos ?? [],
+          requirements: this.parseRequirements(e.requisitos ?? e.requirements ?? []),
           latitude: e.latitud ?? 0,
           longitude: e.longitud ?? 0
         }));
@@ -82,10 +100,9 @@ export class EventoService {
           maxVolunteers: data.capacidad,
           enrolledCount: data.inscritos,
           organizerName: data.organizador,
-          organizerUserId: data.id_usuario_organizador ?? data.idUsuarioOrganizador ?? undefined,
           imageUrl: this.buildImageUrl(data.imagen_url),
           status: data.estado as any,
-          requirements: data.requisitos ?? [],
+          requirements: this.parseRequirements(data.requisitos ?? data.requirements ?? []),
           latitude: data.latitud ?? 0,
           longitude: data.longitud ?? 0
         };

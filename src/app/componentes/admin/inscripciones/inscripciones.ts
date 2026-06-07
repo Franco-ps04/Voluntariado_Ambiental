@@ -105,7 +105,11 @@ export class AdminInscripciones implements OnInit {
           nombre: d.nombre,
           email: d.email,
           telefono: d.telefono ?? '',
-          asistio: d.asistio === 1 ? true : d.asistio === 0 ? false : null
+          asistio: (d.asistio === true || d.asistio === 1 || d.asistio === '1' || d.asistio === 'true')
+            ? true
+            : (d.asistio === false || d.asistio === 0 || d.asistio === '0' || d.asistio === 'false')
+              ? false
+              : null
         }));
       },
       error: () => {

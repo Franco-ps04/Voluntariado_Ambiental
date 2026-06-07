@@ -52,11 +52,13 @@
         (click)="verInfo.emit(event); $event.stopPropagation()">
         <i class="bi bi-info-circle me-1"></i>Información
       </button>
-      <button class="btn btn-sm flex-fill" style="font-size:11px" [class.btn-success]="!inscrito"
-        [class.btn-outline-secondary]="inscrito" [disabled]="inscrito"
+      <button class="btn btn-success btn-sm flex-fill" style="font-size:11px" [disabled]="inscrito"
         (click)="!inscrito && inscribirse.emit(event); $event.stopPropagation()">
-        <i class="bi me-1" [class.bi-person-check]="inscrito" [class.bi-person-plus]="!inscrito"></i>
-        {{ inscrito ? 'Inscrito' : 'Inscribirse' }}
+        @if (inscrito) {
+        <i class="bi bi-check-circle me-1"></i>Inscrito
+        } @else {
+        <i class="bi bi-person-plus me-1"></i>Inscribirse
+        }
       </button>
     </div>
   </div>

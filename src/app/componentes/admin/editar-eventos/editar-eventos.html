@@ -111,9 +111,9 @@
                 </div>
 
                 <div class="col-md-6">
-                    <input class="form-control" [(ngModel)]="event.image">
                     @if (event.image) {
-                    <div class="mt-2 p-2 border rounded-3" style="background:#f8fffe">
+                    <label class="form-label">Imagen actual</label>
+                    <div class="mt-1 p-2 border rounded-3" style="background:#f8fffe">
                         <div style="height:150px;overflow:hidden;border-radius:10px">
                             <img [src]="resolveImageUrl(event.image)" alt="preview" class="w-100 h-100"
                                 style="object-fit:cover">

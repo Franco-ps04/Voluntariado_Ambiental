@@ -28,8 +28,28 @@ export class AdminService {
       return raw;
     }
     const normalized = raw.startsWith('/') ? raw : `/${raw}`;
-    const baseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
-    return `${baseUrl}${normalized}`;
+    return `${environment.apiUrl.replace('/api', '')}${normalized}`;
+  }
+
+
+  private parseRequirements(raw: any): string[] {
+    if (Array.isArray(raw)) return raw.map(x => String(x).trim()).filter(Boolean);
+    if (raw === undefined || raw === null) return [];
+    const text = String(raw).trim();
+    if (!text) return [];
+    if (text.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+          return parsed.map(x => String(x).trim()).filter(Boolean);
+        }
+      } catch {}
+    }
+    return text
+      .replace(/\r/g, '')
+      .split(/\n|,|;/)
+      .map(x => x.trim())
+      .filter(Boolean);
   }
 
   private mapEvento(e: any): AdminEvento {
@@ -47,7 +67,7 @@ export class AdminService {
       idOrganizador: e.id_organizador,
       idTipo: e.id_tipo,
       image: this.buildImageUrl(e.imagen_url),
-      requirements: e.requisitos ?? [],
+      requirements: this.parseRequirements(e.requisitos ?? e.requirements ?? []),
       maxVolunteers: e.capacidad,
       registered: e.inscritos,
       enrolledCount: e.inscritos,
@@ -110,10 +130,6 @@ export class AdminService {
 
   obtenerOrganizadoresHttp(): Observable<any[]> {
     return this.http.get<any[]>(`${environment.apiUrl}/eventos/organizadores/lista`);
-  }
-
-  obtenerReporteResumenHttp(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/reportes/resumen`);
   }
 
   actualizarEventoHttp(idEvento: number, event: any): Observable<any> {
