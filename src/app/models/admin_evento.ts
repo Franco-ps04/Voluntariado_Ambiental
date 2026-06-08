@@ -9,6 +9,7 @@ export interface AdminEvento {
   latitude: number;
   longitude: number;
   organizer: string;
+  organization: string;
   idOrganizador?: number | null;
   idTipo?: number | null;
   image: string;

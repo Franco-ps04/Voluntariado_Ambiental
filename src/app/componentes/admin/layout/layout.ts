@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { MensajesService } from '../../../services/mensajes.service';
+import { filter, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-layout',
@@ -9,7 +10,9 @@ import { MensajesService } from '../../../services/mensajes.service';
   templateUrl: './layout.html',
   styleUrl: './layout.css',
 })
-export class AdminLayout {
+export class AdminLayout implements OnInit, OnDestroy {
+  private navSub?: Subscription;
+
   constructor(
     public auth: AuthService,
     private router: Router,
@@ -24,6 +27,16 @@ export class AdminLayout {
   getInitials(): string {
     const parts = this.getNombre().split(' ');
     return (parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '');
+  }
+
+  ngOnInit(): void {
+    this.navSub = this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(() => this.mensajesService.refresh());
+  }
+
+  ngOnDestroy(): void {
+    this.navSub?.unsubscribe();
   }
 
   logout(): void {

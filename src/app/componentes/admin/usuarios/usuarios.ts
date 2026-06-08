@@ -60,7 +60,8 @@ export class Usuarios implements OnInit {
           rol: u.rol as UserRol,
           estado: this.toEstado(u.activo) as UserEstado,
           numEventos: u.num_eventos ?? 0,
-          creadoEn: u.creado_en ?? ''
+          creadoEn: u.creado_en ?? '',
+          organizacion: u.organizacion ?? ''
         })));
       },
       error: () => {
@@ -114,7 +115,8 @@ export class Usuarios implements OnInit {
       nombre: this.editForm.nombre,
       email: this.editForm.email,
       telefono: this.editForm.telefono,
-      rol: this.editForm.rol
+      rol: this.editForm.rol,
+      nombre_organizacion: this.editForm.rol === 'organizador' ? (this.editForm.organizacion ?? '') : null
     }).subscribe({
       next: () => { this.aplicarEdicion(); },
       error: () => { this.aplicarEdicion(); }   // fallback local

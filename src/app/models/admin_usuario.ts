@@ -10,4 +10,5 @@ export interface UsuarioAdmin {
     estado: UserEstado;
     numEventos: number;   //eventos a los que asistió
     creadoEn: string;   //fecha de registro
+    organizacion?: string;
 }

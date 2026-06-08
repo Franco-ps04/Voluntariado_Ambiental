@@ -70,6 +70,7 @@ export class VoluntarioMensajes implements OnInit {
   }
 
   ngOnInit(): void {
+    this.mensajesService.refresh();
     this.mensajesService.destinatariosActivosHttp().subscribe({
       next: (data: any[]) => {
         this.destinatariosActivos = data.filter(u => (u.rol === 'admin' || u.rol === 'organizador'));

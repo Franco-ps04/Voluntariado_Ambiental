@@ -133,6 +133,16 @@ export class Eventos implements OnInit, OnDestroy {
       this.router.navigate(['/ingresar']);
       return;
     }
+
+    if (this.isInscrito(ev.id) || ev.status === 'Finalizado' || ev.status === 'Cancelado') {
+      this.errorInscripcion = this.isInscrito(ev.id)
+        ? 'Ya estás inscrito en este evento'
+        : 'Este evento ya no está disponible';
+      this.confirmEvent = ev;
+      this.inscritoConExito.set(false);
+      return;
+    }
+
     this.confirmEvent = ev;
     this.inscritoConExito.set(false);
     this.errorInscripcion = '';
@@ -152,14 +162,17 @@ export class Eventos implements OnInit, OnDestroy {
       next: () => {
         this.inscribiendo = false;
         this.inscritoConExito.set(true);
-        // Actualizar contador de inscritos localmente
         this.events = this.events.map(e =>
           e.id === this.confirmEvent!.id
             ? { ...e, enrolledCount: e.enrolledCount + 1 }
             : e
         );
         this.inscritoEventIds.add(this.confirmEvent!.id);
-        setTimeout(() => { this.confirmEvent = null; this.inscritoConExito.set(false); }, 1800);
+        setTimeout(() => {
+          this.confirmEvent = null;
+          this.inscritoConExito.set(false);
+          this.errorInscripcion = '';
+        }, 1800);
       },
       error: (err) => {
         this.inscribiendo = false;

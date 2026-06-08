@@ -64,6 +64,7 @@ export class AdminService {
       latitude: e.latitud ?? 0,
       longitude: e.longitud ?? 0,
       organizer: e.organizador,
+      organization: e.organizacion,
       idOrganizador: e.id_organizador,
       idTipo: e.id_tipo,
       image: this.buildImageUrl(e.imagen_url ?? e.imagenUrl ?? e.imageUrl ?? e.imagen),
@@ -81,7 +82,7 @@ export class AdminService {
   }
 
   getEventoHttp(): Observable<AdminEvento[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/eventos`)
+    return this.http.get<any[]>(`${environment.apiUrl}/eventos/gestion`)
       .pipe(
         map(data => {
           const mapped = data.map(e => this.mapEvento(e));
@@ -198,7 +199,11 @@ export class AdminService {
   }
 
   editarUsuarioHttp(id: number, data: {
-    nombre: string; email: string; telefono: string; rol: string;
+    nombre: string;
+    email: string;
+    telefono: string;
+    rol: string;
+    nombre_organizacion?: string | null;
   }): Observable<any> {
     return this.http.put(`${environment.apiUrl}/usuarios/${id}`, data);
   }

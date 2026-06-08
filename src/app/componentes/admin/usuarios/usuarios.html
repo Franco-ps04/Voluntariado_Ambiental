@@ -287,6 +287,13 @@
                 <input class="form-control" [(ngModel)]="editForm.telefono">
             </div>
 
+            @if (editForm.rol === 'organizador') {
+            <div>
+                <label class="form-label small fw-medium">Organización</label>
+                <input class="form-control" [(ngModel)]="editForm.organizacion" placeholder="Nombre de la organización">
+            </div>
+            }
+
             <!-- Cambio de rol (voluntario ↔ organizador) -->
             <div>
                 <label class="form-label small fw-medium">Rol</label>
