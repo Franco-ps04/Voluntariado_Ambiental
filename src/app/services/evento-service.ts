@@ -12,7 +12,7 @@ export class EventoService {
   private eventsSubject = new BehaviorSubject<VolunteerEvent[]>(MOCK_VOLUNTARIOS_EVENTO);
 
   constructor(private http: HttpClient) { }
-  
+
   private buildImageUrl(url?: string | null): string {
     if (!url) return '';
     const raw = String(url).trim();
@@ -24,7 +24,7 @@ export class EventoService {
     return `${environment.apiUrl.replace('/api', '')}${normalized}`;
   }
 
-   private parseRequirements(raw: any): string[] {
+  private parseRequirements(raw: any): string[] {
     if (Array.isArray(raw)) return raw.map(x => String(x).trim()).filter(Boolean);
     if (raw === undefined || raw === null) return [];
     const text = String(raw).trim();
@@ -35,7 +35,7 @@ export class EventoService {
         if (Array.isArray(parsed)) {
           return parsed.map(x => String(x).trim()).filter(Boolean);
         }
-      } catch {}
+      } catch { }
     }
     return text
       .replace(/\r/g, '')
@@ -68,7 +68,7 @@ export class EventoService {
           maxVolunteers: e.capacidad,
           enrolledCount: e.inscritos,
           organizerName: e.organizador,
-          imageUrl: this.buildImageUrl(e.imagen_url),
+          imageUrl: this.buildImageUrl(e.imagen_url ?? e.imagenUrl ?? e.imageUrl ?? e.imagen),
           status: e.estado as any,
           requirements: this.parseRequirements(e.requisitos ?? e.requirements ?? []),
           latitude: e.latitud ?? 0,
@@ -100,7 +100,7 @@ export class EventoService {
           maxVolunteers: data.capacidad,
           enrolledCount: data.inscritos,
           organizerName: data.organizador,
-          imageUrl: this.buildImageUrl(data.imagen_url),
+          imageUrl: this.buildImageUrl(data.imagen_url ?? data.imagenUrl ?? data.imageUrl ?? data.imagen),
           status: data.estado as any,
           requirements: this.parseRequirements(data.requisitos ?? data.requirements ?? []),
           latitude: data.latitud ?? 0,

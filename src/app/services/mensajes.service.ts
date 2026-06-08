@@ -100,6 +100,14 @@ export class MensajesService {
     this.cargarSegunRol(this.usuarioActual);
   }
 
+  syncMensajes(mensajes: MensajeAdmin[]): void {
+    this._mensajes.set(mensajes);
+  }
+
+  refresh(): void {
+    this.cargarSegunRol(this.usuarioActual);
+  }
+
   // ─────────────────────────────
   // Lectura de datos para la UI
   // ─────────────────────────────

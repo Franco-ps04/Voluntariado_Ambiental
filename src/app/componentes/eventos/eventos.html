@@ -131,8 +131,13 @@
     <button class="btn btn-outline-secondary px-4" (click)="closeInfo()">
       Cerrar
     </button>
-    <button class="btn btn-success px-4 fw-medium" (click)="pedirInscripcion(infoEvent); closeInfo()">
+    <button class="btn btn-success px-4 fw-medium" [disabled]="isInscrito(infoEvent.id)"
+      (click)="!isInscrito(infoEvent.id) && pedirInscripcion(infoEvent); closeInfo()">
+      @if (isInscrito(infoEvent.id)) {
+      <i class="bi bi-check-circle me-1"></i>Inscrito
+      } @else {
       <i class="bi bi-person-plus me-1"></i>Inscribirse
+      }
     </button>
   </div>
 </div>

@@ -59,6 +59,7 @@ export class AdminNotificacion implements OnInit {
             tipo: r.tipo as 'admin' | 'voluntario'
           }))
         }));
+        this.mensajesService.syncMensajes(this._lista);
         const lista = this.filtrados();
         if (lista.length > 0) this.select(lista[0]);
       },
@@ -69,6 +70,7 @@ export class AdminNotificacion implements OnInit {
           this.auth.currentUser?.id ?? 0,
           this.auth.currentUser?.rol ?? ''
         );
+        this.mensajesService.syncMensajes(this._lista);
         const lista = this.filtrados();
         if (lista.length > 0) this.select(lista[0]);
       }
@@ -118,9 +120,10 @@ export class AdminNotificacion implements OnInit {
     if (!m.leido) {
       this.http.patch(`${environment.apiUrl}/mensajes/${m.id}/marcar-leido`, {})
         .subscribe({
-          next: () => this._lista = this._lista.map(
-            x => x.id === m.id ? { ...x, leido: true } : x
-          )
+          next: () => {
+            this._lista = this._lista.map(x => x.id === m.id ? { ...x, leido: true } : x);
+            this.mensajesService.syncMensajes(this._lista);
+          }
         });
     }
   }
@@ -157,6 +160,7 @@ export class AdminNotificacion implements OnInit {
           const actualizado = { ...m, respondido: true, historial: nuevoHistorial };
           this._lista = this._lista.map(x => x.id === m.id ? actualizado : x);
           this.selected.set(actualizado);
+          this.mensajesService.syncMensajes(this._lista);
           this.respuestaTexto = '';
           this.enviando = true;
           setTimeout(() => (this.enviando = false), 2000);

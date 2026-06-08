@@ -43,7 +43,7 @@ export class AdminService {
         if (Array.isArray(parsed)) {
           return parsed.map(x => String(x).trim()).filter(Boolean);
         }
-      } catch {}
+      } catch { }
     }
     return text
       .replace(/\r/g, '')
@@ -66,7 +66,7 @@ export class AdminService {
       organizer: e.organizador,
       idOrganizador: e.id_organizador,
       idTipo: e.id_tipo,
-      image: this.buildImageUrl(e.imagen_url),
+      image: this.buildImageUrl(e.imagen_url ?? e.imagenUrl ?? e.imageUrl ?? e.imagen),
       requirements: this.parseRequirements(e.requisitos ?? e.requirements ?? []),
       maxVolunteers: e.capacidad,
       registered: e.inscritos,

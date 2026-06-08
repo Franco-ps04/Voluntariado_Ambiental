@@ -26,6 +26,7 @@ export class EditarEventos implements OnInit {
   guardando = false;
   error = '';
   loading = false;
+  previewUrl: string | null = null;
 
   organizadores: OrgOption[] = [];
   idOrganizador: number | null = null;
@@ -71,6 +72,7 @@ export class EditarEventos implements OnInit {
         this.event = data;
         this.requirementsText = (data.requirements ?? []).join('\n');
         this.idOrganizador = data.idOrganizador ?? null;
+        this.previewUrl = this.resolveImageUrl(data.image);
         this.loading = false;
       },
       error: () => {

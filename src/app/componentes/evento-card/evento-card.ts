@@ -30,6 +30,8 @@ export class EventoCard {
       'Reforestación': 'badge-reforestacion',
       'Taller': 'badge-taller',
       'Reciclaje': 'badge-reciclaje',
+      'Educación': 'badge-educacion',
+      'Conservación': 'badge-conservacion',
     };
     return m[this.event.type] ?? 'bg-secondary-subtle text-secondary';
   }

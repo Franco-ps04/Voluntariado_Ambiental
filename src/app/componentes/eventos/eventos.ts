@@ -114,6 +114,15 @@ export class Eventos implements OnInit, OnDestroy {
     this.infoEvent = ev;
   }
 
+  getInfoImageUrl(): string {
+    const img = String(this.infoEvent?.imageUrl ?? (this.infoEvent as any)?.image ?? (this.infoEvent as any)?.imagen_url ?? (this.infoEvent as any)?.imagen ?? '').trim();
+    if (!img) return 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800';
+    if (img.startsWith('data:') || img.startsWith('http://') || img.startsWith('https://')) return img;
+    const normalized = img.startsWith('/') ? img : `/${img}`;
+    return `http://localhost:3000${normalized}`;
+  }
+
+
   closeInfo(): void {
     this.infoEvent = null;
   }

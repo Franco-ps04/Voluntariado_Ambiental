@@ -152,8 +152,8 @@ export class DashboardVoluntario implements OnInit {
     if (!this.cancelTarget) return;
     const id = this.cancelTarget.id;
     this.http.patch(`${environment.apiUrl}/inscripciones/${id}/cancelar`, {}).subscribe({
-      next: () => this.inscriptions.update(list => list.filter(i => i.id! == id)),
-      error: () => this.inscriptions.update(list => list.filter(i => i.id! == id))
+      next: () => this.inscriptions.update(list => list.filter(i => i.id !== id)),
+      error: () => this.inscriptions.update(list => list.filter(i => i.id !== id))
     });
     this.cancelTarget = null;
   }
