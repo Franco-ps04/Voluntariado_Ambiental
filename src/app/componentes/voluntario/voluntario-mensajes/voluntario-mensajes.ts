@@ -1,5 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, effect, OnInit, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 import { FormsModule } from '@angular/forms';
 import { MensajeAdmin } from '../../../models/mensaje';
 import { MensajesService } from '../../../services/mensajes.service';
@@ -44,19 +46,16 @@ export class VoluntarioMensajes implements OnInit {
   enviandoSeguimiento = false;
 
   // Inscripciones del voluntario (solo las activas/próximas)
-  readonly misInscripciones: Inscripcion[];
+  misInscripciones: Inscripcion[] = [];
 
   // IDs fijos (en backend vendrán de la BD)
   private readonly ID_ADMIN = 2;
 
   constructor(
     public mensajesService: MensajesService,
-    public auth: AuthService
+    public auth: AuthService,
+    private http: HttpClient
   ) {
-    this.misInscripciones = MOCK_INSCRIPCIONES.filter(
-      i => i.userId === (auth.currentUser?.id ?? 0)
-    );
-
     effect(() => {
       const userId = this.auth.currentUser?.id ?? 0;
       const mis = this.mensajesService.mensajes().filter(m =>
@@ -71,6 +70,46 @@ export class VoluntarioMensajes implements OnInit {
 
   ngOnInit(): void {
     this.mensajesService.refresh();
+
+    this.http.get<any[]>(`${environment.apiUrl}/inscripciones/mis`).subscribe({
+      next: (data: any[]) => {
+        this.misInscripciones = data.map((d: any) => ({
+          id: Number(d.id_inscripcion),
+          userId: this.idUsuario,
+          eventId: Number(d.id_evento),
+          enrolledAt: String(d.fecha_inscripcion ?? ''),
+          status: d.estado,
+          asistio:
+            d.asistio === true || d.asistio === 1 || d.asistio === '1' || d.asistio === 'true'
+              ? true
+              : d.asistio === false || d.asistio === 0 || d.asistio === '0' || d.asistio === 'false'
+                ? false
+                : null,
+          event: {
+            id: Number(d.id_evento),
+            title: String(d.titulo ?? ''),
+            description: String(d.descripcion ?? ''),
+            type: d.tipo,
+            date: String(d.fecha ?? ''),
+            time: String(d.hora ?? ''),
+            location: String(d.ubicacion ?? ''),
+            latitude: Number(d.latitud ?? 0),
+            longitude: Number(d.longitud ?? 0),
+            maxVolunteers: Number(d.capacidad ?? 0),
+            enrolledCount: Number(d.inscritos ?? 0),
+            organizerName: String(d.organizador ?? ''),
+            organizerUserId: Number(d.id_usuario_organizador ?? 0) || undefined,
+            imageUrl: String(d.imagen_url ?? ''),
+            requirements: [],
+            status: d.estado
+          }
+        }));
+      },
+      error: () => {
+        this.misInscripciones = MOCK_INSCRIPCIONES.filter(i => i.userId === this.idUsuario);
+      }
+    });
+
     this.mensajesService.destinatariosActivosHttp().subscribe({
       next: (data: any[]) => {
         this.destinatariosActivos = data.filter(u => (u.rol === 'admin' || u.rol === 'organizador'));
@@ -107,7 +146,7 @@ export class VoluntarioMensajes implements OnInit {
     if (this.destinoTipo === 'admin') {
       return this.destinatarioSeleccionado?.email ?? 'admingreen@greenunity.pe';
     }
-    return 'organizador@gmail.com';
+    return this.inscripcionSel?.event?.organizerEmail ?? 'organizador@gmail.com';
   }
 
   get destinatarioSeleccionado(): any | null {
@@ -118,7 +157,7 @@ export class VoluntarioMensajes implements OnInit {
   /** Id del usuario destino: admin/organizador activo seleccionado */
   private get idDestinatario(): number {
     if (this.destinoTipo === 'admin') return Number(this.adminSeleccionadoId ?? this.ID_ADMIN);
-    return 3; // mock: único org. En backend: buscar org del evento
+    return Number(this.inscripcionSel?.event?.organizerUserId ?? 0);
   }
 
   // ── Lista ─────────────────────────────────────────────────────
@@ -243,6 +282,7 @@ export class VoluntarioMensajes implements OnInit {
     if (!this.nuevoAsunto.trim() || !this.nuevoMensaje.trim()) return false;
     if (this.destinoTipo === 'evento' && !this.eventoInscripcionId) return false;
     if (this.destinoTipo === 'admin' && !this.adminSeleccionadoId) return false;
+    if (this.destinoTipo === 'evento' && !this.idDestinatario) return false;
     return true;
   }
 

@@ -81,7 +81,8 @@
         <i class="bi bi-geo-alt text-success"></i>
         <div>
           <p class="mb-0 small fw-semibold">Lugar</p>
-          <p class="mb-0 small text-muted">{{ infoEvent.location }}</p>
+          <p class="mb-0 small text-muted text-break" style="overflow-wrap:anywhere;word-break:break-word">{{
+            infoEvent.location }}</p>
         </div>
       </div>
     </div>
@@ -107,7 +108,8 @@
 
   <!-- Descripción -->
   @if (infoEvent.description) {
-  <p class="text-dark mb-3" style="line-height:1.7">{{ infoEvent.description }}</p>
+  <p class="text-dark mb-3 text-break" style="line-height:1.7;overflow-wrap:anywhere;word-break:break-word">{{
+    infoEvent.description }}</p>
   }
 
   <!-- Requisitos -->

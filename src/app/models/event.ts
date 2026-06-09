@@ -18,6 +18,7 @@ export interface VolunteerEvent {
   enrolledCount: number;
   organizerName: string;
   organizerUserId?: number;
+  organizerEmail?: string;
   imageUrl: string;
   requirements: string[];
   status: EventStatus;

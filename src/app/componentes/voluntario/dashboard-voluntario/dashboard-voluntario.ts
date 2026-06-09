@@ -65,7 +65,12 @@ export class DashboardVoluntario implements OnInit {
           eventId: d.id_evento,
           enrolledAt: d.fecha_inscripcion,
           status: d.estado as any,
-          asistio: d.asistio === 1 ? true : d.asistio === 0 ? false : null,
+          asistio:
+            d.asistio === true || d.asistio === 1 || d.asistio === '1' || d.asistio === 'true'
+              ? true
+              : d.asistio === false || d.asistio === 0 || d.asistio === '0' || d.asistio === 'false'
+                ? false
+                : null,
           event: {
             id: d.id_evento,
             title: d.titulo,
@@ -77,6 +82,8 @@ export class DashboardVoluntario implements OnInit {
             maxVolunteers: d.capacidad,
             enrolledCount: d.inscritos,
             organizerName: d.organizador,
+            organizerUserId: Number(d.id_usuario_organizador ?? d.organizerUserId ?? 0) || undefined,
+            organizerEmail: d.email_organizador ?? d.organizerEmail ?? undefined,
             imageUrl: d.imagen_url ?? '',
             status: d.estado as any,
             requirements: [],

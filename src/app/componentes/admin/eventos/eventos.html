@@ -176,7 +176,7 @@
 <!-- ═══ MODAL: Crear / Editar evento ═══ -->
 @if (showModal()) {
 <div class="gu-modal-backdrop" (click)="showModal.set(false)"></div>
-<div class="gu-modal-panel">
+<div class="gu-modal-panel" style="max-height:88vh;overflow-y:auto">
   <div class="d-flex justify-content-between align-items-start mb-3">
     <div>
       <p class="text-muted small mb-0">
