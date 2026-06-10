@@ -36,6 +36,11 @@ export class AdminEventos implements OnInit {
   submitted = false;
   error = '';
 
+  pageSize = 10;
+  hiddenEventIds = signal<number[]>([]);
+
+  currentPage = 1;
+
   totalEvents = computed(() => this.events().length);
   upcoming = computed(() => this.events().filter(e => e.status === 'Próximo').length);
   totalEnrolled = computed(() => this.events().reduce((s, e) => s + (e.enrolledCount ?? e.registered ?? 0), 0));
@@ -50,6 +55,7 @@ export class AdminEventos implements OnInit {
 
   ngOnInit(): void {
     this.loading = true;
+    this.loadHiddenEvents();
 
     if (this.auth.currentUser?.rol === 'admin') {
       this.adminService.obtenerOrganizadoresHttp().subscribe({
@@ -117,10 +123,63 @@ export class AdminEventos implements OnInit {
 
   filtered(): AdminEvento[] {
     const q = this.searchText.toLowerCase();
+    const hidden = new Set(this.hiddenEventIds());
     return this.events().filter(e =>
-      !q || e.title.toLowerCase().includes(q) || e.type.toLowerCase().includes(q)
+      !hidden.has(e.id) &&
+      (!q || e.title.toLowerCase().includes(q) || e.type.toLowerCase().includes(q))
     );
   }
+
+  paginatedEvents(): AdminEvento[] {
+    const items = this.filtered();
+    const start = (this.currentPage - 1) * this.pageSize;
+    return items.slice(start, start + this.pageSize);
+  }
+
+  totalPages(): number {
+    return Math.max(1, Math.ceil(this.filtered().length / this.pageSize));
+  }
+
+  paginationPages(): number[] {
+    return Array.from({ length: this.totalPages() }, (_, i) => i + 1);
+  }
+
+  goPage(page: number): void {
+    const total = this.totalPages();
+    this.currentPage = Math.min(Math.max(1, page), total);
+  }
+
+  pageStart(total: number): number {
+    return total === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  pageEnd(total: number): number {
+    return Math.min(this.currentPage * this.pageSize, total);
+  }
+
+  private loadHiddenEvents(): void {
+    try {
+      const raw = localStorage.getItem('greenunity_admin_hidden_events');
+      const ids = raw ? JSON.parse(raw) : [];
+      this.hiddenEventIds.set(Array.isArray(ids) ? ids.map((n: any) => Number(n)).filter((n: number) => Number.isFinite(n)) : []);
+    } catch {
+      this.hiddenEventIds.set([]);
+    }
+  }
+
+  private saveHiddenEvents(ids: number[]): void {
+    localStorage.setItem('greenunity_admin_hidden_events', JSON.stringify(ids));
+  }
+
+  private hideEventLocally(id: number): void {
+    this.hiddenEventIds.update(list => {
+      if (list.includes(id)) return list;
+      const next = [...list, id];
+      this.saveHiddenEvents(next);
+      return next;
+    });
+  }
+
 
   voluntariosPorTipo(type: string): number {
     return this.events()
@@ -309,10 +368,7 @@ export class AdminEventos implements OnInit {
   confirmDelete(): void {
     if (!this.deleteId) return;
     const id = this.deleteId;
-    this.adminService.eliminarEventoHttp(id).subscribe({
-      next: () => this.events.update(list => list.filter(e => e.id !== id)),
-      error: () => this.events.update(list => list.filter(e => e.id !== id))
-    });
+    this.hideEventLocally(id);
     this.deleteId = null;
     this.showDelete.set(false);
   }
@@ -337,6 +393,10 @@ export class AdminEventos implements OnInit {
     this.events.update(list =>
       list.map(e => e.id === id ? { ...e, status: estado as any } : e)
     );
+  }
+
+  isTerminalStatus(status: string): boolean {
+    return status === 'Finalizado' || status === 'Cancelado';
   }
 
   statusClass(status: string): string {

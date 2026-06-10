@@ -16,7 +16,8 @@
     @for (ev of filteredEvents; track ev.id) {
     <div class="mb-3" (click)="selectEvent(ev)">
       <app-evento-card [event]="ev" [selected]="selectedEvent?.id === ev.id" [inscrito]="isInscrito(ev.id)"
-        (inscribirse)="pedirInscripcion($event)" (verMapa)="selectEvent($event)" (verInfo)="openInfo($event)" />
+        [canEnroll]="canEnroll()" (inscribirse)="pedirInscripcion($event)" (verMapa)="selectEvent($event)"
+        (verInfo)="openInfo($event)" />
     </div>
     }
 
@@ -133,6 +134,7 @@
     <button class="btn btn-outline-secondary px-4" (click)="closeInfo()">
       Cerrar
     </button>
+    @if (canEnroll()) {
     <button class="btn btn-success px-4 fw-medium" [disabled]="isInscrito(infoEvent.id)"
       (click)="!isInscrito(infoEvent.id) && pedirInscripcion(infoEvent); closeInfo()">
       @if (isInscrito(infoEvent.id)) {
@@ -141,6 +143,11 @@
       <i class="bi bi-person-plus me-1"></i>Inscribirse
       }
     </button>
+    } @else {
+    <button class="btn btn-outline-secondary px-4 fw-medium" disabled>
+      <i class="bi bi-shield-lock me-1"></i>Solo voluntario
+    </button>
+    }
   </div>
 </div>
 }
@@ -157,12 +164,7 @@
       <i class="bi bi-person-check-fill text-success fs-3"></i>
     </div>
   </div>
-  <!-- <h5 class="fw-bold mb-1">¿Confirmar inscripción?</h5> -->
   <h5 class="fw-bold text-success mb-2">¡Inscripción exitosa!</h5>
-  <!-- <p class="text-muted small">
-    Te inscribirás en <strong>{{ confirmEvent.title }}</strong><br>
-    {{ confirmEvent.date }} — {{ confirmEvent.time }}
-  </p> -->
   <p class="text-muted small">Ya estás inscrito en <strong>{{ confirmEvent.title }}</strong>.</p>
   }@else {
   <div class="d-flex justify-content-center mb-3">
@@ -174,7 +176,8 @@
   <h5 class="fw-bold mb-1">¿Confirmar inscripción?</h5>
   <p class="text-muted small mb-3">
     Te inscribirás en <strong>{{ confirmEvent.title }}</strong><br>
-    {{ confirmEvent.date }} — {{ confirmEvent.time }}
+    <span>Fecha: {{confirmEvent.date}}</span><br>
+    <span>Hora: {{confirmEvent.time}}</span>
   </p>
 
   @if (errorInscripcion) {

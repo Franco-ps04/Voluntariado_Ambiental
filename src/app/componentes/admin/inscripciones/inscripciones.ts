@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { VolunteerEvent } from '../../../models/event';
 import { MOCK_VOLUNTARIOS_EVENTO } from '../../../mocks/mock_eventos';
@@ -20,8 +20,10 @@ export class AdminInscripciones implements OnInit {
   notifMessage = '';
   sent = signal(false);
   enviandoNotif = false;
+  pageSize = 10;
+  currentPage = 1;
 
-  // ── Modal asistencia ────────────────────────
+  //Modal asistencia 
   showAsistenciaModal = signal(false);
   asistenciaEventoTitulo = '';
   asistenciaEventoId: number | null = null;
@@ -41,6 +43,31 @@ export class AdminInscripciones implements OnInit {
     });
   }
 
+  paginatedEvents(): VolunteerEvent[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.events().slice(start, start + this.pageSize);
+  }
+
+  totalPages(): number {
+    return Math.max(1, Math.ceil(this.events().length / this.pageSize));
+  }
+
+  paginationPages(): number[] {
+    return Array.from({ length: this.totalPages() }, (_, i) => i + 1);
+  }
+
+  goPage(page: number): void {
+    this.currentPage = Math.min(Math.max(1, page), this.totalPages());
+  }
+
+  pageStart(total: number): number {
+    return total === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  pageEnd(total: number): number {
+    return Math.min(this.currentPage * this.pageSize, total);
+  }
+
   //Notificacion
   openNotif(eventId: number): void {
     this.selectedEventId = eventId;
@@ -51,12 +78,6 @@ export class AdminInscripciones implements OnInit {
     this.showNotifModal.set(true);
   }
 
-  /* sendNotif(): void {
-    if (!this.notifTitle || !this.notifMessage) return;
-    // Mock — sustituir por llamada al backend
-    this.sent.set(true);
-    setTimeout(() => this.showNotifModal.set(false), 1200);
-  } */
   sendNotif(): void {
     if (!this.notifTitle || !this.notifMessage || !this.selectedEventId) return;
     this.enviandoNotif = true;
@@ -74,19 +95,6 @@ export class AdminInscripciones implements OnInit {
         }
       });
   }
-
-  // Asistencia
-  /* openAsistencia(ev: VolunteerEvent): void {
-    this.asistenciaEventoTitulo = ev.title;
-    this.guardadoAsistencia = false;
-
-    // Buscar voluntarios mock del evento
-    const data = MOCK_ASISTENCIA.find(a => a.eventoId === ev.id);
-    // Clonar para no mutar el mock directamente
-    this.voluntariosModal = (data?.voluntarios ?? []).map(v => ({ ...v }));
-
-    this.showAsistenciaModal.set(true);
-  } */
 
   openAsistencia(ev: VolunteerEvent): void {
     this.asistenciaEventoTitulo = ev.title;
@@ -147,14 +155,6 @@ export class AdminInscripciones implements OnInit {
     return 'bi-x-circle-fill';
   }
 
-  /* guardarAsistencia(): void {
-    // En producción: llamar al backend con los datos
-    // this.adminService.guardarAsistencia(this.voluntariosModal).subscribe(...)
-    console.log('Asistencia guardada:', this.voluntariosModal);
-    this.guardadoAsistencia = true;
-    setTimeout(() => this.showAsistenciaModal.set(false), 1200);
-  } */
-
   guardarAsistencia(): void {
     const pendientes = this.voluntariosModal.filter(v => v.asistio !== null && v.inscripcionId);
     if (!pendientes.length) {
@@ -189,3 +189,4 @@ export class AdminInscripciones implements OnInit {
     return this.voluntariosModal.filter(v => v.asistio === false).length;
   }
 }
+

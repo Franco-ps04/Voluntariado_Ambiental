@@ -23,12 +23,12 @@ export class DashboardVoluntario implements OnInit {
   badges = signal<Certificado[]>([]);
   loading = false;
 
-  // ── Métricas principales ───────────────────────────────────
+  //Métricas principales
   enrolledCount = computed(() => this.inscriptions().length);
   participatedCount = computed(() => this.inscriptions().filter(i => i.status === 'Finalizado').length);
   badgeCount = computed(() => this.badges().length);
 
-  // ── Métricas de asistencia ─────────────────────────────────
+  //Métricas de asistencia
   asistenciasConfirmadas = computed(() =>
     this.inscriptions().filter(i => i.asistio === true).length
   );

@@ -25,6 +25,11 @@ export class Eventos implements OnInit, OnDestroy {
   inscritoEventIds = new Set<number>();
   loading = false;
 
+  // Los administradores y organizadores no se inscriben desde el módulo público
+  canEnroll(): boolean {
+    return !this.auth.currentUser || this.auth.currentUser.rol === 'voluntario';
+  }
+
   // Modal de información del evento
   infoEvent: VolunteerEvent | null = null;
 
@@ -92,13 +97,14 @@ export class Eventos implements OnInit, OnDestroy {
       const matchSearch = !q ||
         e.title.toLowerCase().includes(q) ||
         e.location.toLowerCase().includes(q);
-      return matchType && matchSearch;
+      const statusOk = e.status === 'Próximo' || e.status === 'En curso';
+      return matchType && matchSearch && statusOk;
     });
   }
 
   private updateMapMarkers(): void {
     this.mapMarkers = this.events
-      .filter(e => e.latitude && e.longitude)
+      .filter(e => (e.status === 'Próximo' || e.status === 'En curso') && e.latitude && e.longitude)
       .map(e => ({ lat: e.latitude!, lng: e.longitude!, label: e.title }));
   }
 
@@ -131,6 +137,10 @@ export class Eventos implements OnInit, OnDestroy {
   pedirInscripcion(ev: VolunteerEvent): void {
     if (!this.auth.isLoggedIn()) {
       this.router.navigate(['/ingresar']);
+      return;
+    }
+
+    if (!this.canEnroll()) {
       return;
     }
 

@@ -21,9 +21,6 @@ export class AnunciosVoluntario implements OnInit {
   constructor(private http: HttpClient) { }
 
   ngOnInit(): void {
-    /* // Mock — reemplazar con announcementService.getMyAnnouncements()
-    this.announcements.set(MOCK_ANUNCIOS);
-    this.selected.set(MOCK_ANUNCIOS[0]); */
     this.loading = true;
     this.http.get<any[]>(`${environment.apiUrl}/notificaciones/mis`).subscribe({
       next: (data) => {

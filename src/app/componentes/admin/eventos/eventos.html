@@ -53,7 +53,7 @@
       <i class="bi bi-search text-muted" style="font-size:12px"></i>
     </span>
     <input type="text" class="form-control border-start-0" placeholder="Buscar por evento o tipo"
-      [(ngModel)]="searchText">
+      [(ngModel)]="searchText" (ngModelChange)="currentPage=1">
   </div>
   <div class="btn-group">
     <button class="btn btn-sm" [class.btn-dark]="activeTab==='eventos'"
@@ -80,7 +80,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (ev of filtered(); track ev.id) {
+        @for (ev of paginatedEvents(); track ev.id) {
         <tr>
           <td class="fw-medium">{{ ev.title }}</td>
           <td class="text-muted">{{ ev.date | date:'dd MMM, yyyy' }}</td>
@@ -101,13 +101,17 @@
             <button class="btn btn-sm btn-outline-success" (click)="pedirFinalizar(ev)" title="Finalizar evento">
               <i class="bi bi-check2-square me-1"></i>Finalizar
             </button>
-            }
+            <button class="btn btn-sm btn-outline-danger" (click)="askDelete(ev.id)" title="Cancelar evento">
+              <i class="bi bi-x-circle me-1"></i>Cancelar
+            </button>
             <button class="btn btn-sm btn-outline-warning" (click)="openEdit(ev)" title="Editar">
               <i class="bi bi-pencil"></i>
             </button>
-            <button class="btn btn-sm btn-outline-danger" (click)="askDelete(ev.id)" title="Eliminar">
-              <i class="bi bi-trash"></i>
+            } @else {
+            <button class="btn btn-sm btn-outline-danger" (click)="askDelete(ev.id)" title="Eliminar del listado">
+              <i class="bi bi-trash me-1"></i>Eliminar
             </button>
+            }
           </td>
         </tr>
         }
@@ -119,6 +123,29 @@
       </tbody>
     </table>
   </div>
+
+  <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+    <p class="text-muted small mb-0">
+      Mostrando {{ pageEnd(filtered().length) }}
+      de {{ filtered().length }} eventos
+    </p>
+    <nav aria-label="Paginación de eventos">
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item" [class.disabled]="currentPage === 1">
+          <button class="page-link" (click)="goPage(currentPage - 1)">&laquo;</button>
+        </li>
+        @for (p of paginationPages(); track p) {
+        <li class="page-item" [class.active]="currentPage === p">
+          <button class="page-link" (click)="goPage(p)">{{ p }}</button>
+        </li>
+        }
+        <li class="page-item" [class.disabled]="currentPage === totalPages()">
+          <button class="page-link" (click)="goPage(currentPage + 1)">&raquo;</button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+
 </div>
 }
 
@@ -385,10 +412,10 @@
       <i class="bi bi-trash-fill text-danger fs-3"></i>
     </div>
   </div>
-  <h5 class="fw-bold mb-1">¿Eliminar este evento?</h5>
+  <h5 class="fw-bold mb-1">¿Eliminar del listado?</h5>
   <p class="text-muted small mb-4">
     Esta acción no se puede deshacer.<br>
-    El evento y todos sus inscritos serán removidos.
+    El evento se ocultará del listado visible de administración. El historial se conserva.
   </p>
   <div class="d-flex gap-3">
     <button class="btn btn-outline-secondary flex-fill" (click)="showDelete.set(false)">

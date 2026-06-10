@@ -112,7 +112,7 @@ export class VoluntarioMensajes implements OnInit {
 
     this.mensajesService.destinatariosActivosHttp().subscribe({
       next: (data: any[]) => {
-        this.destinatariosActivos = data.filter(u => (u.rol === 'admin' || u.rol === 'organizador'));
+        this.destinatariosActivos = data.filter(u => u.rol === 'admin');
         this.adminSeleccionadoId = this.destinatariosActivos[0]?.id_usuario ?? null;
       },
       error: () => {
@@ -197,7 +197,7 @@ export class VoluntarioMensajes implements OnInit {
     setTimeout(() => (this.enviandoSeguimiento = false), 2000);
   }
 
-  // ── Modal ─────────────────────────────────────────────────────
+  // Modal
   abrirModal(): void {
     this.showModal = true;
     this.borradorGuardado = false;
@@ -222,27 +222,6 @@ export class VoluntarioMensajes implements OnInit {
     if (tipo === 'admin') this.eventoInscripcionId = null;
   }
 
-  guardarBorrador(): void {
-    if (!this.nuevoAsunto.trim() && !this.nuevoMensaje.trim()) return;
-    this.borrador = {
-      asunto: this.nuevoAsunto,
-      mensaje: this.nuevoMensaje,
-      destinoTipo: this.destinoTipo,
-      eventoInscripcionId: this.eventoInscripcionId,
-      guardadoEn: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
-    };
-    this.borradorGuardado = true;
-    setTimeout(() => (this.borradorGuardado = false), 2500);
-  }
-
-  descartarBorrador(): void {
-    this.borrador = null;
-    this.nuevoAsunto = '';
-    this.nuevoMensaje = '';
-    this.destinoTipo = 'admin';
-    this.eventoInscripcionId = null;
-  }
-
   enviarNuevo(): void {
     if (!this.formularioValido()) return;
     const user = this.auth.currentUser!;
@@ -265,7 +244,7 @@ export class VoluntarioMensajes implements OnInit {
     }, 1200);
   }
 
-  // ── Helpers UI ────────────────────────────────────────────────
+  // Helpers UI 
   tieneRespuestasNoLeidas(m: MensajeAdmin): boolean {
     return (m.historial ?? []).length > 0 && !m.leidoPorVoluntario;
   }

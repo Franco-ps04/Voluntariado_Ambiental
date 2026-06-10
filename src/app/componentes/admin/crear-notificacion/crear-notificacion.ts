@@ -39,13 +39,5 @@ export class CrearNotificacion {
         this.error = err.error?.message ?? 'Error al enviar. Intentalo nuevamente';
       }
     })
-    
-    /* this.adminService.createNotification({
-      title: this.title,
-      message: this.message,
-      audience: this.audience
-    });
-
-    this.router.navigate(['/admin/dashboard']); */
   }
 }

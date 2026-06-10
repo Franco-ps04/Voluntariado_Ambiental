@@ -39,7 +39,5 @@ export class Dashboard implements OnInit {
         this.adminService.getEvents().subscribe(data => this.events = data);
       }
     })
-    /* this.stats = this.adminService.getStats();
-    this.adminService.getEvents().subscribe(data => this.events = data); */
   }
 }

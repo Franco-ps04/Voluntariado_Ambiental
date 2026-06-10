@@ -52,6 +52,7 @@
         (click)="verInfo.emit(event); $event.stopPropagation()">
         <i class="bi bi-info-circle me-1"></i>Información
       </button>
+      @if (canEnroll) {
       <button class="btn btn-success btn-sm flex-fill" style="font-size:11px" [disabled]="inscrito"
         (click)="!inscrito && inscribirse.emit(event); $event.stopPropagation()">
         @if (inscrito) {
@@ -60,6 +61,11 @@
         <i class="bi bi-person-plus me-1"></i>Inscribirse
         }
       </button>
+      } @else {
+      <button class="btn btn-outline-secondary btn-sm flex-fill" style="font-size:11px" disabled>
+        <i class="bi bi-shield-lock me-1"></i>Solo voluntario
+      </button>
+      }
     </div>
   </div>
 </div>

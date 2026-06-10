@@ -12,6 +12,7 @@ export class EventoCard {
   @Input({ required: true }) event!: VolunteerEvent;
   @Input() selected = false;
   @Input() inscrito = false;
+  @Input() canEnroll = true;
 
   @Output() inscribirse = new EventEmitter<VolunteerEvent>();
   @Output() verMapa = new EventEmitter<VolunteerEvent>();

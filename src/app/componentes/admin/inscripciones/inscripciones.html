@@ -2,7 +2,7 @@
 <p class="text-muted small mb-4">Visualiza los voluntarios inscritos en cada evento</p>
 
 <div class="d-flex flex-column gap-3">
-    @for (ev of events(); track ev.id) {
+    @for (ev of paginatedEvents(); track ev.id) {
     <div class="card border-0 shadow-sm rounded-3 p-3">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <div>
@@ -31,6 +31,28 @@
     <p class="text-muted text-center">No hay eventos registrados.</p>
     }
 </div>
+
+<div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+    <p class="text-muted small mb-0">
+        Mostrando {{ pageEnd(events().length) }} de {{ events().length }} eventos
+    </p>
+    <nav aria-label="Paginación de eventos">
+        <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+                <button class="page-link" (click)="goPage(currentPage - 1)">&laquo;</button>
+            </li>
+            @for (p of paginationPages(); track p) {
+            <li class="page-item" [class.active]="currentPage === p">
+                <button class="page-link" (click)="goPage(p)">{{ p }}</button>
+            </li>
+            }
+            <li class="page-item" [class.disabled]="currentPage === totalPages()">
+                <button class="page-link" (click)="goPage(currentPage + 1)">&raquo;</button>
+            </li>
+        </ul>
+    </nav>
+</div>
+
 
 <!--MODAL: Asistencia de voluntarios-->
 @if (showAsistenciaModal()) {

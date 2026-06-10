@@ -7,5 +7,5 @@ export interface Inscripcion {
   enrolledAt: string;
   status: 'Próximo' | 'Finalizado' | 'Cancelado';
   event?: VolunteerEvent;
-  asistio?: boolean | null;  // ← nuevo: null = sin registrar
+  asistio?: boolean | null;
 }

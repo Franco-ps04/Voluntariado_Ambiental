@@ -60,7 +60,7 @@ export class MensajesService {
 
 
   destinatariosActivosHttp(): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/usuarios/destinatarios-activos`);
+    return this.http.get<any[]>(`${environment.apiUrl}/mensajes/destinatarios`);
   }
 
   private mapMensajeBackend(raw: any, origenCarga: 'panel' | 'voluntario'): MensajeAdmin {
@@ -108,9 +108,7 @@ export class MensajesService {
     this.cargarSegunRol(this.usuarioActual);
   }
 
-  // ─────────────────────────────
   // Lectura de datos para la UI
-  // ─────────────────────────────
 
   sinLeerPara(idUsuario: number): number {
     return this._mensajes().filter(m => !m.leido && m.idDestinatario === idUsuario).length;
@@ -140,9 +138,7 @@ export class MensajesService {
     );
   }
 
-  // ─────────────────────────────
   // Admin / Organizador
-  // ─────────────────────────────
 
   marcarLeido(id: number, origen: string): void {
     if (!this.usuarioActual) return;
@@ -191,9 +187,7 @@ export class MensajesService {
       });
   }
 
-  // ─────────────────────────────
   // Voluntario
-  // ─────────────────────────────
 
   enviarMensaje(params: {
     idRemitente: number;

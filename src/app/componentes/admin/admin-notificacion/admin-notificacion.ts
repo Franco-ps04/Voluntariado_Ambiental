@@ -20,6 +20,9 @@ export class AdminNotificacion implements OnInit {
   enviando = false;
   loading = false;
 
+  pageSize = 10;
+  currentPage = 1;
+
   //Lista local
   private _lista: MensajeAdmin[] = [];
 
@@ -60,7 +63,7 @@ export class AdminNotificacion implements OnInit {
           }))
         }));
         this.mensajesService.syncMensajes(this._lista);
-        const lista = this.filtrados();
+        const lista = this.paginated();
         if (lista.length > 0) this.select(lista[0]);
       },
       error: () => {
@@ -71,7 +74,7 @@ export class AdminNotificacion implements OnInit {
           this.auth.currentUser?.rol ?? ''
         );
         this.mensajesService.syncMensajes(this._lista);
-        const lista = this.filtrados();
+        const lista = this.paginated();
         if (lista.length > 0) this.select(lista[0]);
       }
     });
@@ -96,6 +99,32 @@ export class AdminNotificacion implements OnInit {
       if (this.filtro === 'mensaje') return m.origen === 'mensaje';
       return true; // 'todos'
     });
+  }
+
+  paginated(): MensajeAdmin[] {
+    const items = this.filtrados();
+    const start = (this.currentPage - 1) * this.pageSize;
+    return items.slice(start, start + this.pageSize);
+  }
+
+  totalPages(): number {
+    return Math.max(1, Math.ceil(this.filtrados().length / this.pageSize));
+  }
+
+  paginationPages(): number[] {
+    return Array.from({ length: this.totalPages() }, (_, i) => i + 1);
+  }
+
+  goPage(page: number): void {
+    this.currentPage = Math.min(Math.max(1, page), this.totalPages());
+  }
+
+  pageStart(total: number): number {
+    return total === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  pageEnd(total: number): number {
+    return Math.min(this.currentPage * this.pageSize, total);
   }
 
   sinLeer(): number {

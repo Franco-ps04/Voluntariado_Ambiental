@@ -41,8 +41,10 @@ export class Usuarios implements OnInit {
 
 
   private toEstado(value: any): UserEstado {
-    if (value === true || value === 1 || value === '1' || String(value).toLowerCase() === 'activo') return 'activo';
-    if (value === false || value === 0 || value === '0' || String(value).toLowerCase() === 'suspendido') return 'suspendido';
+    const raw = String(value ?? '').toLowerCase();
+    if (value === true || value === 1 || value === '1' || raw === 'activo') return 'activo';
+    if (raw === 'inactivo' || raw === 'inactive' || raw === 'null') return 'inactivo';
+    if (value === false || value === 0 || value === '0' || raw === 'suspendido') return 'suspendido';
     return 'inactivo';
   }
 

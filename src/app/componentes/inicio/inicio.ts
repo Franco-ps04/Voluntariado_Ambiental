@@ -23,9 +23,6 @@ export class Inicio implements OnInit {
   constructor(private eventService: EventoService) { }
 
   ngOnInit(): void {
-    /* this.eventService.getEvents().subscribe(evts => {
-      this.events = evts.slice(0, 3);
-    }); */
     //Intenta cargar los datos desde el backend
     this.eventService.eventosHTTP({estado: 'Próximo'}).subscribe({
       next: () => {

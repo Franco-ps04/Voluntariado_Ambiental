@@ -8,7 +8,7 @@ export interface UsuarioAdmin {
     telefono: string;
     rol: UserRol;
     estado: UserEstado;
-    numEventos: number;   //eventos a los que asistió
-    creadoEn: string;   //fecha de registro
+    numEventos: number;//eventos a los que asistió
+    creadoEn: string;//fecha de registro
     organizacion?: string;
 }

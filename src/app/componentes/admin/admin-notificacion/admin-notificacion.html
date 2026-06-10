@@ -18,14 +18,15 @@
                 {v:'mensaje', l:'Voluntarios'}
                 ]; track f.v) {
                 <button class="btn btn-sm rounded-pill" [class.btn-success]="filtro === f.v"
-                    [class.btn-outline-secondary]="filtro !== f.v" (click)="filtro = $any(f.v)">{{ f.l }}</button>
+                    [class.btn-outline-secondary]="filtro !== f.v" (click)="filtro = $any(f.v); currentPage=1">{{ f.l
+                    }}</button>
                 }
             </div>
         </div>
 
         <!-- Lista con scroll -->
         <div class="flex-grow-1 overflow-y-auto">
-            @for (m of filtrados(); track m.id + m.origen) {
+            @for (m of paginated(); track m.id + m.origen) {
             <div class="p-3 border-bottom cursor-pointer" [style.background]="selected()?.id === m.id && selected()?.origen === m.origen
              ? '#f0fdf4' : (!m.leido ? '#fafafa' : 'white')" (click)="select(m)">
                 <div class="d-flex justify-content-between align-items-start gap-2 mb-1">

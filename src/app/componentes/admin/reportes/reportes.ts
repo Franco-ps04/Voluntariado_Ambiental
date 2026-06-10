@@ -104,7 +104,7 @@ export class Reportes implements OnInit {
           const pctOcupacion = capacidad > 0 ? Math.round(inscritos / capacidad * 100) : 0;
           const pctAsistencia = eventInscs.length > 0
             ? Math.round(asistieron / eventInscs.length * 100)
-            : (String(e.status ?? e.estado) === 'Finalizado' ? 85 : 0);
+            : (String(e.status ?? e.estado) === 'Finalizado' ? 0 : 0);
 
           return {
             id: Number(e.id ?? e.id_evento),
