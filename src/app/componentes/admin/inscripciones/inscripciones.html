@@ -20,9 +20,16 @@
                     {{ ev.enrolledCount }} inscritos
                     <i class="bi bi-people ms-1"></i>
                 </button>
+
+                @if (isTerminal(ev)) {
+                <span class="badge px-3 py-2" [class]="estadoBadge(ev).clase" style="font-size:13px;font-weight:500">
+                    {{ estadoBadge(ev).texto }}
+                </span>
+                } @else {
                 <button class="btn btn-sm btn-outline-primary" (click)="openNotif(ev.id)">
                     <i class="bi bi-megaphone me-1"></i>Enviar notificación
                 </button>
+                }
             </div>
         </div>
     </div>
@@ -174,12 +181,18 @@
             placeholder="Escribe el mensaje para los voluntarios..."></textarea>
     </div>
 
+    @if (notifError) {
+    <div class="alert alert-danger py-2 small mb-3">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ notifError }}
+    </div>
+    }
+
     <div class="d-flex justify-content-end gap-2">
         <button class="btn btn-outline-secondary px-4" (click)="showNotifModal.set(false)">
             Cancelar
         </button>
         <button class="btn px-4 fw-semibold" [class.btn-success]="!sent()" [class.btn-light]="sent()"
-            (click)="sendNotif()" [disabled]="sent()">
+            (click)="sendNotif()" [disabled]="sent() || enviandoNotif || !notifTitle.trim() || !notifMessage.trim() || !selectedEventId">
             @if (sent()) {
             <i class="bi bi-check-circle-fill text-success me-1"></i>¡Enviado!
             } @else {

@@ -90,7 +90,7 @@ export class Usuarios implements OnInit {
     });
   }
 
-  // ── Abrir modal ──────────────────────────
+  // Abrir modal
   openModal(u: UsuarioAdmin): void {
     this.modalUsuario = { ...u };
     this.editForm = { ...u };
@@ -133,37 +133,12 @@ export class Usuarios implements OnInit {
     setTimeout(() => { this.guardado = false; }, 2000);
   }
 
-  // ── Confirmar acción ──────────────────────
+  // Confirmar acción
   pedirConfirm(u: UsuarioAdmin, accion: 'suspender' | 'activar' | 'eliminar'): void {
     this.confirmTarget = u;
     this.confirmAccion = accion;
     this.showConfirm = true;
   }
-
-  /* ejecutarConfirm(): void {
-    if (!this.confirmTarget) return;
-    const id = this.confirmTarget.id;
-
-    if (this.confirmAccion === 'eliminar') {
-      this.usuarios.update(list => list.filter(u => u.id !== id));
-      this.closeModal();
-    } else {
-      const nuevoEstado: UserEstado =
-        this.confirmAccion === 'suspender' ? 'suspendido' : 'activo';
-      this.usuarios.update(list =>
-        list.map(u => u.id === id ? { ...u, estado: nuevoEstado } : u)
-      );
-      // Si el modal del usuario estaba abierto, actualizarlo
-      if (this.modalUsuario?.id === id) {
-        this.modalUsuario = { ...this.modalUsuario, estado: nuevoEstado };
-        this.editForm = { ...this.editForm, estado: nuevoEstado };
-      }
-    }
-
-    this.confirmTarget = null;
-    this.showConfirm = false;
-    if (this.confirmAccion === 'eliminar') this.closeModal();
-  } */
 
   ejecutarConfirm(): void {
     if (!this.confirmTarget) return;
@@ -191,7 +166,7 @@ export class Usuarios implements OnInit {
     }
   }
 
-  // ── Helpers UI ───────────────────────────
+  //Helpers UI
   getInitials(nombre: string): string {
     return nombre.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase();
   }

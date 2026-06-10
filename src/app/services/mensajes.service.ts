@@ -198,23 +198,20 @@ export class MensajesService {
     mensaje: string;
     eventoRelacionado?: string;
     idEvento?: number;
-  }): void {
-    if (!this.usuarioActual) return;
+  }): Observable<{ ok: boolean; id: number }> {
+    if (!this.usuarioActual) return of({ ok: false, id: 0 });
 
-    this.http.post<{ ok: boolean; id: number }>(`${environment.apiUrl}/mensajes`, {
+    return this.http.post<{ ok: boolean; id: number }>(`${environment.apiUrl}/mensajes`, {
       idUsuarioDestino: params.idDestinatario,
       idDestinatario: params.idDestinatario,
       asunto: params.asunto,
       mensaje: params.mensaje,
       idEvento: params.idEvento ?? null
-    }).subscribe({
-      next: () => {
-        this.refrescar();
-      },
-      error: () => {
-        // no cambia el estado local si falla
-      }
-    });
+    }).pipe(
+      tap({
+        next: () => this.refrescar()
+      })
+    );
   }
 
   enviarSeguimiento(id: number, texto: string): void {

@@ -42,7 +42,7 @@ export class AdminEventos implements OnInit {
   currentPage = 1;
 
   totalEvents = computed(() => this.events().length);
-  upcoming = computed(() => this.events().filter(e => e.status === 'Próximo').length);
+  upcoming = computed(() => this.events().filter(e => this.estadoKey(e.status) === 'proximo').length);
   totalEnrolled = computed(() => this.events().reduce((s, e) => s + (e.enrolledCount ?? e.registered ?? 0), 0));
 
   readonly EVENT_TYPES = ['Limpieza', 'Reforestación', 'Taller', 'Reciclaje', 'Educación', 'Conservación'];
@@ -65,7 +65,7 @@ export class AdminEventos implements OnInit {
             nombre: u.nombre ?? '',
             organizacion: u.nombre_organizacion ?? u.organizacion ?? ''
           }));
-          this.idOrganizador = this.organizadores[0]?.id_organizador ?? null;
+          this.idOrganizador = null;
         },
         error: () => {
           this.organizadores = [];
@@ -111,9 +111,6 @@ export class AdminEventos implements OnInit {
       else if (lon < -180 || lon > 180) e['longitude'] = 'La longitud debe estar entre -180 y 180.';
     }
 
-    if (this.auth.currentUser?.rol === 'admin' && !this.idOrganizador) {
-      e['organizador'] = 'Selecciona un organizador.';
-    }
     return e;
   }
 
@@ -207,7 +204,7 @@ export class AdminEventos implements OnInit {
     this.error = '';
     this.selectedFile = null;
     this.previewUrl = null;
-    this.idOrganizador = this.organizadores[0]?.id_organizador ?? null;
+    this.idOrganizador = null;
     this.showModal.set(true);
   }
 
@@ -222,7 +219,7 @@ export class AdminEventos implements OnInit {
     this.error = '';
     this.selectedFile = null;
     this.previewUrl = this.resolveImageUrl(ev.image);
-    this.idOrganizador = ev.idOrganizador ?? this.idOrganizador ?? null;
+    this.idOrganizador = null;
     this.showModal.set(true);
   }
 
@@ -334,9 +331,6 @@ export class AdminEventos implements OnInit {
       payload.append('requisitos', JSON.stringify(reqs));
     }
 
-    if (this.auth.currentUser?.rol === 'admin' && this.idOrganizador) {
-      payload.append('idOrganizador', String(this.idOrganizador));
-    }
 
     this.guardando = true;
 
@@ -395,18 +389,28 @@ export class AdminEventos implements OnInit {
     );
   }
 
+  estadoKey(status: string): string {
+    return String(status ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
   isTerminalStatus(status: string): boolean {
-    return status === 'Finalizado' || status === 'Cancelado';
+    const key = this.estadoKey(status);
+    return key === 'finalizado' || key === 'cancelado';
   }
 
   statusClass(status: string): string {
+    const key = this.estadoKey(status);
     const m: Record<string, string> = {
-      'Próximo': 'bg-primary-subtle text-primary',
-      'En curso': 'bg-warning-subtle text-warning',
-      'Finalizado': 'bg-secondary-subtle text-secondary',
-      'Cancelado': 'bg-danger-subtle text-danger',
+      'proximo': 'bg-primary-subtle text-primary',
+      'en curso': 'bg-warning-subtle text-warning',
+      'finalizado': 'bg-secondary-subtle text-secondary',
+      'cancelado': 'bg-danger-subtle text-danger',
     };
-    return m[status] ?? 'bg-secondary-subtle text-secondary';
+    return m[key] ?? 'bg-secondary-subtle text-secondary';
   }
 
   badgeClass(type: string): string {

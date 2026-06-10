@@ -20,6 +20,7 @@ export class AdminInscripciones implements OnInit {
   notifMessage = '';
   sent = signal(false);
   enviandoNotif = false;
+  notifError = '';
   pageSize = 10;
   currentPage = 1;
 
@@ -60,6 +61,33 @@ export class AdminInscripciones implements OnInit {
     this.currentPage = Math.min(Math.max(1, page), this.totalPages());
   }
 
+  private estadoKey(estado: string): string {
+    return String(estado ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  isFinalizado(ev: VolunteerEvent): boolean {
+    return this.estadoKey(ev.status) === 'finalizado';
+  }
+
+  isCancelado(ev: VolunteerEvent): boolean {
+    return this.estadoKey(ev.status) === 'cancelado';
+  }
+
+  isTerminal(ev: VolunteerEvent): boolean {
+    const key = this.estadoKey(ev.status);
+    return key === 'finalizado' || key === 'cancelado';
+  }
+
+  estadoBadge(ev: VolunteerEvent): { texto: string; clase: string } {
+    if (this.isCancelado(ev)) return { texto: 'Cancelado', clase: 'bg-danger-subtle text-danger' };
+    if (this.isFinalizado(ev)) return { texto: 'Finalizado', clase: 'bg-secondary-subtle text-secondary' };
+    return { texto: String(ev.status ?? 'Próximo'), clase: 'bg-primary-subtle text-primary' };
+  }
+
   pageStart(total: number): number {
     return total === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1;
   }
@@ -75,23 +103,42 @@ export class AdminInscripciones implements OnInit {
     this.notifMessage = '';
     this.sent.set(false);
     this.enviandoNotif = false;
+    this.notifError = '';
     this.showNotifModal.set(true);
   }
 
   sendNotif(): void {
-    if (!this.notifTitle || !this.notifMessage || !this.selectedEventId) return;
+    this.notifError = '';
+    const titulo = this.notifTitle.trim();
+    const mensaje = this.notifMessage.trim();
+    const event = this.events().find(e => e.id === (this.selectedEventId ?? -1)) ?? null;
+    if (!titulo || !mensaje || !this.selectedEventId) {
+      this.notifError = 'Completa el título, el mensaje y selecciona un evento.';
+      return;
+    }
+    if (titulo.length > 150) {
+      this.notifError = 'El título no debe superar 150 caracteres.';
+      return;
+    }
+    if (mensaje.length > 5000) {
+      this.notifError = 'El mensaje es demasiado largo.';
+      return;
+    }
+    if (event && this.isTerminal(event)) {
+      this.notifError = 'No puedes enviar notificaciones a eventos finalizados o cancelados.';
+      return;
+    }
     this.enviandoNotif = true;
-    this.adminService.crearAnuncioHttp(this.selectedEventId, this.notifTitle, this.notifMessage)
+    this.adminService.crearAnuncioHttp(this.selectedEventId, titulo, mensaje)
       .subscribe({
         next: () => {
           this.enviandoNotif = false;
           this.sent.set(true);
           setTimeout(() => this.showNotifModal.set(false), 1200);
         },
-        error: () => {
+        error: (err) => {
           this.enviandoNotif = false;
-          this.sent.set(true);
-          setTimeout(() => this.showNotifModal.set(false), 1200);
+          this.notifError = err.error?.message ?? 'No se pudo enviar la notificación.';
         }
       });
   }
@@ -189,4 +236,3 @@ export class AdminInscripciones implements OnInit {
     return this.voluntariosModal.filter(v => v.asistio === false).length;
   }
 }
-

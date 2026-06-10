@@ -284,23 +284,23 @@
       <label class="form-label small fw-semibold">Selecciona el evento</label>
       <select class="form-select" [(ngModel)]="eventoInscripcionId">
         <option [ngValue]="null">— Elige un evento inscrito —</option>
-        @for (ins of misInscripciones; track ins.id) {
+        @for (ins of misInscripcionesActivas; track ins.id) {
         <option [ngValue]="ins.id">{{ ins.event?.title }}</option>
         }
       </select>
-      @if (inscripcionSel) {
+      @if (inscripcionSelActiva) {
       <div class="mt-2 p-3 rounded-3" style="background:#eff6ff;border:1px solid #bfdbfe">
         <p class="small fw-semibold text-primary mb-1">
           <i class="bi bi-building me-1"></i>Tu mensaje se enviará al organizador:
         </p>
-        <p class="fw-bold mb-0 small text-break">{{ inscripcionSel.event?.organizerName }}</p>
+        <p class="fw-bold mb-0 small text-break">{{ inscripcionSelActiva.event?.organizerName }}</p>
       </div>
       }
     </div>
     }
 
     <!-- Resumen destinatario -->
-    @if (destinoTipo === 'admin' || (destinoTipo === 'evento' && inscripcionSel)) {
+    @if (destinoTipo === 'admin' || (destinoTipo === 'evento' && inscripcionSelActiva)) {
     <div class="mb-3 p-3 rounded-3 d-flex align-items-center gap-3"
       [style.border]="destinoTipo === 'admin' ? '1.5px solid #bbf7d0' : '1.5px solid #bfdbfe'"
       [style.background]="destinoTipo === 'admin' ? '#f0fdf4' : '#eff6ff'">
@@ -332,6 +332,12 @@
     </div>
   </div>
 
+  @if (errorNuevo) {
+  <div class="alert alert-danger py-2 small mb-3">
+    <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ errorNuevo }}
+  </div>
+  }
+
   <!-- Footer fijo -->
   <div class="flex-shrink-0 px-4 py-3 border-top bg-white d-flex gap-2 flex-wrap align-items-center">
     <div class="d-flex gap-2 ms-auto">
@@ -341,7 +347,8 @@
         <i class="bi bi-check-circle-fill text-success me-1"></i>¡Enviado!
       </button>
       } @else {
-      <button class="btn btn-success btn-sm fw-semibold" (click)="enviarNuevo()" [disabled]="!formularioValido()">
+      <button class="btn btn-success btn-sm fw-semibold" (click)="enviarNuevo()"
+        [disabled]="!formularioValido() || enviandoNuevo">
         <i class="bi bi-send me-1"></i>Enviar consulta
       </button>
       }

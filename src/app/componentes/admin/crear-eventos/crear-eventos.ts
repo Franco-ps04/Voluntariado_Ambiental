@@ -5,8 +5,6 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { environment } from '../../../../environments/environment';
 
-interface OrgOption { id_organizador: number; nombre: string; organizacion: string; }
-
 @Component({
   selector: 'app-crear-eventos',
   imports: [FormsModule, RouterLink],
@@ -22,12 +20,9 @@ export class CrearEventos implements OnInit {
   location = '';
   latitude = '';
   longitude = '';
-  organizer = '';
   image = '';
   requirementsText = '';
   maxVolunteers = 30;
-  idOrganizador: number | null = null;
-  organizadores: OrgOption[] = [];
   submitted = false;
   guardando = false;
   error = '';
@@ -39,22 +34,7 @@ export class CrearEventos implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    if (this.auth.currentUser?.rol === 'admin') {
-      this.adminService.obtenerOrganizadoresHttp().subscribe({
-        next: (data) => {
-          this.organizadores = data.map((u: any) => ({
-            id_organizador: Number(u.id_organizador ?? u.id_usuario ?? u.id),
-            nombre: u.nombre ?? '',
-            organizacion: u.nombre_organizacion ?? u.organizacion ?? ''
-          }));
-          this.idOrganizador = this.organizadores[0]?.id_organizador ?? null;
-        },
-        error: () => {
-          this.organizadores = [];
-          this.idOrganizador = null;
-        }
-      });
-    }
+    // El organizador se asigna automáticamente en el backend.
   }
 
   get errores(): Record<string, string> {
@@ -83,16 +63,12 @@ export class CrearEventos implements OnInit {
       e['longitude'] = 'La longitud debe estar entre -180 y 180.';
     }
 
-    if (this.auth.currentUser?.rol === 'admin' && !this.idOrganizador) {
-      e['organizador'] = 'Selecciona un organizador.';
-    }
     return e;
   }
 
   get formularioValido(): boolean {
     return Object.keys(this.errores).length === 0;
   }
-
 
   private parseCoordinate(value: string): number | null {
     const raw = String(value ?? '').trim();
@@ -145,10 +121,6 @@ export class CrearEventos implements OnInit {
       imagenUrl: this.image || undefined,
       requisitos: this.requirementsText.split('\n').map(r => r.trim()).filter(Boolean)
     };
-
-    if (this.auth.currentUser?.rol === 'admin') {
-      body.idOrganizador = this.idOrganizador;
-    }
 
     this.adminService.crearEventoHttp(body).subscribe({
       next: () => {

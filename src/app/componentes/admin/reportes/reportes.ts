@@ -194,5 +194,3 @@ export class Reportes implements OnInit {
     return this.reporteFiltrado().reduce((s, r) => s + r.asistieron, 0);
   }
 }
-
-

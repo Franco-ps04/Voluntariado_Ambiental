@@ -97,7 +97,7 @@
             <span class="badge rounded-pill" [class]="statusClass(ev.status)">{{ ev.status }}</span>
           </td>
           <td class="d-flex gap-1 flex-wrap">
-            @if (ev.status === 'Próximo' || ev.status === 'En curso') {
+            @if (estadoKey(ev.status) === 'proximo' || estadoKey(ev.status) === 'en curso') {
             <button class="btn btn-sm btn-outline-success" (click)="pedirFinalizar(ev)" title="Finalizar evento">
               <i class="bi bi-check2-square me-1"></i>Finalizar
             </button>
@@ -309,25 +309,16 @@
     Busca el lugar en Google Maps, haz clic derecho y copia las coordenadas.
   </p>
 
-  @if (auth.currentUser?.rol === 'admin') {
-  <div class="mb-3">
-    <label class="form-label small fw-medium">Organizador / ONG <span class="text-danger">*</span></label>
-    <select class="form-select" [(ngModel)]="idOrganizador" [class.is-invalid]="submitted && formErrors['organizador']">
-      <option [ngValue]="null">— Selecciona un organizador —</option>
-      @for (o of organizadores; track o.id_organizador) {
-      <option [ngValue]="o.id_organizador">{{ o.nombre }} ({{ o.organizacion }})</option>
-      }
-    </select>
-    @if (submitted && formErrors['organizador']) {
-    <div class="invalid-feedback">{{ formErrors['organizador'] }}</div>
-    }
-  </div>
-  } @else {
   <div class="mb-3">
     <label class="form-label small fw-medium">Organizador</label>
+    @if (auth.currentUser?.rol === 'admin') {
+    <input type="text" class="form-control" value="Administrador" disabled>
+    <small class="text-muted">Se asigna automáticamente al crear el evento.</small>
+    } @else {
     <input type="text" class="form-control" [value]="auth.currentUser?.nombre" disabled>
+    <small class="text-muted">El evento se asignará a tu cuenta de organizador.</small>
+    }
   </div>
-  }
 
   <div class="mb-3">
     <label class="form-label small fw-medium">Imagen del evento</label>

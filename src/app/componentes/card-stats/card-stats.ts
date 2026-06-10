@@ -17,4 +17,3 @@ export class CardStats {
   @Input() value: string | number = '';
   @Input() icon = 'bi-star-fill';
 }
-

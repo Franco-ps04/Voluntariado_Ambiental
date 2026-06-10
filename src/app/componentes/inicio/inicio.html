@@ -54,7 +54,7 @@
     <div class="row g-4">
       @for (event of events; track event.id) {
       <div class="col-md-4">
-        <app-evento-card [event]="event" />
+        <app-evento-card [event]="event" [canEnroll]="canEnroll()" />
       </div>
       }
     </div>

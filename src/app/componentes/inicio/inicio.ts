@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 import { EventoService } from '../../services/evento-service';
 import { VolunteerEvent } from '../../models/event';
 import { EventoCard } from '../evento-card/evento-card';
@@ -20,19 +21,26 @@ export class Inicio implements OnInit {
     { label: 'Árboles plantados', value: '15,000+', icon: 'bi-tree-fill' }
   ];
 
-  constructor(private eventService: EventoService) { }
+  constructor(
+    private eventService: EventoService,
+    public auth: AuthService
+  ) { }
+
+  canEnroll(): boolean {
+    return !this.auth.currentUser || this.auth.currentUser.rol === 'voluntario';
+  }
 
   ngOnInit(): void {
     //Intenta cargar los datos desde el backend
-    this.eventService.eventosHTTP({estado: 'Próximo'}).subscribe({
+    this.eventService.eventosHTTP({ estado: 'Próximo' }).subscribe({
       next: () => {
         this.eventService.getEvents().subscribe(evts => {
-          this.events = evts.slice(0,3);
+          this.events = evts.slice(0, 3);
         })
       },
       error: () => {
         this.eventService.getEvents().subscribe(evts => {
-          this.events = evts.slice(0,3);
+          this.events = evts.slice(0, 3);
         })
       }
     })

@@ -38,6 +38,7 @@ export class VoluntarioMensajes implements OnInit {
   destinatariosActivos: any[] = [];
   adminSeleccionadoId: number | null = null;
   enviandoNuevo = false;
+  errorNuevo = '';
   borradorGuardado = false;
   borrador: Borrador | null = null;
 
@@ -99,6 +100,7 @@ export class VoluntarioMensajes implements OnInit {
             enrolledCount: Number(d.inscritos ?? 0),
             organizerName: String(d.organizador ?? ''),
             organizerUserId: Number(d.id_usuario_organizador ?? 0) || undefined,
+            organizerEmail: String(d.email_organizador ?? ''),
             imageUrl: String(d.imagen_url ?? ''),
             requirements: [],
             status: d.estado
@@ -129,7 +131,7 @@ export class VoluntarioMensajes implements OnInit {
     return this.auth.currentUser?.id ?? 0;
   }
 
-  // ── Inscripción seleccionada → info del organizador ──────────
+  // Inscripción seleccionada → info del organizador 
   get inscripcionSel(): Inscripcion | null {
     if (!this.eventoInscripcionId) return null;
     return this.misInscripciones.find(i => i.id === this.eventoInscripcionId) ?? null;
@@ -139,14 +141,14 @@ export class VoluntarioMensajes implements OnInit {
     if (this.destinoTipo === 'admin') {
       return this.destinatarioSeleccionado?.nombre ?? 'Administrador GreenUnity';
     }
-    return this.inscripcionSel?.event?.organizerName ?? 'Organizador';
+    return this.inscripcionSelActiva?.event?.organizerName ?? 'Organizador';
   }
 
   get emailDestinatario(): string {
     if (this.destinoTipo === 'admin') {
       return this.destinatarioSeleccionado?.email ?? 'admingreen@greenunity.pe';
     }
-    return this.inscripcionSel?.event?.organizerEmail ?? 'organizador@gmail.com';
+    return this.inscripcionSelActiva?.event?.organizerEmail ?? 'organizador@gmail.com';
   }
 
   get destinatarioSeleccionado(): any | null {
@@ -157,10 +159,33 @@ export class VoluntarioMensajes implements OnInit {
   /** Id del usuario destino: admin/organizador activo seleccionado */
   private get idDestinatario(): number {
     if (this.destinoTipo === 'admin') return Number(this.adminSeleccionadoId ?? this.ID_ADMIN);
-    return Number(this.inscripcionSel?.event?.organizerUserId ?? 0);
+    return Number(this.inscripcionSelActiva?.event?.organizerUserId ?? 0);
   }
 
-  // ── Lista ─────────────────────────────────────────────────────
+  private estadoKey(estado: string): string {
+    return String(estado ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  private esEventoActivo(estado: string | undefined | null): boolean {
+    const key = this.estadoKey(String(estado ?? ''));
+    return key === 'proximo' || key === 'en curso';
+  }
+
+  get misInscripcionesActivas(): Inscripcion[] {
+    return this.misInscripciones.filter(i => this.esEventoActivo(i.event?.status ?? i.status));
+  }
+
+  get inscripcionSelActiva(): Inscripcion | null {
+    const sel = this.inscripcionSel;
+    if (!sel) return null;
+    return this.esEventoActivo(sel.event?.status ?? sel.status) ? sel : null;
+  }
+
+  // Lista
   misMensajes(): MensajeAdmin[] {
     const todos = this.mensajesService.getMisMensajes(this.idUsuario);
     switch (this.filtro) {
@@ -185,7 +210,7 @@ export class VoluntarioMensajes implements OnInit {
     this.selected.set({ ...actualizado, leidoPorVoluntario: true });
   }
 
-  // ── Seguimiento en el hilo ────────────────────────────────────
+  //Seguimiento en el hilo
   enviarSeguimiento(): void {
     const m = this.selected();
     if (!this.seguimientoTexto.trim() || !m) return;
@@ -202,6 +227,7 @@ export class VoluntarioMensajes implements OnInit {
     this.showModal = true;
     this.borradorGuardado = false;
     this.enviandoNuevo = false;
+    this.errorNuevo = '';
     if (this.borrador) {
       this.nuevoAsunto = this.borrador.asunto;
       this.nuevoMensaje = this.borrador.mensaje;
@@ -223,8 +249,15 @@ export class VoluntarioMensajes implements OnInit {
   }
 
   enviarNuevo(): void {
-    if (!this.formularioValido()) return;
+    this.errorNuevo = '';
+    if (!this.formularioValido()) {
+      this.errorNuevo = 'Completa el asunto, el mensaje y selecciona un destinatario válido.';
+      return;
+    }
+
     const user = this.auth.currentUser!;
+    this.enviandoNuevo = true;
+
     this.mensajesService.enviarMensaje({
       idRemitente: user.id,
       idDestinatario: this.idDestinatario,
@@ -232,16 +265,24 @@ export class VoluntarioMensajes implements OnInit {
       emailRemitente: user.email,
       asunto: this.nuevoAsunto,
       mensaje: this.nuevoMensaje,
-      eventoRelacionado: this.inscripcionSel?.event?.title
+      eventoRelacionado: this.inscripcionSelActiva?.event?.title,
+      idEvento: this.destinoTipo === 'evento' ? (this.inscripcionSelActiva?.event?.id ?? undefined) : undefined
+    }).subscribe({
+      next: () => {
+        this.borrador = null;
+        this.enviandoNuevo = true;
+        setTimeout(() => {
+          this.showModal = false;
+          this.enviandoNuevo = false;
+          const mis = this.misMensajes();
+          if (mis.length > 0) this.seleccionar(mis[0]);
+        }, 1200);
+      },
+      error: (err) => {
+        this.enviandoNuevo = false;
+        this.errorNuevo = err.error?.message ?? 'No se pudo enviar el mensaje.';
+      }
     });
-    this.borrador = null;
-    this.enviandoNuevo = true;
-    setTimeout(() => {
-      this.showModal = false;
-      this.enviandoNuevo = false;
-      const mis = this.misMensajes();
-      if (mis.length > 0) this.seleccionar(mis[0]);
-    }, 1200);
   }
 
   // Helpers UI 
@@ -259,7 +300,7 @@ export class VoluntarioMensajes implements OnInit {
 
   formularioValido(): boolean {
     if (!this.nuevoAsunto.trim() || !this.nuevoMensaje.trim()) return false;
-    if (this.destinoTipo === 'evento' && !this.eventoInscripcionId) return false;
+    if (this.destinoTipo === 'evento' && !this.inscripcionSelActiva) return false;
     if (this.destinoTipo === 'admin' && !this.adminSeleccionadoId) return false;
     if (this.destinoTipo === 'evento' && !this.idDestinatario) return false;
     return true;

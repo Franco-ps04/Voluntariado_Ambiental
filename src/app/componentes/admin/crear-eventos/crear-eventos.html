@@ -100,28 +100,17 @@
                     <div class="invalid-feedback">{{ errores['longitude'] }}</div>
                     }
                 </div>
-                <!-- Organizador — selector si es admin, info fija si es organizador -->
-                @if (auth.currentUser?.rol === 'admin') {
-                <div class="col-md-6">
-                    <label class="form-label fw-medium small">Organizador <span class="text-danger">*</span></label>
-                    <select class="form-select" [(ngModel)]="idOrganizador"
-                        [class.is-invalid]="submitted && errores['organizador']">
-                        <option [ngValue]="null">— Selecciona un organizador —</option>
-                        @for (o of organizadores; track o.id_organizador) {
-                        <option [ngValue]="o.id_organizador">{{ o.nombre }} ({{ o.organizacion }})</option>
-                        }
-                    </select>
-                    @if (submitted && errores['organizador']) {
-                    <div class="invalid-feedback">{{ errores['organizador'] }}</div>
-                    }
-                </div>
-                } @else {
+                <!-- Organizador -->
                 <div class="col-md-6">
                     <label class="form-label fw-medium small">Organizador</label>
+                    @if (auth.currentUser?.rol === 'admin') {
+                    <input class="form-control" value="Administrador" disabled>
+                    <small class="text-muted">Se asigna automáticamente al crear el evento.</small>
+                    } @else {
                     <input class="form-control" [value]="auth.currentUser?.nombre" disabled>
                     <small class="text-muted">El evento se asignará a tu cuenta de organizador.</small>
+                    }
                 </div>
-                }
                 <!-- URL imagen -->
                 <div class="col-md-6">
                     <input class="form-control" [(ngModel)]="image" placeholder="https://...">
