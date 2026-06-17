@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { EventoService } from '../../services/evento-service';
 import { VolunteerEvent } from '../../models/event';
@@ -23,11 +23,18 @@ export class Inicio implements OnInit {
 
   constructor(
     private eventService: EventoService,
-    public auth: AuthService
+    public auth: AuthService,
+    private router: Router
   ) { }
 
   canEnroll(): boolean {
     return !this.auth.currentUser || this.auth.currentUser.rol === 'voluntario';
+  }
+
+  goToEvent(event: VolunteerEvent): void {
+    this.router.navigate(['/eventos'], {
+      queryParams: { evento: event.id }
+    });
   }
 
   ngOnInit(): void {

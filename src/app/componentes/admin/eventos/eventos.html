@@ -101,7 +101,7 @@
             <button class="btn btn-sm btn-outline-success" (click)="pedirFinalizar(ev)" title="Finalizar evento">
               <i class="bi bi-check2-square me-1"></i>Finalizar
             </button>
-            <button class="btn btn-sm btn-outline-danger" (click)="askDelete(ev.id)" title="Cancelar evento">
+            <button class="btn btn-sm btn-outline-danger" (click)="pedirCancelar(ev)" title="Cancelar evento">
               <i class="bi bi-x-circle me-1"></i>Cancelar
             </button>
             <button class="btn btn-sm btn-outline-warning" (click)="openEdit(ev)" title="Editar">
@@ -406,14 +406,42 @@
   <h5 class="fw-bold mb-1">¿Eliminar del listado?</h5>
   <p class="text-muted small mb-4">
     Esta acción no se puede deshacer.<br>
-    El evento se ocultará del listado visible de administración. El historial se conserva.
+    El evento se archivará y dejará de mostrarse en los listados.
   </p>
   <div class="d-flex gap-3">
     <button class="btn btn-outline-secondary flex-fill" (click)="showDelete.set(false)">
       Cancelar
     </button>
     <button class="btn btn-danger flex-fill fw-semibold" (click)="confirmDelete()">
-      Sí, eliminar
+      Sí, archivar
+    </button>
+  </div>
+</div>
+}
+
+<!-- ══ MODAL: Confirmar Cancelación ══ -->
+@if (showCancelar()) {
+<div class="gu-modal-backdrop" (click)="showCancelar.set(false)"></div>
+<div class="gu-modal-panel" style="max-width:380px;text-align:center">
+  <div class="d-flex justify-content-center mb-3">
+    <div class="rounded-circle bg-danger-subtle d-flex align-items-center justify-content-center"
+      style="width:56px;height:56px">
+      <i class="bi bi-x-circle-fill text-danger fs-3"></i>
+    </div>
+  </div>
+  <h5 class="fw-bold mb-1">¿Cancelar este evento?</h5>
+  <p class="text-muted small mb-1">
+    <strong>{{ eventoACancelar()?.title }}</strong>
+  </p>
+  <p class="text-muted small mb-4">
+    El evento quedará como <span class="badge bg-danger">Cancelado</span> y ya no permitirá inscripciones.
+  </p>
+  <div class="d-flex gap-3">
+    <button class="btn btn-outline-secondary flex-fill" (click)="showCancelar.set(false)">
+      Cancelar
+    </button>
+    <button class="btn btn-danger flex-fill fw-semibold" (click)="confirmarCancelar()">
+      <i class="bi bi-x-circle me-1"></i>Sí, cancelar
     </button>
   </div>
 </div>

@@ -26,6 +26,8 @@ export class AdminEventos implements OnInit {
   showDelete = signal(false);
   showFinalizar = signal(false);
   eventoAFinalizar = signal<AdminEvento | null>(null);
+  showCancelar = signal(false);
+  eventoACancelar = signal<AdminEvento | null>(null);
   selectedFile: File | null = null;
   previewUrl: string | null = null;
   isDragging = false;
@@ -74,16 +76,7 @@ export class AdminEventos implements OnInit {
       });
     }
 
-    this.adminService.getEventoHttp().subscribe({
-      next: () => {
-        this.loading = false;
-        this.adminService.getEvents().subscribe(data => this.events.set(data));
-      },
-      error: () => {
-        this.loading = false;
-        this.events.set(MOCK_VOLUNTARIOS_EVENTO as unknown as AdminEvento[]);
-      }
-    });
+    this.reloadEvents();
   }
 
   get formErrors(): Record<string, string> {
@@ -177,6 +170,21 @@ export class AdminEventos implements OnInit {
     });
   }
 
+  private reloadEvents(): void {
+    this.adminService.getEventoHttp().subscribe({
+      next: (data) => {
+        this.loading = false;
+        this.events.set(data);
+        this.currentPage = Math.min(this.currentPage, Math.max(1, Math.ceil(data.length / this.pageSize)));
+      },
+      error: () => {
+        this.loading = false;
+        const fallback = MOCK_VOLUNTARIOS_EVENTO as unknown as AdminEvento[];
+        this.events.set(fallback);
+        this.currentPage = Math.min(this.currentPage, Math.max(1, Math.ceil(fallback.length / this.pageSize)));
+      }
+    });
+  }
 
   voluntariosPorTipo(type: string): number {
     return this.events()
@@ -331,7 +339,6 @@ export class AdminEventos implements OnInit {
       payload.append('requisitos', JSON.stringify(reqs));
     }
 
-
     this.guardando = true;
 
     const request$ = this.isEditing() && this.editingId
@@ -362,9 +369,33 @@ export class AdminEventos implements OnInit {
   confirmDelete(): void {
     if (!this.deleteId) return;
     const id = this.deleteId;
-    this.hideEventLocally(id);
+    this.adminService.eliminarEventoHttp(id).subscribe({
+      next: () => {
+        this.hideEventLocally(id);
+        this.reloadEvents();
+      },
+      error: () => {
+        this.error = 'No se pudo archivar el evento.';
+      }
+    });
     this.deleteId = null;
     this.showDelete.set(false);
+  }
+
+  pedirCancelar(ev: AdminEvento): void {
+    this.eventoACancelar.set(ev);
+    this.showCancelar.set(true);
+  }
+
+  confirmarCancelar(): void {
+    const ev = this.eventoACancelar();
+    if (!ev) return;
+    this.adminService.cambiarEstadoHttp(ev.id, 'Cancelado').subscribe({
+      next: () => this.reloadEvents(),
+      error: () => this.reloadEvents()
+    });
+    this.showCancelar.set(false);
+    this.eventoACancelar.set(null);
   }
 
   pedirFinalizar(ev: AdminEvento): void {
@@ -376,17 +407,11 @@ export class AdminEventos implements OnInit {
     const ev = this.eventoAFinalizar();
     if (!ev) return;
     this.adminService.cambiarEstadoHttp(ev.id, 'Finalizado').subscribe({
-      next: () => this.actualizarEstado(ev.id, 'Finalizado'),
-      error: () => this.actualizarEstado(ev.id, 'Finalizado')
+      next: () => this.reloadEvents(),
+      error: () => this.reloadEvents()
     });
     this.showFinalizar.set(false);
     this.eventoAFinalizar.set(null);
-  }
-
-  private actualizarEstado(id: number, estado: string): void {
-    this.events.update(list =>
-      list.map(e => e.id === id ? { ...e, status: estado as any } : e)
-    );
   }
 
   estadoKey(status: string): string {
