@@ -15,5 +15,6 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
     return true;
   }
 
-  return router.parseUrl('/ingresar');
+  const loginRoute = auth.getLoginRoute();
+  return router.parseUrl(loginRoute);
 };

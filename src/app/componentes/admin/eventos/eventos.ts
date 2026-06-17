@@ -28,6 +28,8 @@ export class AdminEventos implements OnInit {
   eventoAFinalizar = signal<AdminEvento | null>(null);
   showCancelar = signal(false);
   eventoACancelar = signal<AdminEvento | null>(null);
+  showVerInfo = signal(false);
+  eventoAObservar = signal<AdminEvento | null>(null);
   selectedFile: File | null = null;
   previewUrl: string | null = null;
   isDragging = false;
@@ -217,6 +219,7 @@ export class AdminEventos implements OnInit {
   }
 
   openEdit(ev: AdminEvento): void {
+    if (!this.canManageEvent(ev)) return;
     this.isEditing.set(true);
     this.editingId = ev.id;
     this.form = {
@@ -383,6 +386,7 @@ export class AdminEventos implements OnInit {
   }
 
   pedirCancelar(ev: AdminEvento): void {
+    if (!this.canManageEvent(ev)) return;
     this.eventoACancelar.set(ev);
     this.showCancelar.set(true);
   }
@@ -399,6 +403,7 @@ export class AdminEventos implements OnInit {
   }
 
   pedirFinalizar(ev: AdminEvento): void {
+    if (!this.canManageEvent(ev)) return;
     this.eventoAFinalizar.set(ev);
     this.showFinalizar.set(true);
   }
@@ -425,6 +430,38 @@ export class AdminEventos implements OnInit {
   isTerminalStatus(status: string): boolean {
     const key = this.estadoKey(status);
     return key === 'finalizado' || key === 'cancelado';
+  }
+
+  isAdminUser(): boolean {
+    return this.auth.currentUser?.rol === 'admin';
+  }
+
+  isOrganizerUser(): boolean {
+    return this.auth.currentUser?.rol === 'organizador';
+  }
+
+  isOwner(ev: AdminEvento): boolean {
+    const currentId = Number(this.auth.currentUser?.id ?? 0) || null;
+    const ownerId = Number(ev.idUsuarioOrganizador ?? ev.idOrganizador ?? 0) || null;
+    return !!currentId && !!ownerId && currentId === ownerId;
+  }
+
+  canManageEvent(ev: AdminEvento): boolean {
+    return (this.isAdminUser() || this.isOrganizerUser()) && this.isOwner(ev);
+  }
+
+  canObserveEvent(ev: AdminEvento): boolean {
+    return (this.isAdminUser() || this.isOrganizerUser()) && !this.isOwner(ev);
+  }
+
+  abrirObservacion(ev: AdminEvento): void {
+    this.eventoAObservar.set(ev);
+    this.showVerInfo.set(true);
+  }
+
+  closeObservation(): void {
+    this.showVerInfo.set(false);
+    this.eventoAObservar.set(null);
   }
 
   statusClass(status: string): string {

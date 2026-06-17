@@ -97,6 +97,8 @@
             <span class="badge rounded-pill" [class]="statusClass(ev.status)">{{ ev.status }}</span>
           </td>
           <td class="d-flex gap-1 flex-wrap">
+            @if (auth.currentUser?.rol === 'organizador' || auth.currentUser?.rol === 'admin') {
+            @if (canManageEvent(ev)) {
             @if (estadoKey(ev.status) === 'proximo' || estadoKey(ev.status) === 'en curso') {
             <button class="btn btn-sm btn-outline-success" (click)="pedirFinalizar(ev)" title="Finalizar evento">
               <i class="bi bi-check2-square me-1"></i>Finalizar
@@ -111,6 +113,19 @@
             <button class="btn btn-sm btn-outline-danger" (click)="askDelete(ev.id)" title="Eliminar del listado">
               <i class="bi bi-trash me-1"></i>Eliminar
             </button>
+            }
+            } @else {
+            <button class="btn btn-sm btn-outline-primary" (click)="abrirObservacion(ev)" title="Observar información">
+              <i class="bi bi-eye me-1"></i>Observar
+            </button>
+            @if (auth.currentUser?.rol === 'admin' && isTerminalStatus(ev.status)) {
+            <button class="btn btn-sm btn-outline-danger" (click)="askDelete(ev.id)" title="Archivar del listado">
+              <i class="bi bi-trash me-1"></i>Eliminar
+            </button>
+            }
+            }
+            } @else {
+            <span class="text-muted small fst-italic">Solo lectura</span>
             }
           </td>
         </tr>
@@ -389,6 +404,69 @@
       }
       {{ isEditing() ? 'Guardar cambios' : 'Crear evento' }}
     </button>
+  </div>
+</div>
+}
+
+<!-- ═══ MODAL: Ver información ═══ -->
+@if (showVerInfo()) {
+<div class="gu-modal-backdrop" (click)="showVerInfo.set(false)"></div>
+<div class="gu-modal-panel" style="max-width:760px;max-height:88vh;overflow-y:auto">
+  <div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+      <p class="text-muted small mb-0">Información del evento</p>
+      <h5 class="fw-bold mb-0">{{ eventoAObservar()?.title }}</h5>
+    </div>
+    <button class="btn-close" (click)="showVerInfo.set(false)"></button>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="p-3 border rounded-3 bg-light"><small class="text-muted d-block">Tipo</small><strong>{{
+          eventoAObservar()?.type }}</strong></div>
+    </div>
+    <div class="col-md-6">
+      <div class="p-3 border rounded-3 bg-light"><small class="text-muted d-block">Estado</small><strong>{{
+          eventoAObservar()?.status }}</strong></div>
+    </div>
+    <div class="col-md-6">
+      <div class="p-3 border rounded-3 bg-light"><small class="text-muted d-block">Fecha</small><strong>{{
+          eventoAObservar()?.date | date:'dd MMM, yyyy' }}</strong></div>
+    </div>
+    <div class="col-md-6">
+      <div class="p-3 border rounded-3 bg-light"><small class="text-muted d-block">Hora</small><strong>{{
+          eventoAObservar()?.time }}</strong></div>
+    </div>
+    <div class="col-md-6">
+      <div class="p-3 border rounded-3 bg-light"><small class="text-muted d-block">Ubicación</small><strong>{{
+          eventoAObservar()?.location }}</strong></div>
+    </div>
+    <div class="col-md-6">
+      <div class="p-3 border rounded-3 bg-light"><small class="text-muted d-block">Organizador</small><strong>{{
+          eventoAObservar()?.organizer }}</strong></div>
+    </div>
+  </div>
+
+  <div class="mb-3 p-3 border rounded-3 bg-white">
+    <small class="text-muted d-block mb-1">Descripción</small>
+    <p class="mb-0">{{ eventoAObservar()?.description }}</p>
+  </div>
+
+  <div class="mb-3 p-3 border rounded-3 bg-white">
+    <small class="text-muted d-block mb-1">Requisitos</small>
+    @if (eventoAObservar()?.requirements?.length) {
+    <ul class="mb-0 ps-3">
+      @for (r of (eventoAObservar()?.requirements ?? []); track r) {
+      <li>{{ r }}</li>
+      }
+    </ul>
+    } @else {
+    <p class="text-muted mb-0">Sin requisitos registrados.</p>
+    }
+  </div>
+
+  <div class="d-flex justify-content-end pt-2 border-top">
+    <button class="btn btn-outline-secondary px-4" (click)="showVerInfo.set(false)">Cerrar</button>
   </div>
 </div>
 }

@@ -18,6 +18,12 @@ export class Ingresar implements OnInit {
 
   constructor(private auth: AuthService, private router: Router) { }
   ngOnInit(): void {
+    const notice = this.auth.getPendingNotice();
+    if (notice) {
+      this.error = notice;
+      this.auth.clearPendingNotice();
+    }
+
     // Si ya está autenticado, redirigir según su rol
     this.redirectIfLoggedIn();
   }

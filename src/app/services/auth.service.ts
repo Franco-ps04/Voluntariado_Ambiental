@@ -3,21 +3,33 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { AuthUser, UserRole } from '../models/UserRole';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-
   private readonly key = 'greenunity_user';
+  private readonly noticeKey = 'greenunity_login_notice';
+  private readonly logoutRouteKey = 'greenunity_logout_route';
 
-  private userSubject = new BehaviorSubject<AuthUser | null>(
-    this.getUserFromStorage()
-  );
-
+  private userSubject = new BehaviorSubject<AuthUser | null>(this.getUserFromStorage());
   user$ = this.userSubject.asObservable();
 
-  constructor(private http: HttpClient) { }
+  private sessionMonitor?: ReturnType<typeof setInterval>;
+
+  constructor(
+    private http: HttpClient,
+    private router: Router
+  ) {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (event) => this.onStorageEvent(event));
+    }
+
+    this.user$.subscribe(user => {
+      this.configureSessionMonitor(user);
+    });
+  }
 
   // LOGIN REAL
   login(email: string, password: string): Observable<AuthUser> {
@@ -25,7 +37,10 @@ export class AuthService {
       email,
       password
     }).pipe(
-      tap(user => this.saveUser(user))
+      tap(user => {
+        this.clearNotice();
+        this.saveUser(user);
+      })
     );
   }
 
@@ -38,7 +53,10 @@ export class AuthService {
   }): Observable<AuthUser> {
     return this.http.post<AuthUser>(`${environment.apiUrl}/auth/register`, data)
       .pipe(
-        tap(user => this.saveUser(user))
+        tap(user => {
+          this.clearNotice();
+          this.saveUser(user);
+        })
       );
   }
 
@@ -47,10 +65,36 @@ export class AuthService {
     return this.http.get<AuthUser>(`${environment.apiUrl}/auth/me`);
   }
 
-  //Sesión activa
-  logout(): void {
-    localStorage.removeItem(this.key);
-    this.userSubject.next(null);
+  /**
+   * Cierra sesión. Si se provee mensaje y/o ruta, se usa para expulsiones
+   * por cuenta suspendida o token inválido.
+   */
+  logout(message?: string, delayMs = 0, redirectTo?: string): void {
+    const targetRoute = redirectTo ?? this.getLoginRoute();
+
+    const exec = (): void => {
+      try {
+        if (message) {
+          localStorage.setItem(this.noticeKey, message);
+        } else {
+          this.clearNotice();
+        }
+        localStorage.setItem(this.logoutRouteKey, targetRoute);
+        localStorage.removeItem(this.key);
+      } catch { /* noop */ }
+
+      this.userSubject.next(null);
+
+      if (redirectTo || targetRoute) {
+        this.router.navigate([targetRoute]);
+      }
+    };
+
+    if (delayMs > 0) {
+      setTimeout(exec, delayMs);
+    } else {
+      exec();
+    }
   }
 
   get currentUser(): AuthUser | null {
@@ -79,9 +123,81 @@ export class AuthService {
     return this.currentUser?.rol === role;
   }
 
+  getPendingNotice(): string {
+    try {
+      const msg = localStorage.getItem(this.noticeKey);
+      return msg ? msg : '';
+    } catch {
+      return '';
+    }
+  }
+
+  clearPendingNotice(): void {
+    this.clearNotice();
+  }
+
+  getLoginRouteForRole(role?: UserRole | null): string {
+    return role === 'admin' || role === 'organizador' ? '/admin/ingresar' : '/ingresar';
+  }
+
+  getLoginRoute(): string {
+    return this.getLoginRouteForRole(this.currentUser?.rol ?? null);
+  }
+
   private saveUser(user: AuthUser): void {
     localStorage.setItem(this.key, JSON.stringify(user));
+    localStorage.removeItem(this.logoutRouteKey);
     this.userSubject.next(user);
+  }
+
+  private clearNotice(): void {
+    try {
+      localStorage.removeItem(this.noticeKey);
+    } catch { /* noop */ }
+  }
+
+  private onStorageEvent(event: StorageEvent): void {
+    if (event.key === this.key && !event.newValue) {
+      // Otra pestaña cerró sesión
+      this.userSubject.next(null);
+      this.configureSessionMonitor(null);
+      const route = localStorage.getItem(this.logoutRouteKey) || '/ingresar';
+      try { localStorage.removeItem(this.logoutRouteKey); } catch { /* noop */ }
+      if (location.pathname !== route) {
+        this.router.navigate([route]);
+      }
+      return;
+    }
+
+    if (event.key === this.key && event.newValue) {
+      try {
+        const user = JSON.parse(event.newValue) as AuthUser;
+        this.userSubject.next(user);
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  private configureSessionMonitor(user: AuthUser | null): void {
+    if (this.sessionMonitor) {
+      clearInterval(this.sessionMonitor);
+      this.sessionMonitor = undefined;
+    }
+
+    if (!user) return;
+
+    this.sessionMonitor = setInterval(() => {
+      const current = this.currentUser;
+      if (!current) return;
+
+      // Validación silenciosa: si el backend responde 401/403, el interceptor
+      // cerrará la sesión y redirigirá automáticamente.
+      this.me().subscribe({
+        next: () => void 0,
+        error: () => void 0
+      });
+    }, 15000);
   }
 
   private getUserFromStorage(): AuthUser | null {

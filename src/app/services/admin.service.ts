@@ -66,6 +66,7 @@ export class AdminService {
       organizer: e.organizador,
       organization: e.organizacion,
       idOrganizador: e.id_organizador,
+      idUsuarioOrganizador: Number(e.id_usuario_organizador ?? e.idUsuarioOrganizador ?? 0) || null,
       idTipo: e.id_tipo,
       image: this.buildImageUrl(e.imagen_url ?? e.imagenUrl ?? e.imageUrl ?? e.imagen),
       requirements: this.parseRequirements(e.requisitos ?? e.requirements ?? []),
