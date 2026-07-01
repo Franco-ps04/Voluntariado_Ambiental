@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { VolunteerEvent } from '../../../models/event';
 import { MOCK_VOLUNTARIOS_EVENTO } from '../../../mocks/mock_eventos';
@@ -24,7 +24,6 @@ export class AdminInscripciones implements OnInit {
   pageSize = 10;
   currentPage = 1;
 
-  //Modal asistencia 
   showAsistenciaModal = signal(false);
   asistenciaEventoTitulo = '';
   asistenciaEventoId: number | null = null;
@@ -35,7 +34,6 @@ export class AdminInscripciones implements OnInit {
   constructor(private adminService: AdminService) { }
 
   ngOnInit(): void {
-    /* this.events.set(MOCK_VOLUNTARIOS_EVENTO); */
     this.adminService.getEventoHttp().subscribe({
       next: () => this.adminService.getEvents().subscribe(data =>
         this.events.set(data as unknown as VolunteerEvent[])
@@ -96,7 +94,15 @@ export class AdminInscripciones implements OnInit {
     return Math.min(this.currentPage * this.pageSize, total);
   }
 
-  //Notificacion
+  private actualizarContadorEvento(eventId: number, total: number): void {
+    this.events.update(current =>
+      current.map(ev => ev.id === eventId
+        ? { ...ev, enrolledCount: total, registered: total }
+        : ev
+      )
+    );
+  }
+
   openNotif(eventId: number): void {
     this.selectedEventId = eventId;
     this.notifTitle = '';
@@ -150,13 +156,12 @@ export class AdminInscripciones implements OnInit {
     this.cargandoAsistencia = true;
     this.showAsistenciaModal.set(true);
 
-    // Cargar inscritos desde el backend
     this.adminService.InscripcionHtpp(ev.id).subscribe({
       next: (data: any[]) => {
         this.cargandoAsistencia = false;
         this.voluntariosModal = data.map(d => ({
           id: d.id_usuario,
-          inscripcionId: d.id_inscripcion,  // ← necesario para PUT /asistencia
+          inscripcionId: d.id_inscripcion,
           nombre: d.nombre,
           email: d.email,
           telefono: d.telefono ?? '',
@@ -166,17 +171,18 @@ export class AdminInscripciones implements OnInit {
               ? false
               : null
         }));
+        this.actualizarContadorEvento(ev.id, this.voluntariosModal.length);
       },
       error: () => {
         this.cargandoAsistencia = false;
         const data = MOCK_ASISTENCIA.find(a => a.eventoId === ev.id);
         this.voluntariosModal = (data?.voluntarios ?? []).map(v => ({ ...v, inscripcionId: v.id }));
+        this.actualizarContadorEvento(ev.id, this.voluntariosModal.length);
       }
     });
   }
 
   toggleAsistencia(v: VoluntarioInscrito): void {
-    // null → true → false → true → false ...
     if (v.asistio === null) {
       v.asistio = true;
     } else {
