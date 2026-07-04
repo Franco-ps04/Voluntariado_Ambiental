@@ -45,8 +45,24 @@ export class CrearEventos implements OnInit {
     if (!this.date.trim()) e['date'] = 'La fecha es obligatoria.';
     if (!this.time.trim()) e['time'] = 'La hora es obligatoria.';
     if (!this.location.trim()) e['location'] = 'La ubicación es obligatoria.';
-    if (!Number.isFinite(this.maxVolunteers) || this.maxVolunteers < 1) {
+
+    const today = this.todayIsoDate;
+    if (this.date.trim()) {
+      if (this.date < today) {
+        e['date'] = 'La fecha no puede ser anterior a hoy.';
+      }
+      if (this.date === today && this.time.trim()) {
+        if (this.time < this.currentTime) {
+          e['time'] = 'La hora no puede ser anterior a la hora actual.';
+        }
+      }
+    }
+
+    const maxVol = Number(this.maxVolunteers);
+    if (!Number.isFinite(maxVol) || maxVol < 1) {
       e['maxVolunteers'] = 'Debe haber al menos 1 voluntario.';
+    } else if (maxVol > 50) {
+      e['maxVolunteers'] = 'El máximo permitido es 50 voluntarios.';
     }
 
     const lat = this.parseCoordinate(this.latitude);
@@ -75,6 +91,27 @@ export class CrearEventos implements OnInit {
     if (!raw) return null;
     const n = Number(raw.replace(',', '.'));
     return Number.isFinite(n) ? n : NaN;
+  }
+
+  private toIsoDate(date = new Date()): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  private toTime(date = new Date()): string {
+    const h = String(date.getHours()).padStart(2, '0');
+    const m = String(date.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
+  }
+
+  get todayIsoDate(): string {
+    return this.toIsoDate();
+  }
+
+  get currentTime(): string {
+    return this.toTime();
   }
 
   resolveImageUrl(url?: string | null): string {

@@ -81,6 +81,21 @@ export class AdminEventos implements OnInit {
     this.reloadEvents();
   }
 
+  getTodayIso(): string {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  getCurrentTime(): string {
+    const d = new Date();
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
+  }
+
   get formErrors(): Record<string, string> {
     const e: Record<string, string> = {};
     if (!this.form.title?.trim()) e['title'] = 'El título es obligatorio.';
@@ -90,8 +105,23 @@ export class AdminEventos implements OnInit {
     if (!this.form.time?.trim()) e['time'] = 'La hora es obligatoria.';
     if (!this.form.location?.trim()) e['location'] = 'La ubicación es obligatoria.';
 
-    if (!Number.isFinite(Number(this.form.maxVolunteers)) || Number(this.form.maxVolunteers) < 1) {
+    const today = this.getTodayIso();
+    if (this.form.date?.trim()) {
+      if (this.form.date < today) {
+        e['date'] = 'La fecha no puede ser anterior a hoy.';
+      }
+      if (this.form.date === today && this.form.time?.trim()) {
+        if (this.form.time < this.getCurrentTime()) {
+          e['time'] = 'La hora no puede ser anterior a la hora actual.';
+        }
+      }
+    }
+
+    const maxVol = Number(this.form.maxVolunteers);
+    if (!Number.isFinite(maxVol) || maxVol < 1) {
       e['maxVolunteers'] = 'Debe haber al menos 1 voluntario.';
+    } else if (maxVol > 50) {
+      e['maxVolunteers'] = 'El máximo permitido es 50 voluntarios.';
     }
 
     if (this.form.latitude !== undefined && this.form.latitude !== null && String(this.form.latitude).trim() !== '') {

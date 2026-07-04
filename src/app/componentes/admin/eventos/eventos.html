@@ -82,10 +82,10 @@
       <tbody>
         @for (ev of paginatedEvents(); track ev.id) {
         <tr>
-          <td class="fw-medium">{{ ev.title }}</td>
+          <td class="fw-medium text-break" style="max-width:240px">{{ ev.title }}</td>
           <td class="text-muted">{{ ev.date | date:'dd MMM, yyyy' }}</td>
           <td>
-            <span class="gu-badge" [class]="badgeClass(ev.type)">{{ ev.type }}</span>
+            <span class="gu-badge text-nowrap" [class]="badgeClass(ev.type)">{{ ev.type }}</span>
           </td>
           <td>
             <span class="fw-medium">{{ ev.enrolledCount }} / {{ ev.maxVolunteers }}</span>
@@ -224,7 +224,7 @@
       <p class="text-muted small mb-0">
         Completa el formulario para publicar el evento{{ isEditing() ? ' editado' : '' }}
       </p>
-      <h5 class="fw-bold mb-0">
+      <h5 class="fw-bold mb-0 text-break">
         {{ isEditing() ? 'Editar evento' : 'Crear nuevo evento' }}
       </h5>
     </div>
@@ -264,7 +264,7 @@
     </div>
     <div class="col">
       <label class="form-label small fw-medium">Máx. voluntarios <span class="text-danger">*</span></label>
-      <input type="number" class="form-control" [(ngModel)]="form.maxVolunteers" min="1"
+      <input type="number" class="form-control" [(ngModel)]="form.maxVolunteers" min="1" max="50"
         [class.is-invalid]="submitted && formErrors['maxVolunteers']">
       @if (submitted && formErrors['maxVolunteers']) {
       <div class="invalid-feedback">{{ formErrors['maxVolunteers'] }}</div>
@@ -275,7 +275,7 @@
   <div class="row g-3 mb-3">
     <div class="col">
       <label class="form-label small fw-medium">Fecha <span class="text-danger">*</span></label>
-      <input type="date" class="form-control" [(ngModel)]="form.date"
+      <input type="date" class="form-control" [(ngModel)]="form.date" [attr.min]="getTodayIso()"
         [class.is-invalid]="submitted && formErrors['date']">
       @if (submitted && formErrors['date']) {
       <div class="invalid-feedback">{{ formErrors['date'] }}</div>
@@ -284,6 +284,7 @@
     <div class="col">
       <label class="form-label small fw-medium">Hora <span class="text-danger">*</span></label>
       <input type="time" class="form-control" [(ngModel)]="form.time"
+        [attr.min]="form.date === getTodayIso() ? getCurrentTime() : null"
         [class.is-invalid]="submitted && formErrors['time']">
       @if (submitted && formErrors['time']) {
       <div class="invalid-feedback">{{ formErrors['time'] }}</div>
@@ -422,34 +423,41 @@
 
   <div class="row g-3 mb-3">
     <div class="col-md-6">
-      <div class="p-3 border rounded-3 bg-light"><small class="text-muted d-block">Tipo</small><strong>{{
+      <div class="p-3 border rounded-3 bg-light h-100"><small class="text-muted d-block">Tipo</small><strong
+          class="text-break d-block">{{
           eventoAObservar()?.type }}</strong></div>
     </div>
     <div class="col-md-6">
-      <div class="p-3 border rounded-3 bg-light"><small class="text-muted d-block">Estado</small><strong>{{
+      <div class="p-3 border rounded-3 bg-light h-100"><small class="text-muted d-block">Estado</small><strong
+          class="text-break d-block">{{
           eventoAObservar()?.status }}</strong></div>
     </div>
     <div class="col-md-6">
-      <div class="p-3 border rounded-3 bg-light"><small class="text-muted d-block">Fecha</small><strong>{{
+      <div class="p-3 border rounded-3 bg-light h-100"><small class="text-muted d-block">Fecha</small><strong
+          class="text-break d-block">{{
           eventoAObservar()?.date | date:'dd MMM, yyyy' }}</strong></div>
     </div>
     <div class="col-md-6">
-      <div class="p-3 border rounded-3 bg-light"><small class="text-muted d-block">Hora</small><strong>{{
+      <div class="p-3 border rounded-3 bg-light h-100"><small class="text-muted d-block">Hora</small><strong
+          class="text-break d-block">{{
           eventoAObservar()?.time }}</strong></div>
     </div>
     <div class="col-md-6">
-      <div class="p-3 border rounded-3 bg-light"><small class="text-muted d-block">Ubicación</small><strong>{{
+      <div class="p-3 border rounded-3 bg-light h-100"><small class="text-muted d-block">Ubicación</small><strong
+          class="text-break d-block">{{
           eventoAObservar()?.location }}</strong></div>
     </div>
     <div class="col-md-6">
-      <div class="p-3 border rounded-3 bg-light"><small class="text-muted d-block">Organizador</small><strong>{{
+      <div class="p-3 border rounded-3 bg-light h-100"><small class="text-muted d-block">Organizador</small><strong
+          class="text-break d-block">{{
           eventoAObservar()?.organizer }}</strong></div>
     </div>
   </div>
 
   <div class="mb-3 p-3 border rounded-3 bg-white">
     <small class="text-muted d-block mb-1">Descripción</small>
-    <p class="mb-0">{{ eventoAObservar()?.description }}</p>
+    <p class="mb-0 text-break" style="overflow-wrap:anywhere;word-break:break-word">{{ eventoAObservar()?.description }}
+    </p>
   </div>
 
   <div class="mb-3 p-3 border rounded-3 bg-white">
@@ -457,7 +465,7 @@
     @if (eventoAObservar()?.requirements?.length) {
     <ul class="mb-0 ps-3">
       @for (r of (eventoAObservar()?.requirements ?? []); track r) {
-      <li>{{ r }}</li>
+      <li class="text-break" style="overflow-wrap:anywhere;word-break:break-word">{{ r }}</li>
       }
     </ul>
     } @else {
