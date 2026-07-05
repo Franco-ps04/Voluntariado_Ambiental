@@ -73,9 +73,50 @@ export class AdminService {
       maxVolunteers: e.capacidad,
       registered: e.inscritos,
       enrolledCount: e.inscritos,
-      status: e.estado
+      status: this.deriveStatus(e.fecha, e.hora, e.estado as AdminEvento['status'])
     };
   }
+
+  private parseDateTime(fecha: any, hora: any): Date | null {
+    const rawFecha = String(fecha ?? '').trim();
+    const rawHora = String(hora ?? '').trim();
+    if (!rawFecha || !rawHora) return null;
+
+    const fechaParts = rawFecha.split('-').map(Number);
+    const horaParts = rawHora.split(':').map(Number);
+    if (fechaParts.length !== 3 || horaParts.length < 2) return null;
+
+    const [y, m, d] = fechaParts;
+    const [hh, mm, ss = 0] = horaParts;
+    const date = new Date(y, m - 1, d, hh, mm, ss);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  private deriveStatus(fecha: string, hora: string, estadoActual?: AdminEvento['status']): AdminEvento['status'] {
+    if (estadoActual === 'Cancelado' || estadoActual === 'Finalizado') {
+      return estadoActual;
+    }
+
+    const now = new Date();
+
+    const [yy, mm, dd] = fecha.includes('-')
+      ? fecha.split('-').map(Number)
+      : fecha.split('/').map(Number).reverse();
+
+    const [hh, min] = hora.split(':').map(Number);
+
+    const eventDate = new Date(yy, mm - 1, dd, hh, min, 0, 0);
+
+    if (now < eventDate) return 'Próximo';
+
+    const endDate = new Date(eventDate);
+    endDate.setHours(endDate.getHours() + 1);
+
+    if (now >= eventDate && now < endDate) return 'En curso';
+
+    return 'Finalizado';
+  }
+
 
   //Para los eventos
   getEvents(): Observable<AdminEvento[]> {
