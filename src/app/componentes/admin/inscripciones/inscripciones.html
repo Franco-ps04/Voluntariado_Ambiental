@@ -1,6 +1,14 @@
 <h4 class="fw-bold mb-1">Inscripciones por evento</h4>
 <p class="text-muted small mb-4">Visualiza los voluntarios inscritos en cada evento</p>
 
+<div class="input-group mb-4" style="max-width:320px">
+    <span class="input-group-text bg-white border-end-0">
+        <i class="bi bi-search text-muted" style="font-size:12px"></i>
+    </span>
+    <input type="text" class="form-control border-start-0" placeholder="Buscar por nombre del evento"
+        [(ngModel)]="searchText" (ngModelChange)="onSearchChange()">
+</div>
+
 <div class="d-flex flex-column gap-3">
     @for (ev of paginatedEvents(); track ev.id) {
     <div class="card border-0 shadow-sm rounded-3 p-3">
@@ -41,7 +49,7 @@
 
 <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
     <p class="text-muted small mb-0">
-        Mostrando {{ pageEnd(events().length) }} de {{ events().length }} eventos
+        Mostrando {{ pageEnd(filteredEvents().length) }} de {{ filteredEvents().length }} eventos
     </p>
     <nav aria-label="Paginación de eventos">
         <ul class="pagination pagination-sm mb-0">
@@ -192,7 +200,8 @@
             Cancelar
         </button>
         <button class="btn px-4 fw-semibold" [class.btn-success]="!sent()" [class.btn-light]="sent()"
-            (click)="sendNotif()" [disabled]="sent() || enviandoNotif || !notifTitle.trim() || !notifMessage.trim() || !selectedEventId">
+            (click)="sendNotif()"
+            [disabled]="sent() || enviandoNotif || !notifTitle.trim() || !notifMessage.trim() || !selectedEventId">
             @if (sent()) {
             <i class="bi bi-check-circle-fill text-success me-1"></i>¡Enviado!
             } @else {

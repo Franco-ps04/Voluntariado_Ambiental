@@ -23,6 +23,7 @@ export class AdminInscripciones implements OnInit {
   notifError = '';
   pageSize = 10;
   currentPage = 1;
+  searchText = '';
 
   showAsistenciaModal = signal(false);
   asistenciaEventoTitulo = '';
@@ -42,13 +43,20 @@ export class AdminInscripciones implements OnInit {
     });
   }
 
+  filteredEvents(): VolunteerEvent[] {
+    const q = this.searchText.trim().toLowerCase();
+    const items = this.events();
+    if (!q) return items;
+    return items.filter(ev => String(ev.title ?? '').toLowerCase().includes(q));
+  }
+
   paginatedEvents(): VolunteerEvent[] {
     const start = (this.currentPage - 1) * this.pageSize;
-    return this.events().slice(start, start + this.pageSize);
+    return this.filteredEvents().slice(start, start + this.pageSize);
   }
 
   totalPages(): number {
-    return Math.max(1, Math.ceil(this.events().length / this.pageSize));
+    return Math.max(1, Math.ceil(this.filteredEvents().length / this.pageSize));
   }
 
   paginationPages(): number[] {
@@ -57,6 +65,10 @@ export class AdminInscripciones implements OnInit {
 
   goPage(page: number): void {
     this.currentPage = Math.min(Math.max(1, page), this.totalPages());
+  }
+
+  onSearchChange(): void {
+    this.currentPage = 1;
   }
 
   private estadoKey(estado: string): string {

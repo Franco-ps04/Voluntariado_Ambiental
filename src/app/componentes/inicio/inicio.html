@@ -54,8 +54,9 @@
     <div class="row g-4">
       @for (event of events; track event.id) {
       <div class="col-md-4">
-        <app-evento-card [event]="event" [canEnroll]="canEnroll()" (abrirEvento)="goToEvent($event)"
-          (verMapa)="goToEvent($event)" (verInfo)="goToEvent($event)" (inscribirse)="goToEvent($event)" />
+        <app-evento-card [event]="event" [canEnroll]="canEnroll()" [inscrito]="isInscrito(event.id)"
+          [inscrito]="isInscrito(event.id)" (abrirEvento)="goToEvent($event)" (verMapa)="goToEvent($event)"
+          (verInfo)="goToEvent($event)" (inscribirse)="goToEvent($event)" />
       </div>
       }
     </div>
