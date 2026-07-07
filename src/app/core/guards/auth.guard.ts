@@ -8,6 +8,6 @@ export const authGuard: CanActivateFn = () => {
   if (auth.hasValidSession()) return true;
 
   const route = auth.getLoginRoute();
-  auth.logout(undefined, 0, route);
+  //auth.logout(undefined, 0, route);
   return router.parseUrl(route);
 };

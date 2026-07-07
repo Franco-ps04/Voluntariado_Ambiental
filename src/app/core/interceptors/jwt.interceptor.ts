@@ -14,6 +14,10 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((err: HttpErrorResponse) => {
+      if (req.url.includes('/auth/login') || req.url.includes('/auth/register') || req.url.includes('/auth/recuperar-contrasena')) {
+        return throwError(() => err);
+      }
+
       if (err.status === 401 || (err.status === 403 && err.error?.message === 'Cuenta suspendida')) {
         const suspended = err.status === 403 && err.error?.message === 'Cuenta suspendida';
         auth.logout(suspended ? 'Cuenta suspendida' : undefined, suspended ? 1200 : 0);
