@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist/voluntariado-ambiental",
+  "outputDirectory": "dist/voluntariado_ambiental",
   "rewrites": [
     {
       "source": "/(.*)",
