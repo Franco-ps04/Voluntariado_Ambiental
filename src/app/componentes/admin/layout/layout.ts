@@ -41,7 +41,6 @@ export class AdminLayout implements OnInit, OnDestroy {
 
   logout(): void {
     this.auth.logout();
-    this.router.navigate(['/admin/ingresar']);
   }
 
   /* Badge de mensajes sin leer según el rol del usuario actual */

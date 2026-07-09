@@ -28,12 +28,29 @@ export class IngresarAdmin implements OnInit {
 
   submit(): void {
     this.error = '';
-    if (!this.email || !this.password) {
-      this.error = 'Completa todos los campos.';
+    const email = this.email.trim();
+    const password = this.password.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!email) {
+      this.error = 'Ingresa el correo del administrador.';
       return;
     }
+    if (!emailRegex.test(email)) {
+      this.error = 'Ingresa un correo válido.';
+      return;
+    }
+    if (!password) {
+      this.error = 'Ingresa la contraseña.';
+      return;
+    }
+    if (password.length < 8) {
+      this.error = 'La contraseña debe tener al menos 8 caracteres.';
+      return;
+    }
+
     this.loading = true;
-    this.auth.login(this.email, this.password).subscribe({
+    this.auth.login(email, password).subscribe({
       next: (user) => {
         this.loading = false;
         if (user.rol === 'admin' || user.rol === 'organizador') {

@@ -18,6 +18,7 @@ import { PublicLayout } from './componentes/public-layout/public-layout';
 import { AdminNotificacion } from './componentes/admin/admin-notificacion/admin-notificacion';
 import { Usuarios } from './componentes/admin/usuarios/usuarios';
 import { Reportes } from './componentes/admin/reportes/reportes';
+import { RecuperarContrasena } from './componentes/recuperar-contrasenia/recuperar-contrasenia';
 
 export const routes: Routes = [
     //Acceso publico
@@ -28,6 +29,7 @@ export const routes: Routes = [
             { path: 'contacto', component: Contacto },
             { path: 'ingresar', component: Ingresar },
             { path: 'registrarse', component: Registrarse },
+            { path: 'recuperar-contrasena', component: RecuperarContrasena},
             //Voluntario
             {
                 path: 'voluntario',

@@ -26,6 +26,10 @@ export class AdminEventos implements OnInit {
   showDelete = signal(false);
   showFinalizar = signal(false);
   eventoAFinalizar = signal<AdminEvento | null>(null);
+  showCancelar = signal(false);
+  eventoACancelar = signal<AdminEvento | null>(null);
+  showVerInfo = signal(false);
+  eventoAObservar = signal<AdminEvento | null>(null);
   selectedFile: File | null = null;
   previewUrl: string | null = null;
   isDragging = false;
@@ -74,16 +78,22 @@ export class AdminEventos implements OnInit {
       });
     }
 
-    this.adminService.getEventoHttp().subscribe({
-      next: () => {
-        this.loading = false;
-        this.adminService.getEvents().subscribe(data => this.events.set(data));
-      },
-      error: () => {
-        this.loading = false;
-        this.events.set(MOCK_VOLUNTARIOS_EVENTO as unknown as AdminEvento[]);
-      }
-    });
+    this.reloadEvents();
+  }
+
+  getTodayIso(): string {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  getCurrentTime(): string {
+    const d = new Date();
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
   }
 
   get formErrors(): Record<string, string> {
@@ -95,8 +105,23 @@ export class AdminEventos implements OnInit {
     if (!this.form.time?.trim()) e['time'] = 'La hora es obligatoria.';
     if (!this.form.location?.trim()) e['location'] = 'La ubicación es obligatoria.';
 
-    if (!Number.isFinite(Number(this.form.maxVolunteers)) || Number(this.form.maxVolunteers) < 1) {
+    const today = this.getTodayIso();
+    if (this.form.date?.trim()) {
+      if (this.form.date < today) {
+        e['date'] = 'La fecha no puede ser anterior a hoy.';
+      }
+      if (this.form.date === today && this.form.time?.trim()) {
+        if (this.form.time < this.getCurrentTime()) {
+          e['time'] = 'La hora no puede ser anterior a la hora actual.';
+        }
+      }
+    }
+
+    const maxVol = Number(this.form.maxVolunteers);
+    if (!Number.isFinite(maxVol) || maxVol < 1) {
       e['maxVolunteers'] = 'Debe haber al menos 1 voluntario.';
+    } else if (maxVol > 50) {
+      e['maxVolunteers'] = 'El máximo permitido es 50 voluntarios.';
     }
 
     if (this.form.latitude !== undefined && this.form.latitude !== null && String(this.form.latitude).trim() !== '') {
@@ -177,6 +202,21 @@ export class AdminEventos implements OnInit {
     });
   }
 
+  private reloadEvents(): void {
+    this.adminService.getEventoHttp().subscribe({
+      next: (data) => {
+        this.loading = false;
+        this.events.set(data);
+        this.currentPage = Math.min(this.currentPage, Math.max(1, Math.ceil(data.length / this.pageSize)));
+      },
+      error: () => {
+        this.loading = false;
+        const fallback = MOCK_VOLUNTARIOS_EVENTO as unknown as AdminEvento[];
+        this.events.set(fallback);
+        this.currentPage = Math.min(this.currentPage, Math.max(1, Math.ceil(fallback.length / this.pageSize)));
+      }
+    });
+  }
 
   voluntariosPorTipo(type: string): number {
     return this.events()
@@ -209,6 +249,7 @@ export class AdminEventos implements OnInit {
   }
 
   openEdit(ev: AdminEvento): void {
+    if (!this.canManageEvent(ev)) return;
     this.isEditing.set(true);
     this.editingId = ev.id;
     this.form = {
@@ -331,7 +372,6 @@ export class AdminEventos implements OnInit {
       payload.append('requisitos', JSON.stringify(reqs));
     }
 
-
     this.guardando = true;
 
     const request$ = this.isEditing() && this.editingId
@@ -362,12 +402,38 @@ export class AdminEventos implements OnInit {
   confirmDelete(): void {
     if (!this.deleteId) return;
     const id = this.deleteId;
-    this.hideEventLocally(id);
+    this.adminService.eliminarEventoHttp(id).subscribe({
+      next: () => {
+        this.hideEventLocally(id);
+        this.reloadEvents();
+      },
+      error: () => {
+        this.error = 'No se pudo archivar el evento.';
+      }
+    });
     this.deleteId = null;
     this.showDelete.set(false);
   }
 
+  pedirCancelar(ev: AdminEvento): void {
+    if (!this.canManageEvent(ev)) return;
+    this.eventoACancelar.set(ev);
+    this.showCancelar.set(true);
+  }
+
+  confirmarCancelar(): void {
+    const ev = this.eventoACancelar();
+    if (!ev) return;
+    this.adminService.cambiarEstadoHttp(ev.id, 'Cancelado').subscribe({
+      next: () => this.reloadEvents(),
+      error: () => this.reloadEvents()
+    });
+    this.showCancelar.set(false);
+    this.eventoACancelar.set(null);
+  }
+
   pedirFinalizar(ev: AdminEvento): void {
+    if (!this.canManageEvent(ev)) return;
     this.eventoAFinalizar.set(ev);
     this.showFinalizar.set(true);
   }
@@ -376,17 +442,11 @@ export class AdminEventos implements OnInit {
     const ev = this.eventoAFinalizar();
     if (!ev) return;
     this.adminService.cambiarEstadoHttp(ev.id, 'Finalizado').subscribe({
-      next: () => this.actualizarEstado(ev.id, 'Finalizado'),
-      error: () => this.actualizarEstado(ev.id, 'Finalizado')
+      next: () => this.reloadEvents(),
+      error: () => this.reloadEvents()
     });
     this.showFinalizar.set(false);
     this.eventoAFinalizar.set(null);
-  }
-
-  private actualizarEstado(id: number, estado: string): void {
-    this.events.update(list =>
-      list.map(e => e.id === id ? { ...e, status: estado as any } : e)
-    );
   }
 
   estadoKey(status: string): string {
@@ -400,6 +460,38 @@ export class AdminEventos implements OnInit {
   isTerminalStatus(status: string): boolean {
     const key = this.estadoKey(status);
     return key === 'finalizado' || key === 'cancelado';
+  }
+
+  isAdminUser(): boolean {
+    return this.auth.currentUser?.rol === 'admin';
+  }
+
+  isOrganizerUser(): boolean {
+    return this.auth.currentUser?.rol === 'organizador';
+  }
+
+  isOwner(ev: AdminEvento): boolean {
+    const currentId = Number(this.auth.currentUser?.id ?? 0) || null;
+    const ownerId = Number(ev.idUsuarioOrganizador ?? ev.idOrganizador ?? 0) || null;
+    return !!currentId && !!ownerId && currentId === ownerId;
+  }
+
+  canManageEvent(ev: AdminEvento): boolean {
+    return (this.isAdminUser() || this.isOrganizerUser()) && this.isOwner(ev);
+  }
+
+  canObserveEvent(ev: AdminEvento): boolean {
+    return (this.isAdminUser() || this.isOrganizerUser()) && !this.isOwner(ev);
+  }
+
+  abrirObservacion(ev: AdminEvento): void {
+    this.eventoAObservar.set(ev);
+    this.showVerInfo.set(true);
+  }
+
+  closeObservation(): void {
+    this.showVerInfo.set(false);
+    this.eventoAObservar.set(null);
   }
 
   statusClass(status: string): string {

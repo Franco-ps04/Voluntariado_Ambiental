@@ -11,6 +11,7 @@ export interface AdminEvento {
   organizer: string;
   organization: string;
   idOrganizador?: number | null;
+  idUsuarioOrganizador?: number | null;
   idTipo?: number | null;
   image: string;
   requirements: string[];

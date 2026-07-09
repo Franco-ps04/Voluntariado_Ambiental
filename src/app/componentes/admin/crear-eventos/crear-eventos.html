@@ -45,7 +45,7 @@
                 <!-- Fecha, Hora, Máx voluntarios -->
                 <div class="col-md-4">
                     <label class="form-label fw-medium small">Fecha <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control" [(ngModel)]="date"
+                    <input type="date" class="form-control" [(ngModel)]="date" [attr.min]="todayIsoDate"
                         [class.is-invalid]="submitted && errores['date']">
                     @if (submitted && errores['date']) {
                     <div class="invalid-feedback">{{ errores['date'] }}</div>
@@ -54,6 +54,7 @@
                 <div class="col-md-4">
                     <label class="form-label fw-medium small">Hora <span class="text-danger">*</span></label>
                     <input type="time" class="form-control" [(ngModel)]="time"
+                        [attr.min]="date === todayIsoDate ? currentTime : null"
                         [class.is-invalid]="submitted && errores['time']">
                     @if (submitted && errores['time']) {
                     <div class="invalid-feedback">{{ errores['time'] }}</div>
@@ -62,7 +63,7 @@
                 <div class="col-md-4">
                     <label class="form-label fw-medium small">Máx. voluntarios <span
                             class="text-danger">*</span></label>
-                    <input type="number" class="form-control" [(ngModel)]="maxVolunteers" min="1"
+                    <input type="number" class="form-control" [(ngModel)]="maxVolunteers" min="1" max="50"
                         [class.is-invalid]="submitted && errores['maxVolunteers']">
                     @if (submitted && errores['maxVolunteers']) {
                     <div class="invalid-feedback">{{ errores['maxVolunteers'] }}</div>

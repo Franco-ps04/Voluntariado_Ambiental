@@ -116,7 +116,7 @@ export class MensajesService {
 
   getMensajesPanel(idUsuario: number, rol: string): MensajeAdmin[] {
     if (rol === 'admin' || rol === 'organizador') {
-      return this._mensajes().filter(m => m.idDestinatario === idUsuario || true);
+      return [...this._mensajes()];
     }
 
     return this._mensajes().filter(m => m.idDestinatario === idUsuario);
@@ -149,6 +149,7 @@ export class MensajesService {
           this._mensajes.update(list =>
             list.map(m => (m.id === id && m.origen === origen) ? { ...m, leido: true } : m)
           );
+          this.refrescar();
         },
         error: () => {
           // no cambia el estado local si falla
@@ -180,6 +181,7 @@ export class MensajesService {
               };
             })
           );
+          this.refrescar();
         },
         error: () => {
           // no cambia el estado local si falla
@@ -248,6 +250,7 @@ export class MensajesService {
           this._mensajes.update(list =>
             list.map(m => (m.id === id ? { ...m, leidoPorVoluntario: true } : m))
           );
+          this.refrescar();
         },
         error: () => {
           // no cambia el estado local si falla

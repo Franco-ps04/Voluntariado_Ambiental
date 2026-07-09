@@ -2,7 +2,7 @@ import { Component, NgZone, OnDestroy, OnInit, signal, ViewChild } from '@angula
 import { VolunteerEvent } from '../../models/event';
 import { EventoService } from '../../services/evento-service';
 import { AuthService } from '../../services/auth.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { EventoCard } from '../evento-card/evento-card';
 import { MapaVista } from '../mapa-vista/mapa-vista';
@@ -24,6 +24,7 @@ export class Eventos implements OnInit, OnDestroy {
   mapMarkers: { lat: number; lng: number; label: string }[] = [];
   inscritoEventIds = new Set<number>();
   loading = false;
+  private pendingEventId: number | null = null;
 
   // Los administradores y organizadores no se inscriben desde el módulo público
   canEnroll(): boolean {
@@ -43,6 +44,7 @@ export class Eventos implements OnInit, OnDestroy {
     private eventService: EventoService,
     private auth: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private ngZone: NgZone
   ) { }
 
@@ -52,6 +54,13 @@ export class Eventos implements OnInit, OnDestroy {
       this.updateMapMarkers();
     }); */
     this.loading = true;
+
+    this.route.queryParamMap.subscribe(params => {
+      const raw = params.get('evento');
+      const id = Number(raw);
+      this.pendingEventId = Number.isFinite(id) && id > 0 ? id : null;
+      this.openPendingEvent();
+    });
 
     if (this.auth.isLoggedIn() && this.auth.currentUser?.rol === 'voluntario') {
       this.eventService.misInscripcionesHTTP().subscribe({
@@ -75,6 +84,7 @@ export class Eventos implements OnInit, OnDestroy {
         this.eventService.getEvents().subscribe(evts => {
           this.events = evts;
           this.updateMapMarkers();
+          this.openPendingEvent();
         });
       },
       error: () => {
@@ -83,6 +93,7 @@ export class Eventos implements OnInit, OnDestroy {
         this.eventService.getEvents().subscribe(evts => {
           this.events = evts;
           this.updateMapMarkers();
+          this.openPendingEvent();
         });
       }
     });
@@ -106,6 +117,16 @@ export class Eventos implements OnInit, OnDestroy {
     this.mapMarkers = this.events
       .filter(e => (e.status === 'Próximo' || e.status === 'En curso') && e.latitude && e.longitude)
       .map(e => ({ lat: e.latitude!, lng: e.longitude!, label: e.title }));
+  }
+
+  private openPendingEvent(): void {
+    if (!this.pendingEventId) return;
+    const ev = this.events.find(e => e.id === this.pendingEventId);
+    if (!ev) return;
+
+    this.pendingEventId = null;
+    this.selectEvent(ev);
+    this.openInfo(ev);
   }
 
   selectEvent(ev: VolunteerEvent): void {

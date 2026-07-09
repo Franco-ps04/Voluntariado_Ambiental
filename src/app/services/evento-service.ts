@@ -44,6 +44,38 @@ export class EventoService {
       .filter(Boolean);
   }
 
+  private parseDateTime(fecha: any, hora: any): Date | null {
+    const rawFecha = String(fecha ?? '').trim();
+    const rawHora = String(hora ?? '').trim();
+    if (!rawFecha || !rawHora) return null;
+
+    const fechaParts = rawFecha.split('-').map(Number);
+    const horaParts = rawHora.split(':').map(Number);
+    if (fechaParts.length !== 3 || horaParts.length < 2) return null;
+
+    const [y, m, d] = fechaParts;
+    const [hh, mm, ss = 0] = horaParts;
+    const date = new Date(y, m - 1, d, hh, mm, ss);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  private deriveStatus(fecha: any, hora: any, estado: any): string {
+    const current = String(estado ?? '').trim();
+    if (['Cancelado', 'Finalizado'].includes(current)) return current;
+
+    const start = this.parseDateTime(fecha, hora);
+    if (!start) return current || 'Próximo';
+
+    const durationHours = 2;
+    const end = new Date(start.getTime() + durationHours * 60 * 60 * 1000);
+    const now = new Date();
+
+    if (now < start) return 'Próximo';
+    if (now >= start && now < end) return 'En curso';
+    return 'Finalizado';
+  }
+
+
   //Con mock
   getEvents(): Observable<VolunteerEvent[]> {
     return this.eventsSubject.asObservable();
@@ -71,7 +103,7 @@ export class EventoService {
           organizerUserId: Number(e.id_usuario_organizador ?? e.organizerUserId ?? 0) || undefined,
           organizerEmail: e.email_organizador ?? e.organizerEmail ?? undefined,
           imageUrl: this.buildImageUrl(e.imagen_url ?? e.imagenUrl ?? e.imageUrl ?? e.imagen),
-          status: e.estado as any,
+          status: this.deriveStatus(e.fecha, e.hora, e.estado) as any,
           requirements: this.parseRequirements(e.requisitos ?? e.requirements ?? []),
           latitude: e.latitud ?? 0,
           longitude: e.longitud ?? 0
@@ -105,7 +137,7 @@ export class EventoService {
           organizerUserId: Number(data.id_usuario_organizador ?? data.organizerUserId ?? 0) || undefined,
           organizerEmail: data.email_organizador ?? data.organizerEmail ?? undefined,
           imageUrl: this.buildImageUrl(data.imagen_url ?? data.imagenUrl ?? data.imageUrl ?? data.imagen),
-          status: data.estado as any,
+          status: this.deriveStatus(data.fecha, data.hora, data.estado) as any,
           requirements: this.parseRequirements(data.requisitos ?? data.requirements ?? []),
           latitude: data.latitud ?? 0,
           longitude: data.longitud ?? 0

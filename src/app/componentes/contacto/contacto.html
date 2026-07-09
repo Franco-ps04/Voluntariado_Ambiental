@@ -10,7 +10,6 @@
   </div>
 
   <div class="row g-4">
-    <!-- Info contacto -->
     <div class="col-md-4">
       <div class="card border-0 shadow-sm rounded-4 p-3 mb-3">
         <div class="d-flex align-items-center gap-3">
@@ -38,7 +37,6 @@
       </div>
     </div>
 
-    <!-- Formulario -->
     <div class="col-md-8">
       <div class="card border-0 shadow-sm rounded-4 p-4">
         <h5 class="fw-bold mb-1">Envíanos un mensaje</h5>
@@ -46,44 +44,84 @@
 
         @if (success) {
         <div class="alert alert-success py-2">
-          <i class="bi bi-check-circle me-2"></i>¡Mensaje enviado! Te contactaremos pronto.
+          <i class="bi bi-check-circle me-2"></i>¡Mensaje enviado correctamente! Te contactaremos pronto.
         </div>
         }
 
-        <div class="row g-3">
+        @if (errorMessage) {
+        <div class="alert alert-danger py-2">
+          <i class="bi bi-exclamation-triangle me-2"></i>{{ errorMessage }}
+        </div>
+        }
+
+        <form class="row g-3" (ngSubmit)="submit()" novalidate>
           <div class="col-md-6">
             <label class="form-label small fw-semibold">Nombre completo</label>
-            <input class="form-control" placeholder="Tu nombre" [(ngModel)]="form.name">
+            <input class="form-control" placeholder="Tu nombre" name="name" [(ngModel)]="form.name"
+              [class.is-invalid]="submitted && form.name.trim().length < 3">
+            @if (submitted && !form.name.trim()) {
+            <div class="invalid-feedback d-block">El nombre es obligatorio.</div>
+            }
           </div>
+
           <div class="col-md-6">
             <label class="form-label small fw-semibold">Teléfono</label>
-            <input class="form-control" placeholder="987654321" [(ngModel)]="form.phone">
+            <input class="form-control" placeholder="987654321" name="phone" maxlength="9" inputmode="numeric"
+              [(ngModel)]="form.phone" [class.is-invalid]="submitted && !isPhoneValid(form.phone)">
+            @if (submitted && form.phone.trim().length !== 9) {
+            <div class="invalid-feedback d-block">El teléfono debe tener 9 dígitos.</div>
+            }
           </div>
+
           <div class="col-md-6">
             <label class="form-label small fw-semibold">Correo electrónico</label>
-            <input class="form-control" placeholder="tu@email.com" [(ngModel)]="form.email">
+            <input class="form-control" placeholder="tu@email.com" name="email" [(ngModel)]="form.email"
+              [class.is-invalid]="submitted && !isEmailValid(form.email)">
+            @if (submitted && form.email.trim() && !form.email.includes('@')) {
+            <div class="invalid-feedback d-block">Ingresa un correo válido.</div>
+            }
+            @if (submitted && !form.email.trim()) {
+            <div class="invalid-feedback d-block">El correo es obligatorio.</div>
+            }
           </div>
+
           <div class="col-md-6">
             <label class="form-label small fw-semibold">Asunto</label>
-            <select class="form-select" [(ngModel)]="form.subject">
+            <select class="form-select" name="subject" [(ngModel)]="form.subject"
+              [class.is-invalid]="submitted && !form.subject.trim()">
               <option value="">Seleccione un asunto...</option>
               @for (s of subjects; track s) {
               <option [value]="s">{{ s }}</option>
               }
             </select>
+            @if (submitted && !form.subject.trim()) {
+            <div class="invalid-feedback d-block">Selecciona un asunto.</div>
+            }
           </div>
+
           <div class="col-12">
             <label class="form-label small fw-semibold">Mensaje</label>
-            <textarea class="form-control" rows="5" placeholder="Cuéntanos cómo podemos ayudarte..."
-              [(ngModel)]="form.message"></textarea>
+            <textarea class="form-control" rows="5" placeholder="Cuéntanos cómo podemos ayudarte..." name="message"
+              [(ngModel)]="form.message" [class.is-invalid]="submitted && form.message.trim().length < 10"></textarea>
+            <div class="form-text">Mínimo 10 caracteres.</div>
+            @if (submitted && form.message.trim().length < 10) { <div class="invalid-feedback d-block">Escribe un
+              mensaje más detallado.
           </div>
-          <div class="col-12">
-            <button type="submit" class="btn btn-success px-5 py-2 fw-semibold" (click)="submit()">
-              <i class="bi bi-send me-2"></i>Enviar mensaje
-            </button>
-          </div>
-        </div>
+          }
       </div>
+
+      <div class="col-12 d-flex align-items-center gap-3 flex-wrap">
+        <button type="submit" class="btn btn-success px-5 py-2 fw-semibold" [disabled]="sending">
+          @if (sending) {
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          } @else {
+          <i class="bi bi-send me-2"></i>
+          }
+          {{ sending ? 'Enviando...' : 'Enviar mensaje' }}
+        </button>
+      </div>
+      </form>
     </div>
   </div>
+</div>
 </div>

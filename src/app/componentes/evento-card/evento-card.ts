@@ -16,7 +16,8 @@ export class EventoCard {
 
   @Output() inscribirse = new EventEmitter<VolunteerEvent>();
   @Output() verMapa = new EventEmitter<VolunteerEvent>();
-  @Output() verInfo = new EventEmitter<VolunteerEvent>(); // ← nuevo
+  @Output() verInfo = new EventEmitter<VolunteerEvent>();
+  @Output() abrirEvento = new EventEmitter<VolunteerEvent>();
 
   getImageUrl(): string {
     const img = (this.event.imageUrl ?? '').trim();

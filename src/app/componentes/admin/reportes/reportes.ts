@@ -155,7 +155,7 @@ export class Reportes implements OnInit {
           .sort((a, b) => Number(b.enrolledCount ?? b.inscritos ?? 0) - Number(a.enrolledCount ?? a.inscritos ?? 0))
           .slice(0, 6)
           .map(e => ({
-            label: (e.title ?? e.nombre ?? '').length > 22 ? (e.title ?? e.nombre ?? '').substring(0, 20) + '…' : (e.title ?? e.nombre ?? ''),
+            label: String(e.title ?? e.nombre ?? ''),
             value: Number(e.enrolledCount ?? e.inscritos ?? 0),
             pct: Math.round(Number(e.enrolledCount ?? e.inscritos ?? 0) / maxInscritos * 100),
             color: this.COLORES_TIPO[e.type ?? e.tipo ?? ''] ?? '#6366f1'
