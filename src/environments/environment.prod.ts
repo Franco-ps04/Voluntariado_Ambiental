@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://tu-dominio.com/api'
+  apiUrl: 'https://greenunity-api.onrender.com/api'
 };
