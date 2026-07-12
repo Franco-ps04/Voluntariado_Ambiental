@@ -227,13 +227,13 @@ export class MensajesService {
     );
   }
 
-  enviarSeguimiento(id: number, texto: string): void {
-    if (!texto.trim() || !this.usuarioActual) return;
+  enviarSeguimiento(id: number, texto: string): Observable<any> {
+    if (!texto.trim() || !this.usuarioActual) return of(null);
 
-    this.http.post(`${environment.apiUrl}/mensajes/${id}/seguimiento`, {
+    return this.http.post(`${environment.apiUrl}/mensajes/${id}/seguimiento`, {
       texto: texto.trim()
-    }).subscribe({
-      next: () => {
+    }).pipe(
+      tap(() => {
         const now = new Date().toISOString();
         this._mensajes.update(list =>
           list.map(m => {
@@ -245,11 +245,8 @@ export class MensajesService {
             return { ...m, historial: nuevoHistorial, leido: false };
           })
         );
-      },
-      error: () => {
-        // no cambia el estado local si falla
-      }
-    });
+      })
+    );
   }
 
   marcarLeidoPorVoluntario(id: number): void {

@@ -214,12 +214,22 @@ export class VoluntarioMensajes implements OnInit {
   enviarSeguimiento(): void {
     const m = this.selected();
     if (!this.seguimientoTexto.trim() || !m) return;
-    this.mensajesService.enviarSeguimiento(m.id, this.seguimientoTexto);
-    const actualizado = this.mensajesService.mensajes().find(x => x.id === m.id);
-    if (actualizado) this.selected.set({ ...actualizado, leidoPorVoluntario: true });
+
+    const texto = this.seguimientoTexto;
     this.seguimientoTexto = '';
     this.enviandoSeguimiento = true;
-    setTimeout(() => (this.enviandoSeguimiento = false), 2000);
+
+    this.mensajesService.enviarSeguimiento(m.id, texto).subscribe({
+      next: () => {
+        this.enviandoSeguimiento = false;
+        const actualizado = this.mensajesService.mensajes().find(x => x.id === m.id);
+        if (actualizado) this.selected.set({ ...actualizado, leidoPorVoluntario: true });
+      },
+      error: () => {
+        this.enviandoSeguimiento = false;
+        this.seguimientoTexto = texto; // devolver el texto si falló, para no perderlo
+      }
+    });
   }
 
   // Modal
