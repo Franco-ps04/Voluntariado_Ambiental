@@ -231,7 +231,6 @@ export class VoluntarioMensajes implements OnInit {
       }
     });
   }
-
   // Modal
   abrirModal(): void {
     this.showModal = true;
