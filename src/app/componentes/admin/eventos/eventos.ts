@@ -47,7 +47,7 @@ export class AdminEventos implements OnInit {
 
   totalEvents = computed(() => this.events().length);
   upcoming = computed(() => this.events().filter(e => this.estadoKey(e.status) === 'proximo').length);
-  totalEnrolled = computed(() => this.events().reduce((s, e) => s + (e.enrolledCount ?? e.registered ?? 0), 0));
+  totalEnrolled = computed(() => this.events().reduce((s, e) => s + Number(e.enrolledCount ?? e.registered ?? 0), 0));
 
   readonly EVENT_TYPES = ['Limpieza', 'Reforestación', 'Taller', 'Reciclaje', 'Educación', 'Conservación'];
 
@@ -221,7 +221,7 @@ export class AdminEventos implements OnInit {
   voluntariosPorTipo(type: string): number {
     return this.events()
       .filter(e => e.type === type)
-      .reduce((s, e) => s + (e.enrolledCount ?? e.registered ?? 0), 0);
+      .reduce((s, e) => s + Number(e.enrolledCount ?? e.registered ?? 0), 0);
   }
 
   eventosPorTipo(type: string): number {

@@ -106,10 +106,13 @@
             <button class="btn btn-sm btn-outline-danger" (click)="pedirCancelar(ev)" title="Cancelar evento">
               <i class="bi bi-x-circle me-1"></i>Cancelar
             </button>
+            }
+            @if (estadoKey(ev.status) === 'proximo') {
             <button class="btn btn-sm btn-outline-warning" (click)="openEdit(ev)" title="Editar">
               <i class="bi bi-pencil"></i>
             </button>
-            } @else {
+            }
+            @if (estadoKey(ev.status) !== 'proximo' && estadoKey(ev.status) !== 'en curso') {
             <button class="btn btn-sm btn-outline-danger" (click)="askDelete(ev.id)" title="Eliminar del listado">
               <i class="bi bi-trash me-1"></i>Eliminar
             </button>

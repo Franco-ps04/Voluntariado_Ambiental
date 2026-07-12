@@ -16,9 +16,11 @@
       <a routerLink="/eventos" class="btn btn-success btn-lg px-5 fw-semibold shadow">
         Explorar eventos <i class="bi bi-arrow-right ms-1"></i>
       </a>
+      @if (!auth.currentUser) {
       <a routerLink="/registrarse" class="btn btn-outline-light btn-lg px-5 fw-semibold">
         Crear cuenta
       </a>
+      }
     </div>
   </div>
 </section>

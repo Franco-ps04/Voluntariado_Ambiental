@@ -1,6 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, tap, map } from 'rxjs';
+import { Observable, of, tap, map, switchMap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 import { AuthUser, UserRole } from '../models/UserRole';
@@ -63,7 +63,7 @@ export class MensajesService {
     return this.http.get<any[]>(`${environment.apiUrl}/mensajes/destinatarios`);
   }
 
-  private mapMensajeBackend(raw: any, origenCarga: 'panel' | 'voluntario'): MensajeAdmin {
+  mapMensajeBackend(raw: any, origenCarga: 'panel' | 'voluntario'): MensajeAdmin {
     const historial: HistorialItem[] = Array.isArray(raw.historial)
       ? raw.historial.map((h: any) => ({
         texto: String(h.texto ?? ''),
@@ -210,9 +210,20 @@ export class MensajesService {
       mensaje: params.mensaje,
       idEvento: params.idEvento ?? null
     }).pipe(
-      tap({
-        next: () => this.refrescar()
-      })
+      // Antes: this.refrescar() se disparaba "en paralelo" (fire-and-forget)
+      // y el componente cerraba el modal con un setTimeout fijo, asumiendo
+      // que para ese momento el refresco ya había llegado. Con redes más
+      // lentas (Render + Supabase en regiones distintas) el refresco podía
+      // tardar más que ese tiempo fijo, y el mensaje recién enviado no
+      // aparecía hasta la siguiente acción. Ahora se encadena con
+      // switchMap: el observable no se completa hasta que la lista está
+      // realmente actualizada.
+      switchMap(resp =>
+        this.http.get<any[]>(`${environment.apiUrl}/mensajes/mis`).pipe(
+          tap(data => this._mensajes.set(data.map(m => this.mapMensajeBackend(m, 'voluntario')))),
+          map(() => resp)
+        )
+      )
     );
   }
 

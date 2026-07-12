@@ -150,6 +150,18 @@ export class AuthService {
     this.userSubject.next(user);
   }
 
+  /**
+   * Actualiza los datos del usuario en sesión (ej. tras editar el propio
+   * perfil) sin necesidad de cerrar sesión y volver a entrar. Cualquier
+   * componente que muestre auth.currentUser (como la barra lateral) se
+   * refresca solo porque currentUser lee de userSubject reactivamente.
+   */
+  updateLocalUser(patch: Partial<AuthUser>): void {
+    const current = this.currentUser;
+    if (!current) return;
+    this.saveUser({ ...current, ...patch });
+  }
+
   private clearNotice(): void {
     try {
       localStorage.removeItem(this.noticeKey);

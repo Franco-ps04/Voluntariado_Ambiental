@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { UserEstado, UserRol, UsuarioAdmin } from '../../../models/admin_usuario';
 import { MOCK_USUARIOS_ADMIN } from '../../../mocks/admin_usuarios';
 import { AdminService } from '../../../services/admin.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-usuarios',
@@ -37,7 +38,10 @@ export class Usuarios implements OnInit {
   organizadores = computed(() => this.usuarios().filter(u => u.rol === 'organizador').length);
   suspendidos = computed(() => this.usuarios().filter(u => u.estado === 'suspendido').length);
 
-  constructor(private adminService: AdminService) { }
+  constructor(
+    private adminService: AdminService,
+    private auth: AuthService
+  ) { }
 
 
   private toEstado(value: any): UserEstado {
@@ -130,7 +134,45 @@ export class Usuarios implements OnInit {
     this.usuarios.update(list => list.map(u => u.id === this.editForm.id ? { ...this.editForm } : u));
     this.modalUsuario = { ...this.editForm };
     this.guardado = true;
+
+    // Si el usuario editado es el que está logueado ahora mismo, refresca
+    // la identidad en caché (barra lateral) sin necesidad de reloguearse.
+    if (this.auth.currentUser?.id === this.editForm.id) {
+      this.auth.updateLocalUser({
+        nombre: this.editForm.nombre,
+        email: this.editForm.email,
+        telefono: this.editForm.telefono
+      });
+    }
+
     setTimeout(() => { this.guardado = false; }, 2000);
+  }
+
+  exportando = false;
+
+  exportarListado(formato: 'xlsx' | 'pdf'): void {
+    this.exportando = true;
+    this.adminService.exportarUsuarios(formato).subscribe({
+      next: (blob) => {
+        this.exportando = false;
+        const fecha = new Date().toISOString().slice(0, 10);
+        this.adminService.descargarBlob(blob, `usuarios_${fecha}.${formato}`);
+      },
+      error: () => { this.exportando = false; }
+    });
+  }
+
+  exportarUno(formato: 'xlsx' | 'pdf'): void {
+    if (!this.modalUsuario) return;
+    this.exportando = true;
+    this.adminService.exportarUsuarios(formato, this.modalUsuario.id).subscribe({
+      next: (blob) => {
+        this.exportando = false;
+        const nombreLimpio = this.modalUsuario!.nombre.replace(/\s+/g, '_').toLowerCase();
+        this.adminService.descargarBlob(blob, `usuario_${nombreLimpio}.${formato}`);
+      },
+      error: () => { this.exportando = false; }
+    });
   }
 
   // Confirmar acción

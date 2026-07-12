@@ -20,6 +20,32 @@ export class AdminService {
 
   constructor(private http: HttpClient) { }
 
+  /**
+   * Exporta usuarios en Excel o PDF y dispara la descarga en el navegador.
+   * Sin idUsuario: exporta el listado completo. Con idUsuario: solo ese usuario
+   * (útil como respaldo puntual, por ejemplo antes de suspender una cuenta).
+   */
+  exportarUsuarios(formato: 'xlsx' | 'pdf', idUsuario?: number): Observable<Blob> {
+    let params = `formato=${formato}`;
+    if (idUsuario) params += `&id=${idUsuario}`;
+
+    return this.http.get(`${environment.apiUrl}/usuarios/exportar?${params}`, {
+      responseType: 'blob'
+    });
+  }
+
+  /** Dispara la descarga de un Blob en el navegador con el nombre de archivo dado. */
+  descargarBlob(blob: Blob, nombreArchivo: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  }
+
   private buildImageUrl(url?: string | null): string {
     if (!url) return '';
     const raw = String(url).trim();
@@ -72,7 +98,7 @@ export class AdminService {
       requirements: this.parseRequirements(e.requisitos ?? e.requirements ?? []),
       maxVolunteers: e.capacidad,
       registered: e.inscritos,
-      enrolledCount: e.inscritos,
+      enrolledCount: Number(e.inscritos ?? 0),
       status: this.deriveStatus(e.fecha, e.hora, e.estado as AdminEvento['status'])
     };
   }
@@ -237,6 +263,27 @@ export class AdminService {
   usuariosHttp(filtros?: { rol?: string; buscar?: string }): Observable<any[]> {
     return this.http.get<any[]>(`${environment.apiUrl}/usuarios`, {
       params: filtros ?? {}
+    });
+  }
+
+  /**
+   * GET /reportes/resumen — trae en una sola llamada el resumen, el detalle
+   * por evento (con asistencia real, incluyendo eventos ya archivados) y el
+   * top de voluntarios. Reemplaza el enfoque anterior que armaba todo esto
+   * en el frontend con N llamadas (una por evento) y datos estimados cuando
+   * faltaba información real.
+   */
+  getReporteResumen(): Observable<{
+    resumen: { totalEventos: number; totalInscritos: number; pctAsistencia: number };
+    eventos: any[];
+    voluntarios: any[];
+  }> {
+    return this.http.get<any>(`${environment.apiUrl}/reportes/resumen`);
+  }
+
+  exportarReporte(formato: 'xlsx' | 'pdf'): Observable<Blob> {
+    return this.http.get(`${environment.apiUrl}/reportes/exportar?formato=${formato}`, {
+      responseType: 'blob'
     });
   }
 

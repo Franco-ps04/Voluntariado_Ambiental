@@ -270,13 +270,10 @@ export class VoluntarioMensajes implements OnInit {
     }).subscribe({
       next: () => {
         this.borrador = null;
-        this.enviandoNuevo = true;
-        setTimeout(() => {
-          this.showModal = false;
-          this.enviandoNuevo = false;
-          const mis = this.misMensajes();
-          if (mis.length > 0) this.seleccionar(mis[0]);
-        }, 1200);
+        this.showModal = false;
+        this.enviandoNuevo = false;
+        const mis = this.misMensajes();
+        if (mis.length > 0) this.seleccionar(mis[0]);
       },
       error: (err) => {
         this.enviandoNuevo = false;

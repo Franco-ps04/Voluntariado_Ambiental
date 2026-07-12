@@ -44,24 +44,7 @@ export class AdminNotificacion implements OnInit {
     this.http.get<any[]>(`${environment.apiUrl}/mensajes/panel`).subscribe({
       next: (data) => {
         this.loading = false;
-        this._lista = data.map(m => ({
-          id: m.id_mensaje,
-          idDestinatario: this.auth.currentUser?.id,
-          origen: 'mensaje' as const,
-          remitente: m.remitente,
-          emailRemitente: m.email_remitente,
-          asunto: m.asunto,
-          mensaje: m.mensaje,
-          fecha: m.fecha,
-          leido: m.leido === 1,
-          respondido: m.respondido === 1,
-          eventoRelacionado: m.evento_relacionado,
-          historial: (m.historial ?? []).map((r: any) => ({
-            texto: r.texto,
-            fecha: r.fecha,
-            tipo: r.tipo as 'admin' | 'voluntario'
-          }))
-        }));
+        this._lista = data.map(m => this.mensajesService.mapMensajeBackend(m, 'panel'));
         this.mensajesService.syncMensajes(this._lista);
         const lista = this.paginated();
         if (lista.length > 0) this.select(lista[0]);
