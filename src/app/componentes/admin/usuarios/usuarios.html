@@ -4,7 +4,7 @@
         <h4 class="fw-bold mb-0">Usuarios</h4>
         <p class="text-muted small mb-0">{{ total() }} usuarios registrados</p>
     </div>
-    <div class="dropdown">
+   <!--  <div class="dropdown">
         <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
             <i class="bi bi-download me-1"></i>Exportar
         </button>
@@ -16,7 +16,7 @@
                     <i class="bi bi-file-earmark-pdf me-2 text-danger"></i>PDF
                 </button></li>
         </ul>
-    </div>
+    </div> -->
 </div>
 
 <!-- Métricas -->
@@ -184,6 +184,7 @@
                             (click)="openModal(u)">
                             <i class="bi bi-pencil" style="font-size:14px"></i>
                         </button>
+                        @if (!esUsuarioActual(u)) {
                         <button class="btn btn-sm btn-link p-1" [class.text-warning]="u.estado === 'activo'"
                             [class.text-success]="u.estado !== 'activo'"
                             [title]="u.estado === 'activo' ? 'Suspender' : 'Activar'"
@@ -191,6 +192,10 @@
                             <i class="bi" style="font-size:14px" [class.bi-shield-x]="u.estado === 'activo'"
                                 [class.bi-shield-check]="u.estado !== 'activo'"></i>
                         </button>
+                        } @else {
+                        <span class="badge rounded-pill text-bg-light text-muted" style="font-size:10px"
+                            title="No puedes suspenderte ni cambiar tu propio rol desde aquí">Tú</span>
+                        }
                     </td>
                 </tr>
                 }
@@ -273,7 +278,7 @@
             <button class="btn btn-outline-secondary flex-fill fw-medium" (click)="enableEdit()">
                 Editar perfil
             </button>
-            <div class="dropdown">
+            <!-- <div class="dropdown">
                 <button class="btn btn-outline-secondary fw-medium" type="button" data-bs-toggle="dropdown"
                     title="Exportar este usuario">
                     <i class="bi bi-download"></i>
@@ -286,7 +291,8 @@
                             <i class="bi bi-file-earmark-pdf me-2 text-danger"></i>PDF
                         </button></li>
                 </ul>
-            </div>
+            </div> -->
+            @if (!esUsuarioActual(modalUsuario)) {
             @if (modalUsuario.estado === 'activo') {
             <button class="btn flex-fill fw-medium" style="background:#fff0f0;color:#dc2626;border:1px solid #fecaca"
                 (click)="pedirConfirm(modalUsuario, 'suspender')">
@@ -297,7 +303,14 @@
                 Activar
             </button>
             }
+            }
         </div>
+        @if (esUsuarioActual(modalUsuario)) {
+        <p class="text-muted mt-2 mb-0" style="font-size:11px">
+            <i class="bi bi-info-circle me-1"></i>
+            Esta es tu propia cuenta: no puedes suspenderte ni cambiar tu rol desde aquí.
+        </p>
+        }
         } @else {
         <!-- Formulario de edición -->
         <div class="d-flex flex-column gap-3 mb-4">
@@ -324,6 +337,7 @@
             <!-- Cambio de rol (voluntario ↔ organizador) -->
             <div>
                 <label class="form-label small fw-medium">Rol</label>
+                @if (!esUsuarioActual(editForm)) {
                 <div class="d-flex gap-2">
                     @for (r of
                     [{v:'voluntario',i:'bi-person'},{v:'organizador',i:'bi-building'},{v:'admin',i:'bi-shield-lock'}];
@@ -339,6 +353,17 @@
                     <i class="bi bi-info-circle me-1"></i>
                     Cambiar a organizador permitirá gestionar eventos
                 </p>
+                } @else {
+                <div class="d-flex align-items-center gap-2 px-3 py-2 rounded"
+                    style="background:#f8fafc;border:1px solid #e2e8f0">
+                    <i class="bi bi-shield-lock text-muted"></i>
+                    <span class="fw-medium">{{ editForm.rol | titlecase }}</span>
+                </div>
+                <p class="text-muted mt-1" style="font-size:11px">
+                    <i class="bi bi-info-circle me-1"></i>
+                    No puedes cambiar tu propio rol. Pide a otro administrador que lo haga.
+                </p>
+                }
             </div>
         </div>
 

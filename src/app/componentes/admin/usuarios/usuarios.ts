@@ -209,6 +209,13 @@ export class Usuarios implements OnInit {
   }
 
   //Helpers UI
+  // Evita que un admin se suspenda o cambie su propio rol desde este panel
+  // (si fuera el único admin, el sistema se quedaría sin nadie que administre).
+  // El backend valida esto también; esto es solo para no ofrecer la opción.
+  esUsuarioActual(u: UsuarioAdmin): boolean {
+    return this.auth.currentUser?.id === u.id;
+  }
+  
   getInitials(nombre: string): string {
     return nombre.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase();
   }
